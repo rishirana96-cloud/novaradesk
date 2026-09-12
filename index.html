@@ -5812,20 +5812,21 @@ samp,
 
 <style id="novaradesk-chatgpt-sidebar-behavior-v1">
 /* NOVARADESK_CHATGPT_SIDEBAR_BEHAVIOR_V1
-   ChatGPT-style desktop sidebar:
-   the icon rail does not auto-expand on general hover.
-   Hover the Novara mark to reveal the persistent-open control. */
+   ChatGPT-style desktop sidebar.
+   Collapsed rail stays collapsed; hovering the Novara mark swaps the mark
+   for a clean sidebar-open control. */
 @media (min-width:721px) {
     #appSidebar {
         width:82px!important;
         box-shadow:none!important;
+        overflow-x:hidden!important;
     }
     body.sidebar-pinned #appSidebar {
         width:266px!important;
         box-shadow:12px 0 42px rgba(0,0,0,.12)!important;
     }
 
-    /* Disable the older whole-sidebar hover expansion. */
+    /* Never expand merely because the rail is hovered. */
     body:not(.sidebar-pinned) #appSidebar:hover,
     body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) {
         width:82px!important;
@@ -5862,7 +5863,80 @@ samp,
         opacity:0!important;
     }
 
-    /* Keep the expanded state fully usable once pinned. */
+    /* Clean logo hit area: no card, halo, focus box or duplicated shape. */
+    #appSidebar .brand {
+        position:relative!important;
+        z-index:2;
+        width:58px!important;
+        min-width:58px!important;
+        min-height:42px!important;
+        padding:0 10px!important;
+        margin-bottom:30px!important;
+        border:0!important;
+        border-radius:0!important;
+        background:transparent!important;
+        box-shadow:none!important;
+        outline:none!important;
+        overflow:visible!important;
+    }
+    #appSidebar .brand img {
+        width:36px!important;
+        height:36px!important;
+        flex:0 0 36px!important;
+        border:0!important;
+        box-shadow:none!important;
+        outline:none!important;
+        transition:opacity .12s ease!important;
+    }
+
+    /* The control replaces the logo exactly, rather than sitting on top of it. */
+    #appSidebar .sidebar-pin-toggle {
+        top:25px!important;
+        left:22px!important;
+        right:auto!important;
+        width:36px!important;
+        height:36px!important;
+        padding:0!important;
+        border:0!important;
+        border-radius:9px!important;
+        background:transparent!important;
+        color:var(--text-secondary)!important;
+        box-shadow:none!important;
+        outline:none!important;
+        opacity:0!important;
+        visibility:hidden!important;
+        transform:none!important;
+        pointer-events:none!important;
+        z-index:8!important;
+    }
+    #appSidebar .sidebar-pin-toggle svg {
+        width:20px!important;
+        height:20px!important;
+        fill:none!important;
+    }
+
+    body:not(.sidebar-pinned) #appSidebar .brand:hover img,
+    body:not(.sidebar-pinned) #appSidebar .brand:has(+ .sidebar-pin-toggle:hover) img {
+        opacity:0!important;
+    }
+    body:not(.sidebar-pinned) #appSidebar .brand:hover + .sidebar-pin-toggle,
+    body:not(.sidebar-pinned) #appSidebar .sidebar-pin-toggle:hover,
+    body:not(.sidebar-pinned) #appSidebar .sidebar-pin-toggle:focus-visible {
+        opacity:1!important;
+        visibility:visible!important;
+        pointer-events:auto!important;
+    }
+    #appSidebar .sidebar-pin-toggle:hover {
+        background:var(--surface-hover)!important;
+        color:var(--text)!important;
+    }
+
+    /* Pinned state remains fully expanded. */
+    body.sidebar-pinned #appSidebar .brand {
+        width:auto!important;
+        min-width:0!important;
+        padding-right:48px!important;
+    }
     body.sidebar-pinned #appSidebar .brand-product,
     body.sidebar-pinned #appSidebar .sidebar-heading,
     body.sidebar-pinned #appSidebar .nav-item>span,
@@ -5886,51 +5960,15 @@ samp,
         opacity:1!important;
     }
 
-    /* The Novara logo is the reveal target, matching ChatGPT's interaction. */
-    #appSidebar .brand {
-        position:relative!important;
-        z-index:2;
-    }
-    #appSidebar .sidebar-pin-toggle {
-        top:23px!important;
-        left:20px!important;
-        right:auto!important;
-        width:40px!important;
-        height:40px!important;
-        border:0!important;
-        border-radius:10px!important;
-        background:rgba(10,13,11,.98)!important;
-        color:var(--text-secondary)!important;
-        opacity:0!important;
-        visibility:hidden!important;
-        transform:none!important;
-        pointer-events:none!important;
-        z-index:8!important;
-        box-shadow:none!important;
-    }
-    #appSidebar .sidebar-pin-toggle svg {
-        width:20px!important;
-        height:20px!important;
-        fill:none!important;
-    }
-    #appSidebar .brand:hover + .sidebar-pin-toggle,
-    #appSidebar .sidebar-pin-toggle:hover,
-    #appSidebar .sidebar-pin-toggle:focus-visible {
-        opacity:1!important;
-        visibility:visible!important;
-        pointer-events:auto!important;
-    }
-    #appSidebar .sidebar-pin-toggle:hover {
-        background:var(--surface-hover)!important;
-        color:var(--text)!important;
-    }
+    /* When pinned, reveal the collapse control at the far right of the brand row. */
     body.sidebar-pinned #appSidebar .sidebar-pin-toggle {
+        top:25px!important;
+        left:auto!important;
+        right:16px!important;
         opacity:0!important;
         visibility:hidden!important;
         pointer-events:none!important;
-        color:var(--text-secondary)!important;
-        border-color:transparent!important;
-        background:rgba(10,13,11,.98)!important;
+        background:transparent!important;
     }
     body.sidebar-pinned #appSidebar .brand:hover + .sidebar-pin-toggle,
     body.sidebar-pinned #appSidebar .sidebar-pin-toggle:hover,
@@ -5938,10 +5976,6 @@ samp,
         opacity:1!important;
         visibility:visible!important;
         pointer-events:auto!important;
-    }
-    body.sidebar-pinned #appSidebar .sidebar-pin-toggle:hover {
-        background:var(--surface-hover)!important;
-        color:var(--text)!important;
     }
 }
 </style>
