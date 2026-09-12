@@ -6214,6 +6214,23 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 </style>
 
+
+<style id="novaradesk-global-search-nudge-down-v2">
+/* NOVARADESK_GLOBAL_SEARCH_NUDGE_DOWN_V2 — explicit optical alignment of search text/icon with adjacent controls. */
+@media (min-width:721px){
+    .global-search-shell input,
+    .global-search-wrap.open .global-search-shell input,
+    .global-search-wrap:focus-within .global-search-shell input{
+        position:relative!important;
+        top:3px!important;
+    }
+    .global-search-button svg{
+        position:relative!important;
+        top:3px!important;
+    }
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
