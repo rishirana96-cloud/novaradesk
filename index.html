@@ -6013,6 +6013,30 @@ html[data-theme="dark"] .ticket-tag-popover {
 }
 </style>
 
+
+<style id="novaradesk-tag-colour-pill-v1">
+/* NOVARADESK_TAG_COLOUR_PILL_V1 */
+.ticket-tag{
+    color:var(--tag-colour,var(--accent))!important;
+    background:color-mix(in srgb,var(--tag-colour,var(--accent)) 12%,transparent)!important;
+    border:1px dotted var(--tag-colour,var(--accent))!important;
+    padding-left:10px!important;
+}
+.ticket-tag::before{
+    display:none!important;
+    content:none!important;
+}
+.ticket-tag button{
+    color:var(--tag-colour,var(--accent))!important;
+}
+html[data-theme="light"] .ticket-tag{
+    background:color-mix(in srgb,var(--tag-colour,var(--accent)) 10%,#fff)!important;
+}
+html[data-theme="dark"] .ticket-tag{
+    background:color-mix(in srgb,var(--tag-colour,var(--accent)) 14%,#111713)!important;
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
