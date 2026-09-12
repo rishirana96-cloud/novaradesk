@@ -6170,6 +6170,21 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 </style>
 
+
+<style id="novaradesk-global-search-narrower-v1">
+/* NOVARADESK_GLOBAL_SEARCH_NARROWER_V1 — tighten only the search segment. */
+@media (min-width:721px){
+    .global-search-wrap .global-search-shell,
+    .global-search-wrap.open .global-search-shell,
+    .global-search-wrap:focus-within .global-search-shell{
+        width:210px!important;
+    }
+    .global-search-results{
+        width:270px!important;
+    }
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
