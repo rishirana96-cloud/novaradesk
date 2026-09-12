@@ -5097,7 +5097,15 @@ html[data-theme="light"] #periodSelector button.active{color:var(--accent-dark);
 .page-title h1{font-size:clamp(31px,2.85vw,47px);letter-spacing:-1.9px;}
 .topbar{margin-bottom:21px;}
 .kpi-card{min-height:146px;}
-.kpi-sub{color:color-mix(in srgb,var(--text) 50%,transparent);}
+.kpi-sub,.ticket-kpi-sub,
+.kpi-sub span,.ticket-kpi-sub span{
+    color:color-mix(in srgb,var(--text) 60%,transparent);
+    font-family:"Instrument Sans","Inter",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:calc(11px * var(--ui-text-scale));
+    font-weight:500;
+    letter-spacing:0;
+    font-variant-numeric:proportional-nums;
+}
 .kpi-card::before{opacity:0;}
 .kpi-card:has(.kpi-value.accent)::before{opacity:.72;}
 .layout-control-btn#customizeLayoutBtn{
@@ -5108,7 +5116,10 @@ html[data-theme="light"] #periodSelector button.active{color:var(--accent-dark);
     font-weight:650;
 }
 .layout-control-btn#customizeLayoutBtn svg{width:13px;height:13px;stroke-width:1.6;}
-html[data-theme="light"] .kpi-sub{color:rgba(23,35,28,.55);}
+html[data-theme="light"] .kpi-sub,
+html[data-theme="light"] .ticket-kpi-sub,
+html[data-theme="light"] .kpi-sub span,
+html[data-theme="light"] .ticket-kpi-sub span{color:rgba(23,35,28,.62);}
 /* Retain the card's resting depth and decorative haze, but remove the hover shadow. */
 .kpi-card{box-shadow:var(--shadow-soft);}
 .kpi-card:hover{box-shadow:none;}
