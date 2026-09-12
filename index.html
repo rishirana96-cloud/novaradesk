@@ -15683,5 +15683,44 @@ document.getElementById("customizeLayoutBtn")?.addEventListener("click",event=>{
 },true);
 </script>
 
+<style id="novaradesk-report-filter-input-width-v1">
+/* Keep the value field usable when custom select triggers replace the native selects. */
+#panel-reports .report-filter-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(170px, 1.08fr) 32px;
+    gap: 10px;
+}
+#panel-reports .report-filter-row > * {
+    min-width: 0;
+}
+#panel-reports .report-filter-row .unified-select-trigger {
+    min-width: 0;
+}
+#panel-reports .report-filter-row [data-filter-value] {
+    width: 100%;
+    min-width: 170px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 10px;
+}
+#panel-reports .report-filter-row .report-filter-remove {
+    width: 32px;
+    height: 32px;
+}
+@media (max-width: 620px) {
+    #panel-reports .report-filter-row {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+    }
+    #panel-reports .report-filter-row [data-filter-value] {
+        grid-column: 1 / 3;
+        min-width: 0;
+    }
+    #panel-reports .report-filter-row .report-filter-remove {
+        grid-column: 3;
+        grid-row: 1 / 3;
+    }
+}
+</style>
+
 </body>
 </html>
