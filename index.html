@@ -8453,7 +8453,7 @@ function formatTicketDate(value) {
 if (!value) return "—";
 const date = new Date(String(value).includes("T") ? value : `${String(value).replace(" ", "T")}Z`);
 if (isNaN(date.getTime())) return "—";
-return `${date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}<br><span class="conversation-time">${date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>`;
+return `${date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}<br><span style="color:var(--text-muted);font-size:10px">${date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>`;
 }
 function formatTicketAge(createdAt, resolvedAt) {
 if (!createdAt) return "—";
@@ -9800,12 +9800,7 @@ tbody.innerHTML =
                                 date
                             )}
                             <br>
-                            <span
-                                style="
-                                    color:var(--text-muted);
-                                    font-size:10px;
-                                "
-                            >
+                            <span class="conversation-time">
                                 ${escapeHtml(
                                     time
                                 )}
