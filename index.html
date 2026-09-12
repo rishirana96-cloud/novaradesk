@@ -5086,6 +5086,24 @@ html[data-theme="light"] #tabSwitcher .tab.active:hover{background:linear-gradie
 #panel-dashboards .dashboard-title-main strong{font-size:11px;font-weight:700;}
 #panel-dashboards .dashboard-title-main span{margin-top:3px;font-size:8px;}
 #panel-dashboards .dashboard-title-actions button{width:29px;height:29px;border-radius:7px;}
+#panel-dashboards .dashboard-title-row.editing{padding:7px;background:var(--surface);}
+#panel-dashboards .dashboard-title-inline-edit{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:5px;width:100%;}
+#panel-dashboards .dashboard-title-inline-edit input{
+    min-width:0;
+    height:34px;
+    padding:0 9px;
+    border:1px solid var(--border-strong);
+    border-radius:7px;
+    outline:0;
+    background:var(--bg-card);
+    color:var(--text);
+    font:700 11px/1 inherit;
+}
+#panel-dashboards .dashboard-title-inline-edit input:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 16%,transparent);}
+#panel-dashboards .dashboard-title-inline-edit button{height:32px;padding:0 8px;border:0;border-radius:7px;background:transparent;color:var(--text-muted);font:700 9px/1 inherit;cursor:pointer;}
+#panel-dashboards .dashboard-title-inline-edit button[type="submit"]{background:var(--accent);color:#fff;}
+#panel-dashboards .dashboard-title-inline-edit button:hover{color:var(--text);background:var(--surface-hover);}
+#panel-dashboards .dashboard-title-inline-edit button[type="submit"]:hover{color:#fff;background:var(--accent-dark);}
 #panel-dashboards .dashboard-title-menu-rule{margin:6px 4px 4px;}
 #panel-dashboards .dashboard-title-create{
     min-height:34px;
@@ -11681,6 +11699,36 @@ function setDashboardStatus(message) {
 const element = document.getElementById("dashboardStatus");
 if (element) element.textContent = message;
 }
+function keepDashboardTitleMenuOpen() {
+document.getElementById("dashboardTitleMenu")?.classList.add("open");
+document.getElementById("dashboardTitleTrigger")?.setAttribute("aria-expanded", "true");
+}
+function beginInlineDashboardRename(dashboardId) {
+const dashboards = loadCustomDashboards();
+const dashboard = dashboards.find(item => item.id === dashboardId);
+const row = document.querySelector(`[data-dashboard-row="${CSS.escape(dashboardId)}"]`);
+if (!dashboard || !row) return;
+row.classList.add("editing");
+row.innerHTML = `<form class="dashboard-title-inline-edit"><input type="text" maxlength="60" value="${escapeHtml(dashboard.name)}" aria-label="Dashboard name"><button type="submit">Save</button><button type="button" data-inline-rename-cancel>Cancel</button></form>`;
+const form = row.querySelector("form");
+const input = form.querySelector("input");
+const cancel = () => { updateDashboardSelect(loadCustomDashboards(), activeCustomDashboard()); keepDashboardTitleMenuOpen(); };
+form.addEventListener("submit", event => {
+    event.preventDefault();
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    dashboard.name = name;
+    persistDashboardWidgets(dashboards, dashboard);
+    const active = activeCustomDashboard(dashboards);
+    document.getElementById("dashboardActiveTitle").textContent = active.name;
+    updateDashboardSelect(dashboards, active);
+    keepDashboardTitleMenuOpen();
+    setDashboardStatus("Dashboard name updated.");
+});
+form.querySelector("[data-inline-rename-cancel]").addEventListener("click", cancel);
+input.addEventListener("keydown", event => { if (event.key === "Escape") { event.preventDefault(); cancel(); } });
+requestAnimationFrame(() => { input.focus(); input.select(); });
+}
 function updateDashboardSelect(dashboards, active) {
 const select = document.getElementById("customDashboardSelect");
 if (select) {
@@ -11702,12 +11750,9 @@ menu.querySelectorAll("[data-dashboard-open]").forEach(button => button.addEvent
     closeDashboardTitleMenu();
     renderCustomDashboard();
 }));
-menu.querySelectorAll("[data-dashboard-rename]").forEach(button => button.addEventListener("click", async event => {
+menu.querySelectorAll("[data-dashboard-rename]").forEach(button => button.addEventListener("click", event => {
     event.stopPropagation();
-    localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardRename);
-    await renameActiveDashboard();
-    document.getElementById("dashboardTitleMenu")?.classList.add("open");
-    document.getElementById("dashboardTitleTrigger")?.setAttribute("aria-expanded", "true");
+    beginInlineDashboardRename(button.dataset.dashboardRename);
 }));
 menu.querySelectorAll("[data-dashboard-delete]").forEach(button => button.addEventListener("click", async event => {
     event.stopPropagation();
@@ -12017,8 +12062,9 @@ const dashboards = loadCustomDashboards(); const dashboard = {id:`dashboard_${Da
 dashboards.push(dashboard); saveCustomDashboards(dashboards); localStorage.setItem(DASHBOARD_ACTIVE_KEY,dashboard.id); renderCustomDashboard();
 }
 async function renameActiveDashboard() {
-const dashboards=loadCustomDashboards(); const active=activeCustomDashboard(dashboards); const name=await openNativeDialog({ title:"Rename dashboard", message:"Choose the name shown in your workspace.", value:active.name, input:true, confirmLabel:"Save name" }); if(!name)return;
-active.name=name; persistDashboardWidgets(dashboards,active); renderCustomDashboard();
+const active=activeCustomDashboard();
+keepDashboardTitleMenuOpen();
+requestAnimationFrame(()=>beginInlineDashboardRename(active.id));
 }
 function duplicateActiveDashboard() {
 const dashboards=loadCustomDashboards(); const active=activeCustomDashboard(dashboards); const clone={id:`dashboard_${Date.now()}`,name:`${active.name} Copy`,widgets:active.widgets.map(widget=>({...widget,id:`widget_${Date.now()}_${Math.random().toString(36).slice(2,7)}`})),updatedAt:new Date().toISOString()};
