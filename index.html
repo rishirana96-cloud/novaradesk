@@ -5496,8 +5496,21 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
     color: var(--text-muted);
     font-size: calc(11px * var(--ui-text-scale));
 }
+.conversation-table td {
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+.conversation-table th:nth-child(5),
+.conversation-table td:nth-child(5) {
+    text-align: center;
+}
 .conversation-table .badge {
+    font-size: calc(12px * var(--ui-text-scale));
     font-weight: 500;
+}
+.conversation-table .badge-pending {
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--text) 5%, transparent);
 }
 
 /* Chatbot tester hierarchy: a compact kicker and a controlled title. */
@@ -6172,7 +6185,7 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
             <div class="table-header">
                 <div>
                     <div class="table-title">
-                        Recent AI Conversations
+                        Recent AI conversations
                     </div>
                     <div class="table-subtitle">
                         Latest customer interactions
@@ -6404,7 +6417,7 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
             <div class="table-header">
                 <div>
                     <div class="table-title">
-                        Recent Human Conversations
+                        Recent human conversations
                     </div>
                     <div class="table-subtitle">
                         Conversations escalated from the AI agent
@@ -9650,7 +9663,7 @@ if (
 tbody.innerHTML =
     conversations
         .map(
-            conversation => {
+            (conversation, index) => {
                 /* =====================================
                    DATE
                    Do NOT manually add 5.5 hours.
@@ -9779,6 +9792,12 @@ tbody.innerHTML =
                     pending:
                         "Pending"
                 };
+                const displayNumber =
+                    conversation.id != null
+                        ? String(conversation.id).padStart(4, "0")
+                        : String(index + 1).padStart(4, "0");
+                const displayId =
+                    `${containerId === "humanConversationsBody" ? "HU" : "AI"}-${displayNumber}`;
                 return `
                     <tr data-session="${escapeHtml(conversation.session_id || "")}" data-conversation-kind="${containerId === "humanConversationsBody" ? "human" : "ai"}" tabindex="0" role="button" aria-label="Open complete conversation ${escapeHtml(conversation.session_id || "")}">
                         <td>
@@ -9789,7 +9808,7 @@ tbody.innerHTML =
                                 ${
                                     conversation.session_id
                                         ? escapeHtml(
-                                            "…" + conversation.session_id.slice(-8)
+                                            displayId
                                         )
                                         : "—"
                                 }
