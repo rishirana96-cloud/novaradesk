@@ -5809,6 +5809,143 @@ samp,
     font-weight: 600 !important;
 }
 </style>
+
+<style id="novaradesk-chatgpt-sidebar-behavior-v1">
+/* NOVARADESK_CHATGPT_SIDEBAR_BEHAVIOR_V1
+   ChatGPT-style desktop sidebar:
+   the icon rail does not auto-expand on general hover.
+   Hover the Novara mark to reveal the persistent-open control. */
+@media (min-width:721px) {
+    #appSidebar {
+        width:82px!important;
+        box-shadow:none!important;
+    }
+    body.sidebar-pinned #appSidebar {
+        width:266px!important;
+        box-shadow:12px 0 42px rgba(0,0,0,.12)!important;
+    }
+
+    /* Disable the older whole-sidebar hover expansion. */
+    body:not(.sidebar-pinned) #appSidebar:hover,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) {
+        width:82px!important;
+        box-shadow:none!important;
+    }
+    body:not(.sidebar-pinned) #appSidebar:hover .brand-product,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .brand-product,
+    body:not(.sidebar-pinned) #appSidebar:hover .sidebar-heading,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .sidebar-heading,
+    body:not(.sidebar-pinned) #appSidebar:hover .nav-item>span,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-item>span,
+    body:not(.sidebar-pinned) #appSidebar:hover .agent-profile-info,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .agent-profile-info,
+    body:not(.sidebar-pinned) #appSidebar:hover .system-status,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .system-status {
+        opacity:0!important;
+        visibility:hidden!important;
+        transform:translateX(-5px)!important;
+    }
+    body:not(.sidebar-pinned) #appSidebar:hover .nav-item,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-item {
+        width:58px!important;
+        padding-right:17px!important;
+    }
+    body:not(.sidebar-pinned) #appSidebar:hover .nav-expand-toggle,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-expand-toggle {
+        opacity:0!important;
+        visibility:hidden!important;
+        pointer-events:none!important;
+    }
+    body:not(.sidebar-pinned) #appSidebar:hover .nav-group.open>.nav-submenu,
+    body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-group.open>.nav-submenu {
+        display:none!important;
+        opacity:0!important;
+    }
+
+    /* Keep the expanded state fully usable once pinned. */
+    body.sidebar-pinned #appSidebar .brand-product,
+    body.sidebar-pinned #appSidebar .sidebar-heading,
+    body.sidebar-pinned #appSidebar .nav-item>span,
+    body.sidebar-pinned #appSidebar .agent-profile-info,
+    body.sidebar-pinned #appSidebar .system-status {
+        opacity:1!important;
+        visibility:visible!important;
+        transform:none!important;
+    }
+    body.sidebar-pinned #appSidebar .nav-item {
+        width:100%!important;
+        padding-right:44px!important;
+    }
+    body.sidebar-pinned #appSidebar .nav-expand-toggle {
+        opacity:1!important;
+        visibility:visible!important;
+        pointer-events:auto!important;
+    }
+    body.sidebar-pinned #appSidebar .nav-group.open>.nav-submenu {
+        display:flex!important;
+        opacity:1!important;
+    }
+
+    /* The Novara logo is the reveal target, matching ChatGPT's interaction. */
+    #appSidebar .brand {
+        position:relative!important;
+        z-index:2;
+    }
+    #appSidebar .sidebar-pin-toggle {
+        top:23px!important;
+        left:20px!important;
+        right:auto!important;
+        width:40px!important;
+        height:40px!important;
+        border:0!important;
+        border-radius:10px!important;
+        background:rgba(10,13,11,.98)!important;
+        color:var(--text-secondary)!important;
+        opacity:0!important;
+        visibility:hidden!important;
+        transform:none!important;
+        pointer-events:none!important;
+        z-index:8!important;
+        box-shadow:none!important;
+    }
+    #appSidebar .sidebar-pin-toggle svg {
+        width:20px!important;
+        height:20px!important;
+        fill:none!important;
+    }
+    #appSidebar .brand:hover + .sidebar-pin-toggle,
+    #appSidebar .sidebar-pin-toggle:hover,
+    #appSidebar .sidebar-pin-toggle:focus-visible {
+        opacity:1!important;
+        visibility:visible!important;
+        pointer-events:auto!important;
+    }
+    #appSidebar .sidebar-pin-toggle:hover {
+        background:var(--surface-hover)!important;
+        color:var(--text)!important;
+    }
+    body.sidebar-pinned #appSidebar .sidebar-pin-toggle {
+        opacity:0!important;
+        visibility:hidden!important;
+        pointer-events:none!important;
+        color:var(--text-secondary)!important;
+        border-color:transparent!important;
+        background:rgba(10,13,11,.98)!important;
+    }
+    body.sidebar-pinned #appSidebar .brand:hover + .sidebar-pin-toggle,
+    body.sidebar-pinned #appSidebar .sidebar-pin-toggle:hover,
+    body.sidebar-pinned #appSidebar .sidebar-pin-toggle:focus-visible {
+        opacity:1!important;
+        visibility:visible!important;
+        pointer-events:auto!important;
+    }
+    body.sidebar-pinned #appSidebar .sidebar-pin-toggle:hover {
+        background:var(--surface-hover)!important;
+        color:var(--text)!important;
+    }
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -5850,8 +5987,8 @@ samp,
         <div class="brand-endorsement">by Novara CX</div>
     </div>
 </a>
-<button id="sidebarPinToggle" class="sidebar-pin-toggle" type="button" aria-label="Pin sidebar" aria-pressed="false" title="Pin sidebar">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 4 8 0-1.5 6 3 3H13v7l-2-2v-5H6.5l3-3L8 4Z"/></svg>
+<button id="sidebarPinToggle" class="sidebar-pin-toggle" type="button" aria-label="Keep sidebar open" aria-pressed="false" title="Keep sidebar open">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9 4v16"></path><path d="m13.5 9 3 3-3 3"></path></svg>
 </button>
 <div class="sidebar-heading">
     Workspace
@@ -7974,15 +8111,21 @@ const ticketsNavGroup = document.getElementById("ticketsNavGroup");
 const analyticsNavToggle = document.getElementById("analyticsNavToggle");
 const ticketsNavToggle = document.getElementById("ticketsNavToggle");
 const sidebarPinToggle = document.getElementById("sidebarPinToggle");
-const SIDEBAR_PIN_KEY = "novaradesk_sidebar_pinned_v1";
-function setSidebarPinned(pinned) {
-document.body.classList.toggle("sidebar-pinned", Boolean(pinned));
-sidebarPinToggle?.setAttribute("aria-pressed", String(Boolean(pinned)));
-sidebarPinToggle?.setAttribute("aria-label", pinned ? "Unpin sidebar" : "Pin sidebar");
-sidebarPinToggle?.setAttribute("title", pinned ? "Unpin sidebar" : "Pin sidebar");
-localStorage.setItem(SIDEBAR_PIN_KEY, pinned ? "true" : "false");
+const SIDEBAR_PIN_KEY = "novaradesk_sidebar_pinned_v2";
+function setSidebarPinned(pinned, persist = true) {
+const expanded = Boolean(pinned);
+document.body.classList.toggle("sidebar-pinned", expanded);
+sidebarPinToggle?.setAttribute("aria-pressed", String(expanded));
+sidebarPinToggle?.setAttribute("aria-label", expanded ? "Collapse sidebar" : "Keep sidebar open");
+sidebarPinToggle?.setAttribute("title", expanded ? "Collapse sidebar" : "Keep sidebar open");
+if (sidebarPinToggle) {
+    sidebarPinToggle.innerHTML = expanded
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9 4v16"></path><path d="m16.5 9-3 3 3 3"></path></svg>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9 4v16"></path><path d="m13.5 9 3 3-3 3"></path></svg>';
 }
-setSidebarPinned(localStorage.getItem(SIDEBAR_PIN_KEY) === "true");
+if (persist) localStorage.setItem(SIDEBAR_PIN_KEY, expanded ? "true" : "false");
+}
+setSidebarPinned(localStorage.getItem(SIDEBAR_PIN_KEY) === "true", false);
 sidebarPinToggle?.addEventListener("click", event => {
 event.preventDefault();
 event.stopPropagation();
