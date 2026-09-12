@@ -6315,8 +6315,8 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     gap:0;
 }
 .ticket-compact-metrics{
-    display:flex;
-    align-items:stretch;
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
     width:100%;
     margin-left:0;
     border:0;
@@ -6326,17 +6326,14 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 .ticket-compact-metrics .ticket-kpi-card,
 .ticket-compact-metrics .ticket-kpi-card[hidden]{
-    display:grid!important;
-    grid-template-columns:auto auto;
-    grid-template-rows:auto auto;
-    align-content:center;
-    column-gap:9px;
-    row-gap:2px;
-    flex:1 1 0;
+    display:flex!important;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
     min-width:0!important;
-    min-height:84px!important;
+    min-height:100px!important;
     margin:0!important;
-    padding:16px 28px!important;
+    padding:15px 20px!important;
     border:0!important;
     border-right:1px solid var(--border)!important;
     border-radius:0!important;
@@ -6354,9 +6351,6 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     content:none!important;
 }
 .ticket-compact-metrics .ticket-kpi-label{
-    grid-column:1;
-    grid-row:1;
-    align-self:end;
     color:var(--text-secondary)!important;
     font-size:calc(9px * var(--ui-text-scale))!important;
     font-weight:700!important;
@@ -6366,22 +6360,18 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     white-space:nowrap;
 }
 .ticket-compact-metrics .ticket-kpi-value{
-    grid-column:2;
-    grid-row:1 / span 2;
-    align-self:center;
-    justify-self:end;
-    margin:0!important;
+    margin:7px 0 5px!important;
     color:var(--text)!important;
-    font-size:calc(24px * var(--ui-text-scale))!important;
+    font-size:calc(26px * var(--ui-text-scale))!important;
     font-weight:760!important;
     line-height:1!important;
     letter-spacing:-.9px!important;
 }
 .ticket-compact-metrics .ticket-kpi-value.danger{color:var(--danger)!important}
 .ticket-compact-metrics .ticket-kpi-value.warning{color:var(--warning)!important}
+.ticket-compact-metrics .ticket-kpi-value.progress{color:var(--accent-dark)!important}
+.ticket-compact-metrics .ticket-kpi-value.resolved{color:var(--success)!important}
 .ticket-compact-metrics .ticket-kpi-sub{
-    grid-column:1;
-    grid-row:2;
     margin:0!important;
     color:var(--text-muted)!important;
     font-size:calc(8px * var(--ui-text-scale))!important;
@@ -6395,15 +6385,17 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 .layout-editing .layout-card::after{
     content:"Drag to re-arrange"!important;
 }
-@media(max-width:1100px){
-    #panel-tickets .table-header{gap:0}
-    .ticket-compact-metrics .ticket-kpi-card{flex:1;min-width:0!important}
+@media(max-width:1300px){
+    .ticket-compact-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .ticket-compact-metrics .ticket-kpi-card:nth-child(3n){border-right:0!important}
+    .ticket-compact-metrics .ticket-kpi-card:nth-child(-n+3){border-bottom:1px solid var(--border)!important}
 }
 @media(max-width:680px){
     .ticket-compact-metrics{display:grid;grid-template-columns:1fr 1fr}
     .ticket-compact-metrics .ticket-kpi-card{border-bottom:1px solid var(--border)!important}
-    .ticket-compact-metrics .ticket-kpi-card:nth-child(2){border-right:0!important}
-    .ticket-compact-metrics .ticket-kpi-card:last-child{grid-column:1/-1;border-bottom:0!important}
+    .ticket-compact-metrics .ticket-kpi-card:nth-child(odd){border-right:1px solid var(--border)!important}
+    .ticket-compact-metrics .ticket-kpi-card:nth-child(even){border-right:0!important}
+    .ticket-compact-metrics .ticket-kpi-card:nth-last-child(-n+2){border-bottom:0!important}
 }
 </style>
 
@@ -7414,9 +7406,24 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
                         <div class="ticket-kpi-sub">Awaiting agent action</div>
                     </div>
                     <div class="ticket-kpi-card">
-                        <div class="ticket-kpi-label">Pending / In Progress</div>
+                        <div class="ticket-kpi-label">In Progress</div>
+                        <div id="ticketProgress" class="ticket-kpi-value progress">—</div>
+                        <div class="ticket-kpi-sub">Being worked on</div>
+                    </div>
+                    <div class="ticket-kpi-card">
+                        <div class="ticket-kpi-label">Pending Revert</div>
                         <div id="ticketPending" class="ticket-kpi-value warning">—</div>
-                        <div class="ticket-kpi-sub">Active support work</div>
+                        <div class="ticket-kpi-sub">Waiting for response</div>
+                    </div>
+                    <div class="ticket-kpi-card">
+                        <div class="ticket-kpi-label">Resolved</div>
+                        <div id="ticketResolved" class="ticket-kpi-value resolved">—</div>
+                        <div class="ticket-kpi-sub">Completed tickets</div>
+                    </div>
+                    <div class="ticket-kpi-card">
+                        <div class="ticket-kpi-label">Avg. Resolution</div>
+                        <div id="ticketAvgResolution" class="ticket-kpi-value">—</div>
+                        <div class="ticket-kpi-sub">Created to resolved</div>
                     </div>
                 </div>
             </div>
@@ -9427,25 +9434,23 @@ const oldestAge = ages.length ? `${Math.max(...ages).toFixed(1)}h` : "—";
 const slaRisk = filtered.filter(ticket => ["warning","breached","danger"].includes(ticketSlaDisplay(ticket).className)).length;
 const slaMet = resolved ? `${resolved}/${resolved}` : "0/0";
 const active = ticketWorkspaceState.activeView || "all";
-const viewType = active.startsWith("status:") ? active.slice(7) : active.startsWith("saved:") ? "saved" : "all";
-const configurations = {
-    all:[["Total Tickets",total,"Matching selected period"],["Open",open,"Awaiting agent action"],["Pending / In Progress",pending+progress,"Active support work"]],
-    open:[["Open Tickets",total,"Awaiting agent action"],["Average Age",averageAge,"Time since creation"],["SLA at Risk",slaRisk,"Needs attention"]],
-    progress:[["In Progress",total,"Currently being handled"],["Average Age",averageAge,"Time since creation"],["SLA at Risk",slaRisk,"Needs attention"]],
-    pending:[["Pending Revert",total,"Waiting for a response"],["Average Wait",averageAge,"Time in queue"],["Oldest Waiting",oldestAge,"Longest pending ticket"]],
-    resolved:[["Resolved Tickets",total,"Closed by human support"],["Average Resolution",avgResolution==="—"?"—":`${avgResolution}h`,"Created to resolved"],["Resolution SLA Met",slaMet,"Resolved within target"]],
-    reopened:[["Reopened Tickets",total,"Returned after resolution"],["Average Age",averageAge,"Time since creation"],["SLA at Risk",slaRisk,"Needs attention"]],
-    saved:[["Matching tickets",total,"Saved view results"],["Average age",averageAge,"Time since creation"],["SLA at risk",slaRisk,"Needs attention"]]
-};
+const configurations = [
+    ["Total Tickets",total,"Matching selected period"],
+    ["Open",open,"Awaiting agent action"],
+    ["In Progress",progress,"Being worked on"],
+    ["Pending Revert",pending,"Waiting for response"],
+    ["Resolved",resolved,"Completed tickets"],
+    ["Avg. Resolution",avgResolution==="—"?"—":`${avgResolution}h`,"Created to resolved"]
+];
 const cards = [...document.querySelectorAll("#panel-tickets .ticket-kpi-card")];
-(configurations[viewType] || configurations.all).forEach((item,index) => {
+configurations.forEach((item,index) => {
     const card = cards[index]; if (!card) return;
     card.hidden = false;
     card.querySelector(".ticket-kpi-label").textContent = item[0];
     card.querySelector(".ticket-kpi-value").textContent = item[1];
     card.querySelector(".ticket-kpi-sub").textContent = item[2];
 });
-cards.slice(3).forEach(card => card.hidden = true);
+cards.slice(configurations.length).forEach(card => card.hidden = true);
 const tableTitle = document.querySelector("#panel-tickets .table-title");
 if (tableTitle) tableTitle.textContent = document.getElementById("ticketViewSelect")?.selectedOptions?.[0]?.textContent || "All Tickets";
 updateTicketsTable(filtered);
