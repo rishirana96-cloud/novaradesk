@@ -6259,6 +6259,54 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 .session-copy-btn.copied{opacity:1;visibility:visible;color:var(--accent-light)}
 </style>
 
+
+<style id="novaradesk-global-search-alignment-final-v1">
+/* NOVARADESK_GLOBAL_SEARCH_ALIGNMENT_FINAL_V1 — use the same explicit control height as Sync Now / Settings. */
+@media (min-width:721px){
+    .topbar-actions .global-search-wrap{
+        height:44px!important;
+        min-height:44px!important;
+        align-self:center!important;
+        display:flex!important;
+        align-items:center!important;
+    }
+    .topbar-actions .global-search-shell,
+    .topbar-actions .global-search-wrap.open .global-search-shell,
+    .topbar-actions .global-search-wrap:focus-within .global-search-shell{
+        height:44px!important;
+        min-height:44px!important;
+        align-items:center!important;
+    }
+    .topbar-actions .global-search-shell input,
+    .topbar-actions .global-search-wrap.open .global-search-shell input,
+    .topbar-actions .global-search-wrap:focus-within .global-search-shell input{
+        height:44px!important;
+        min-height:44px!important;
+        padding-top:0!important;
+        padding-bottom:0!important;
+        line-height:44px!important;
+        position:static!important;
+        top:auto!important;
+        align-self:center!important;
+        -webkit-appearance:none!important;
+        appearance:none!important;
+    }
+    .topbar-actions .global-search-button{
+        height:44px!important;
+        min-height:44px!important;
+        align-self:center!important;
+        display:grid!important;
+        place-items:center!important;
+    }
+    .topbar-actions .global-search-button svg{
+        position:static!important;
+        top:auto!important;
+        margin:0!important;
+        transform:none!important;
+    }
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
