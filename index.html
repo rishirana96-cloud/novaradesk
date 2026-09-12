@@ -5992,6 +5992,27 @@ samp,
 }
 </style>
 
+
+<style id="novaradesk-ai-assist-tag-popover-tweak-v1">
+/* NOVARADESK_AI_ASSIST_TAG_POPOVER_TWEAK_V1 */
+.agent-assist-dock-toggle strong {
+    font-size: calc(1em + 1px)!important;
+}
+/* Tag creation popover: fully opaque/solid in both themes. */
+.ticket-tag-popover {
+    background: var(--bg-card)!important;
+    backdrop-filter: none!important;
+    -webkit-backdrop-filter: none!important;
+    opacity:1!important;
+}
+html[data-theme="light"] .ticket-tag-popover {
+    background:#ffffff!important;
+}
+html[data-theme="dark"] .ticket-tag-popover {
+    background:#111713!important;
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
