@@ -7445,26 +7445,35 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
         </div>
         <section id="ticketFilterPanel" class="ticket-filter-panel" hidden aria-label="Ticket filters">
             <div class="ticket-filter-panel-head">
-                <div><span class="report-eyebrow">Refine queue</span><h2>Filter tickets</h2><p>Combine fields, then save the result as a reusable view.</p></div>
-                <button id="ticketClearFilters" class="report-text-btn" type="button">Clear all</button>
+                <div><h2>Filters</h2><p>Narrow the queue. Results update instantly.</p></div>
+                <div class="ticket-filter-head-actions">
+                    <button id="ticketClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
+                    <button id="ticketFilterClose" class="ticket-filter-close" type="button" aria-label="Close filters">×</button>
+                </div>
             </div>
-            <div class="ticket-filter-grid">
+            <div class="ticket-filter-core">
                 <label><span>Status</span><select id="ticketFilterStatus"><option value="">All statuses</option><option value="open">Open</option><option value="pending">Pending Revert</option><option value="progress">In Progress</option><option value="resolved">Resolved</option><option value="reopened">Reopened</option></select></label>
                 <label><span>Priority</span><select id="ticketFilterPriority"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></label>
                 <label><span>Assigned agent</span><select id="ticketFilterAgent"><option value="">All agents</option></select></label>
+                <fieldset class="ticket-filter-date-group"><legend>Created date</legend><div><label><span>From</span><input id="ticketFilterCreatedFrom" type="date" aria-label="Created from"></label><label><span>To</span><input id="ticketFilterCreatedTo" type="date" aria-label="Created to"></label></div></fieldset>
+            </div>
+            <div id="ticketActiveFilters" class="ticket-active-filters" aria-live="polite"></div>
+            <div id="ticketAdvancedFilters" class="ticket-filter-grid ticket-filter-advanced" hidden>
                 <label><span>Intent</span><input id="ticketFilterIntent" type="search" placeholder="e.g. refund"></label>
                 <label><span>Sentiment</span><select id="ticketFilterSentiment"><option value="">All sentiments</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select></label>
                 <label><span>Ticket number</span><input id="ticketFilterNumber" type="search" placeholder="e.g. NX-0042"></label>
                 <label><span>Customer name</span><input id="ticketFilterCustomer" type="search" placeholder="Name contains…"></label>
                 <label><span>Phone number</span><input id="ticketFilterPhone" type="search" placeholder="Phone contains…"></label>
-                <label><span>Created from</span><input id="ticketFilterCreatedFrom" type="date"></label>
-                <label><span>Created to</span><input id="ticketFilterCreatedTo" type="date"></label>
                 <label><span>Escalation reason</span><input id="ticketFilterEscalation" type="search" placeholder="Reason contains…"></label>
                 <label><span>Customer query</span><input id="ticketFilterQuery" type="search" placeholder="Query contains…"></label>
             </div>
-            <div class="ticket-save-view-row">
+            <div class="ticket-filter-footer">
+                <button id="ticketMoreFilters" class="ticket-more-filters" type="button" aria-expanded="false" aria-controls="ticketAdvancedFilters"><span>＋</span> More filters</button>
+                <button id="ticketSaveViewReveal" class="ticket-save-view-reveal" type="button" aria-expanded="false" aria-controls="ticketSaveViewRow">Save as view</button>
+            </div>
+            <div id="ticketSaveViewRow" class="ticket-save-view-row" hidden>
                 <label><span>Custom view name</span><input id="ticketViewName" type="text" maxlength="60" placeholder="e.g. High-priority refunds"></label>
-                <button id="ticketSaveView" class="report-primary-btn" type="button">Save custom view</button>
+                <button id="ticketSaveView" class="report-primary-btn" type="button">Save view</button>
                 <span id="ticketViewMessage" role="status"></span>
             </div>
         </section>
@@ -9490,6 +9499,7 @@ const activeFilterCount = Object.values(filters).filter(Boolean).length;
 const count = document.getElementById("ticketFilterCount");
 count.textContent = activeFilterCount;
 count.hidden = !activeFilterCount;
+window.syncTicketFilterPanelUi?.(filters);
 const ticketTableSubtitle = document.getElementById("ticketTableSubtitle");
 if (ticketTableSubtitle) ticketTableSubtitle.textContent = `${filtered.length.toLocaleString("en-IN")} of ${ticketWorkspaceState.source.length.toLocaleString("en-IN")} tickets · selected view and filters`;
 const total = filtered.length;
@@ -15721,6 +15731,153 @@ document.getElementById("customizeLayoutBtn")?.addEventListener("click",event=>{
     }
 }
 </style>
+
+<style id="novaradesk-ticket-filter-redesign-v1">
+#panel-tickets .ticket-filter-panel{
+    margin:12px 0 18px;
+    padding:16px 18px 14px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--bg-card);
+    box-shadow:0 12px 34px rgba(22,47,34,.06);
+}
+#panel-tickets .ticket-filter-panel-head{
+    align-items:center;
+    margin-bottom:14px;
+}
+#panel-tickets .ticket-filter-panel-head h2{
+    margin:0;
+    font-size:15px;
+    letter-spacing:-.02em;
+}
+#panel-tickets .ticket-filter-panel-head p{
+    margin-top:3px;
+    font-size:9px;
+}
+.ticket-filter-head-actions{display:flex;align-items:center;gap:7px}
+.ticket-filter-clear,.ticket-filter-close,.ticket-more-filters,.ticket-save-view-reveal{
+    border:0;
+    background:transparent;
+    color:var(--text-muted);
+    font:inherit;
+    font-size:9px;
+    font-weight:720;
+    cursor:pointer;
+}
+.ticket-filter-clear{padding:7px 8px;border-radius:7px}
+.ticket-filter-clear:hover{background:var(--surface);color:var(--text)}
+.ticket-filter-close{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;font-size:18px;font-weight:400}
+.ticket-filter-close:hover{background:var(--surface);color:var(--text)}
+.ticket-filter-core{
+    display:grid;
+    grid-template-columns:minmax(150px,.8fr) minmax(150px,.8fr) minmax(190px,1fr) minmax(300px,1.35fr);
+    gap:10px;
+    align-items:end;
+}
+.ticket-filter-core>label,.ticket-filter-advanced>label,.ticket-filter-date-group label{
+    display:grid;
+    gap:5px;
+    min-width:0;
+    color:var(--text-muted);
+    font-size:8px;
+    font-weight:750;
+    letter-spacing:.055em;
+    text-transform:uppercase;
+}
+.ticket-filter-core input,.ticket-filter-core select,.ticket-filter-advanced input,.ticket-filter-advanced select{
+    width:100%;
+    min-width:0;
+    min-height:38px;
+    padding:7px 10px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:var(--surface);
+    color:var(--text-secondary);
+    font:inherit;
+    font-size:10px;
+    outline:0;
+}
+.ticket-filter-core .unified-select-trigger,.ticket-filter-advanced .unified-select-trigger{
+    min-width:0;
+    min-height:38px;
+    background:var(--surface);
+}
+.ticket-filter-date-group{min-width:0;margin:0;padding:0;border:0}
+.ticket-filter-date-group legend{margin-bottom:5px;color:var(--text-muted);font-size:8px;font-weight:750;letter-spacing:.055em;text-transform:uppercase}
+.ticket-filter-date-group>div{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ticket-filter-date-group label{position:relative}
+.ticket-filter-date-group label span{position:absolute;z-index:1;top:50%;left:10px;transform:translateY(-50%);font-size:7px;pointer-events:none}
+.ticket-filter-date-group input{padding-left:42px}
+.ticket-active-filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ticket-active-filters:empty{display:none}
+.ticket-filter-chip{display:inline-flex;align-items:center;gap:7px;min-height:27px;padding:4px 6px 4px 9px;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border));border-radius:999px;background:color-mix(in srgb,var(--accent) 6%,var(--bg-card));color:var(--text-secondary);font:inherit;font-size:8px;font-weight:680;cursor:pointer}
+.ticket-filter-chip span{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;color:var(--text-muted);font-size:12px;font-weight:500}
+.ticket-filter-chip:hover{border-color:color-mix(in srgb,var(--accent) 42%,var(--border));background:color-mix(in srgb,var(--accent) 10%,var(--bg-card))}
+.ticket-filter-advanced{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.ticket-filter-advanced[hidden]{display:none!important}
+.ticket-filter-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:11px;border-top:1px solid var(--border)}
+.ticket-more-filters,.ticket-save-view-reveal{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border-radius:8px;color:var(--text-secondary)}
+.ticket-more-filters:hover,.ticket-save-view-reveal:hover{background:var(--surface);color:var(--text)}
+.ticket-more-filters span{font-size:13px;font-weight:450}
+.ticket-save-view-reveal{border:1px solid var(--border);background:var(--bg-card)}
+#panel-tickets .ticket-save-view-row{grid-template-columns:minmax(240px,1fr) auto minmax(120px,.5fr);margin-top:10px;padding-top:10px}
+#panel-tickets .ticket-save-view-row[hidden]{display:none!important}
+@media(max-width:1100px){.ticket-filter-core{grid-template-columns:repeat(2,minmax(0,1fr))}.ticket-filter-advanced{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){#panel-tickets .ticket-filter-panel{padding:14px}.ticket-filter-core,.ticket-filter-advanced{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.ticket-filter-core,.ticket-filter-advanced{grid-template-columns:1fr}.ticket-filter-date-group>div{grid-template-columns:1fr}.ticket-filter-footer{align-items:stretch;flex-direction:column;gap:7px}.ticket-filter-footer button{justify-content:center}}
+</style>
+
+<script id="novaradesk-ticket-filter-redesign-v1-script">
+(()=>{
+const panel=document.getElementById("ticketFilterPanel");
+const advanced=document.getElementById("ticketAdvancedFilters");
+const more=document.getElementById("ticketMoreFilters");
+const saveRow=document.getElementById("ticketSaveViewRow");
+const saveReveal=document.getElementById("ticketSaveViewReveal");
+const chips=document.getElementById("ticketActiveFilters");
+const labels={status:"Status",priority:"Priority",agent:"Agent",intent:"Intent",sentiment:"Sentiment",number:"Ticket",customer:"Customer",phone:"Phone",createdFrom:"From",createdTo:"To",escalation:"Reason",query:"Query"};
+const advancedKeys=new Set(["intent","sentiment","number","customer","phone","escalation","query"]);
+function displayValue(key,value){
+    const element=document.getElementById(TICKET_FILTER_IDS[key]);
+    if(element?.tagName==="SELECT")return element.selectedOptions?.[0]?.textContent?.trim()||value;
+    if(key==="createdFrom"||key==="createdTo"){
+        const date=new Date(`${value}T00:00:00`);
+        return isNaN(date)?value:date.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+    }
+    return value;
+}
+function setAdvanced(open){
+    advanced.hidden=!open;
+    more.setAttribute("aria-expanded",String(open));
+    more.innerHTML=open?'<span>−</span> Fewer filters':'<span>＋</span> More filters';
+}
+window.syncTicketFilterPanelUi=(filters=ticketFilterValues())=>{
+    chips.innerHTML=Object.entries(filters).filter(([,value])=>value).map(([key,value])=>`<button class="ticket-filter-chip" type="button" data-ticket-filter-remove="${key}" aria-label="Remove ${labels[key]} filter">${labels[key]}: ${escapeHtml(displayValue(key,value))}<span aria-hidden="true">×</span></button>`).join("");
+    if(Object.entries(filters).some(([key,value])=>value&&advancedKeys.has(key)))setAdvanced(true);
+};
+more?.addEventListener("click",()=>setAdvanced(advanced.hidden));
+saveReveal?.addEventListener("click",()=>{
+    const open=saveRow.hidden;
+    saveRow.hidden=!open;
+    saveReveal.setAttribute("aria-expanded",String(open));
+    saveReveal.textContent=open?"Cancel":"Save as view";
+    if(open)setTimeout(()=>document.getElementById("ticketViewName")?.focus(),0);
+});
+document.getElementById("ticketFilterClose")?.addEventListener("click",()=>{
+    panel.hidden=true;
+    document.getElementById("ticketFilterToggle")?.setAttribute("aria-expanded","false");
+});
+chips?.addEventListener("click",event=>{
+    const button=event.target.closest("[data-ticket-filter-remove]");
+    if(!button)return;
+    const element=document.getElementById(TICKET_FILTER_IDS[button.dataset.ticketFilterRemove]);
+    if(!element)return;
+    element.value="";
+    element.dispatchEvent(new Event(element.tagName==="SELECT"?"change":"input",{bubbles:true}));
+});
+window.syncTicketFilterPanelUi();
+})();
+</script>
 
 </body>
 </html>
