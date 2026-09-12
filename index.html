@@ -5122,6 +5122,56 @@ html[data-theme="light"] .kpi-sub,
 html[data-theme="light"] .ticket-kpi-sub,
 html[data-theme="light"] .kpi-sub span,
 html[data-theme="light"] .ticket-kpi-sub span{color:rgba(23,35,28,.62);}
+/* Unified header utility island. */
+.topbar-actions{
+    min-height:52px;
+    gap:0;
+    padding:3px;
+    border:1px solid var(--border);
+    border-radius:17px;
+    background:color-mix(in srgb,var(--bg-card) 82%,transparent);
+    box-shadow:0 8px 24px rgba(0,0,0,.075),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.topbar-actions .topbar-updated,
+.topbar-actions .refresh-btn,
+.topbar-actions .quick-settings-button{
+    min-height:44px;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+    transform:none;
+}
+.topbar-actions .topbar-updated{
+    padding:0 15px;
+    border-radius:13px 0 0 13px;
+    color:var(--text-muted);
+}
+.topbar-actions .refresh-btn{
+    padding:0 15px;
+    border-left:1px solid var(--border);
+    border-radius:0;
+}
+.topbar-actions .refresh-btn:hover{background:var(--surface-hover);color:var(--text);}
+.topbar-actions .quick-settings-wrap{padding-left:3px;border-left:1px solid var(--border);}
+.topbar-actions .quick-settings-button{
+    width:44px;
+    padding:0;
+    border-radius:13px;
+}
+.topbar-actions .quick-settings-button:hover,
+.topbar-actions .quick-settings-button[aria-expanded="true"]{background:var(--surface-hover);color:var(--text);}
+.topbar-actions .quick-settings-button svg{width:17px;height:17px;stroke-width:1.8;}
+html[data-theme="light"] .topbar-actions{
+    background:rgba(255,255,255,.70);
+    box-shadow:0 8px 24px rgba(30,51,40,.06),inset 0 1px 0 #fff;
+}
+html[data-theme="light"] .topbar-actions .topbar-updated,
+html[data-theme="light"] .topbar-actions .refresh-btn,
+html[data-theme="light"] .topbar-actions .quick-settings-button{background:transparent;}
+html[data-theme="light"] .topbar-actions .refresh-btn:hover,
+html[data-theme="light"] .topbar-actions .quick-settings-button:hover,
+html[data-theme="light"] .topbar-actions .quick-settings-button[aria-expanded="true"]{background:#f1f4f2;}
+@media(max-width:720px){.topbar-actions{width:100%;display:flex;grid-template-columns:none}.topbar-actions .topbar-updated{min-width:0;flex:1}.topbar-actions .refresh-btn{width:44px;padding:0;justify-content:center}.topbar-actions .refresh-btn span{display:none}}
 /* Retain the card's resting depth and decorative haze, but remove the hover shadow. */
 .kpi-card{box-shadow:var(--shadow-soft);}
 .kpi-card:hover{box-shadow:none;}
@@ -6027,7 +6077,7 @@ samp,
             </button>
             <div class="quick-settings-wrap">
                 <button id="quickSettingsBtn" class="quick-settings-button" type="button" aria-label="Open Quick Settings" title="Quick Settings" aria-expanded="false" aria-controls="quickSettingsPanel">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.15.38.36.72.6 1 .3.28.69.42 1.1.4h.09v4h-.09a1.7 1.7 0 0 0-1.7.6Z"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h8M16 7h4M12 4v6M4 17h4M12 17h8M8 14v6"/><circle cx="12" cy="7" r="1.6"/><circle cx="8" cy="17" r="1.6"/></svg>
                 </button>
                 <div id="quickSettingsPanel" class="quick-settings-panel" role="dialog" aria-label="Quick settings">
                     <div class="quick-settings-title">Display &amp; refresh</div>
