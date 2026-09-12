@@ -5409,7 +5409,7 @@ rel="stylesheet"
 href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap"
 />
 <style id="novaradesk-instrument-sans-headings">
-/* Sentence-case interface headings: normal tracking, limited to the requested areas. */
+/* Instrument Sans hierarchy for the requested interface headings. */
 .kpi-label,
 .ticket-kpi-label,
 .chart-title,
@@ -5435,6 +5435,68 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
     font-family: "Instrument Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     text-transform: none;
     letter-spacing: 0;
+}
+
+/* Compact labels must stay readable without competing with their values. */
+.kpi-label,
+.ticket-kpi-label,
+#panel-chatbot .admin-kpi > span,
+#panel-knowledge .admin-kpi > span {
+    font-size: calc(12px * var(--ui-text-scale));
+    font-weight: 600;
+}
+
+/* Report and analytics card headings. */
+.chart-title,
+.panel-title,
+.table-title {
+    font-size: calc(15px * var(--ui-text-scale));
+    font-weight: 600;
+}
+#panel-reports .report-section-heading h2,
+#panel-reports .report-preview-head h2 {
+    font-size: calc(22px * var(--ui-text-scale));
+    font-weight: 600;
+}
+#panel-reports .report-eyebrow,
+#panel-reports .report-field > span,
+#panel-reports .report-summary-strip span {
+    font-size: calc(11px * var(--ui-text-scale));
+    font-weight: 600;
+}
+
+/* Table labels need to remain legible at normal dashboard zoom. */
+.conversation-table th,
+#panel-reports .report-preview-table th,
+#panel-reports .pivot-table th,
+#panel-reports .raw-sql-result-table th,
+.dashboard-widget-table th {
+    font-size: calc(10px * var(--ui-text-scale));
+    font-weight: 600;
+}
+
+/* Chatbot tester hierarchy: a compact kicker and a controlled title. */
+#panel-chatbot .live-chatbot-kicker {
+    font-size: calc(12px * var(--ui-text-scale));
+    font-weight: 600;
+}
+#panel-chatbot .live-chatbot-head h3 {
+    font-size: calc(24px * var(--ui-text-scale));
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* Knowledge Base section titles. */
+#panel-knowledge .admin-card h3,
+#panel-knowledge .kb-item h3 {
+    font-size: calc(16px * var(--ui-text-scale));
+    font-weight: 600;
+}
+
+/* Global Report Type control. */
+.report-mode-toolbar > span {
+    font-size: calc(11px * var(--ui-text-scale)) !important;
+    font-weight: 600 !important;
 }
 </style>
 </head>
@@ -5775,7 +5837,7 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
             </button>
         </div>
         <div id="reportModeToolbar" class="report-mode-toolbar">
-            <span>Report type</span>
+            <span>Report Type</span>
             <select id="reportMode" aria-label="Report type"><option value="standard">Chart or summary table</option><option value="kpi">KPI Cards</option><option value="pivot">Pivot table</option><option value="sql">Create Custom Data-Set</option></select>
             <button id="reportWorkspaceJump" class="report-workspace-jump" type="button" title="Go to Build a report" aria-label="Go to Build a report">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
