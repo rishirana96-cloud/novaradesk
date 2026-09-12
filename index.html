@@ -6248,6 +6248,17 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 </style>
 
+
+<style id="novaradesk-session-copy-hover-v1">
+/* NOVARADESK_SESSION_COPY_HOVER_V1 */
+.session-id-wrap{display:inline-flex;align-items:center;gap:7px;max-width:100%}
+.session-copy-btn{width:24px;height:24px;display:grid;place-items:center;padding:0;border:0;border-radius:6px;background:transparent;color:var(--text-muted);opacity:0;visibility:hidden;transform:translateX(-3px);cursor:pointer;transition:opacity .14s ease,transform .14s ease,background .14s ease,color .14s ease}
+.session-id-wrap:hover .session-copy-btn,.session-copy-btn:focus-visible{opacity:1;visibility:visible;transform:none}
+.session-copy-btn:hover{background:var(--surface-hover);color:var(--text)}
+.session-copy-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.session-copy-btn.copied{opacity:1;visibility:visible;color:var(--accent-light)}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -10512,17 +10523,21 @@ tbody.innerHTML =
                 return `
                     <tr data-session="${escapeHtml(conversation.session_id || "")}" data-conversation-kind="${containerId === "humanConversationsBody" ? "human" : "ai"}" tabindex="0" role="button" aria-label="Open complete conversation ${escapeHtml(conversation.session_id || "")}">
                         <td>
-                            <span
-                                class="session-id"
-                                title="${escapeHtml(conversation.session_id || "")}"
-                            >
-                                ${
-                                    conversation.session_id
-                                        ? escapeHtml(
-                                            displayId
-                                        )
-                                        : "—"
-                                }
+                            <span class="session-id-wrap">
+                                <span
+                                    class="session-id"
+                                    title="${escapeHtml(conversation.session_id || "")}"
+                                >
+                                    ${
+                                        conversation.session_id
+                                            ? escapeHtml(displayId)
+                                            : "—"
+                                    }
+                                </span>
+                                ${conversation.session_id ? `
+                                    <button class="session-copy-btn" type="button" data-copy-session="${escapeHtml(conversation.session_id)}" aria-label="Copy session ID" title="Copy session ID">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="2"></rect><path d="M15 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"></path></svg>
+                                    </button>` : ""}
                             </span>
                         </td>
                         <td>
@@ -15406,6 +15421,24 @@ input.addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(search,
 input.addEventListener("keydown",e=>{if(e.key==="Escape"){e.preventDefault();input.value="";wrap.classList.remove("has-results");results.innerHTML="";items=[];input.blur()}else if(e.key==="Enter"&&items[0]){e.preventDefault();items[0].action();close()}});
 document.addEventListener("pointerdown",e=>{if(!wrap.contains(e.target)){wrap.classList.remove("has-results");results.innerHTML="";items=[];}});
 })();
+</script>
+
+
+<script id="novaradesk-session-copy-hover-v1-script">
+document.addEventListener("click",async event=>{
+    const button=event.target.closest(".session-copy-btn");
+    if(!button)return;
+    event.preventDefault();
+    event.stopPropagation();
+    const value=button.dataset.copySession||"";
+    if(!value)return;
+    try{
+        await navigator.clipboard.writeText(value);
+        button.classList.add("copied");
+        button.title="Copied";
+        setTimeout(()=>{button.classList.remove("copied");button.title="Copy session ID"},900);
+    }catch(_){}
+});
 </script>
 
 </body>
