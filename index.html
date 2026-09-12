@@ -5100,7 +5100,7 @@ html[data-theme="light"] #periodSelector button.active{color:var(--accent-dark);
 .kpi-sub,.ticket-kpi-sub,
 .kpi-sub span,.ticket-kpi-sub span{
     color:color-mix(in srgb,var(--text) 60%,transparent);
-    font-family:"Instrument Sans","Inter",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-family:"Geist","Inter",-apple-system,BlinkMacSystemFont,sans-serif;
     font-size:calc(11px * var(--ui-text-scale));
     font-weight:500;
     letter-spacing:0;
@@ -5607,19 +5607,19 @@ html[data-theme="dark"] .ticket-sla-state.overdue{color:#df8d82}
 }
 </style>
 
-<!-- Instrument Sans for compact interface headings -->
+<!-- Geist for the complete NovaraDesk interface -->
 <link
 rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap"
+href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap"
 />
-<style id="novaradesk-instrument-sans-headings">
+<style id="novaradesk-geist-type-system">
 /* One product-wide type system. Technical identifiers and code remain monospace. */
 body,
 button,
 input,
 select,
 textarea {
-    font-family:"Instrument Sans","Inter",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-family:"Geist","Inter",-apple-system,BlinkMacSystemFont,sans-serif;
 }
 code,
 pre,
@@ -5630,7 +5630,7 @@ samp,
 .raw-sql-result-table td {
     font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
 }
-/* Instrument Sans hierarchy for interface headings. */
+/* Geist hierarchy for interface headings. */
 .page-title h1,
 .kpi-label,
 .ticket-kpi-label,
@@ -5654,7 +5654,7 @@ samp,
 #panel-knowledge .admin-card h3,
 #panel-knowledge .kb-item h3,
 .report-mode-toolbar > span {
-    font-family: "Instrument Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Geist", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     text-transform: none;
     letter-spacing: 0;
 }
@@ -13284,21 +13284,21 @@ const fontSizes = { small: 10, default: 11, large: 12, xlarge: 14 };
 const chartText = isLight ? "rgba(23,35,28,.70)" : "rgba(245,247,246,.58)";
 const chartGrid = isLight ? "rgba(35,67,50,.10)" : "rgba(255,255,255,.07)";
 Chart.defaults.color = chartText;
-Chart.defaults.font.family = '"Instrument Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+Chart.defaults.font.family = '"Geist", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
 Chart.defaults.font.size = fontSizes[size] || fontSizes.default;
 Object.values(Chart.instances || {}).forEach(chart => {
     const options = chart.options || {};
     if (options.plugins?.legend?.labels) {
         options.plugins.legend.labels.color = chartText;
         options.plugins.legend.labels.font ||= {};
-        options.plugins.legend.labels.font.family = '"Instrument Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+        options.plugins.legend.labels.font.family = '"Geist", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
         options.plugins.legend.labels.font.size = fontSizes[size] || fontSizes.default;
     }
     Object.values(options.scales || {}).forEach(scale => {
         if (scale.ticks) {
             scale.ticks.color = chartText;
             scale.ticks.font ||= {};
-            scale.ticks.font.family = '"Instrument Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+            scale.ticks.font.family = '"Geist", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
             scale.ticks.font.size = fontSizes[size] || fontSizes.default;
         }
         if (scale.grid) scale.grid.color = chartGrid;
