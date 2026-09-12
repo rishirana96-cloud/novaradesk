@@ -5014,9 +5014,9 @@ html[data-theme="light"] #tabSwitcher .tab.active{
 }
 #tabSwitcher .tab.active:hover{color:var(--text);background:color-mix(in srgb,var(--surface-light) 66%,transparent)}
 html[data-theme="light"] #tabSwitcher .tab.active:hover{background:rgba(255,255,255,.60)}
-/* KPI cards stay crisp: no exterior shadow or decorative glow. */
-.kpi-card,.kpi-card:hover{box-shadow:none;}
-.kpi-card::after{background:none;}
+/* Retain the card's resting depth and decorative haze, but remove the hover shadow. */
+.kpi-card{box-shadow:var(--shadow-soft);}
+.kpi-card:hover{box-shadow:none;}
 /* Preserve legibility on the primary dashboard action */
 #dashboardAddReportsBtn,
 #dashboardAddReportsBtn svg{
