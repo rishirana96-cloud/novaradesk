@@ -6331,16 +6331,18 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     align-items:flex-start;
     justify-content:center;
     min-width:0!important;
-    min-height:100px!important;
+    min-height:84px!important;
     margin:0!important;
     padding:15px 20px!important;
     border:0!important;
     border-right:1px solid var(--border)!important;
     border-radius:0!important;
-    background:transparent!important;
+    background:color-mix(in srgb,var(--metric-colour,var(--accent)) 2.5%,transparent)!important;
     box-shadow:none!important;
     transform:none!important;
     overflow:visible!important;
+    cursor:pointer;
+    transition:background .16s ease,box-shadow .16s ease!important;
 }
 .ticket-compact-metrics .ticket-kpi-card:last-child{
     border-right:0!important;
@@ -6362,7 +6364,7 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 .ticket-compact-metrics .ticket-kpi-value{
     margin:7px 0 5px!important;
     color:var(--text)!important;
-    font-size:calc(26px * var(--ui-text-scale))!important;
+    font-size:calc(24px * var(--ui-text-scale))!important;
     font-weight:760!important;
     line-height:1!important;
     letter-spacing:-.9px!important;
@@ -6371,9 +6373,26 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 .ticket-compact-metrics .ticket-kpi-value.warning{color:var(--warning)!important}
 .ticket-compact-metrics .ticket-kpi-value.progress{color:var(--accent-dark)!important}
 .ticket-compact-metrics .ticket-kpi-value.resolved{color:var(--success)!important}
+.ticket-compact-metrics .ticket-kpi-card:nth-child(1){--metric-colour:var(--text-secondary)}
+.ticket-compact-metrics .ticket-kpi-card:nth-child(2){--metric-colour:var(--danger)}
+.ticket-compact-metrics .ticket-kpi-card:nth-child(3){--metric-colour:var(--accent)}
+.ticket-compact-metrics .ticket-kpi-card:nth-child(4){--metric-colour:var(--warning)}
+.ticket-compact-metrics .ticket-kpi-card:nth-child(5){--metric-colour:var(--success)}
+.ticket-compact-metrics .ticket-kpi-card:nth-child(6){--metric-colour:var(--text-secondary)}
+.ticket-compact-metrics .ticket-kpi-card:hover{
+    background:color-mix(in srgb,var(--metric-colour) 7%,transparent)!important;
+}
+.ticket-compact-metrics .ticket-kpi-card:focus-visible{
+    outline:2px solid color-mix(in srgb,var(--metric-colour) 60%,transparent)!important;
+    outline-offset:-3px;
+}
+.ticket-compact-metrics .ticket-kpi-card.active{
+    background:color-mix(in srgb,var(--metric-colour) 8%,transparent)!important;
+    box-shadow:inset 0 -3px var(--metric-colour)!important;
+}
 .ticket-compact-metrics .ticket-kpi-sub{
     margin:0!important;
-    color:var(--text-muted)!important;
+    color:color-mix(in srgb,var(--text) 56%,transparent)!important;
     font-size:calc(8px * var(--ui-text-scale))!important;
     font-weight:450!important;
     line-height:1.2!important;
@@ -7395,32 +7414,32 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
         <div class="table-card">
             <div class="table-header">
                 <div class="ticket-compact-metrics" aria-label="Ticket summary">
-                    <div class="ticket-kpi-card">
+                    <div class="ticket-kpi-card" data-ticket-kpi-view="all" role="button" tabindex="0" aria-pressed="true">
                         <div class="ticket-kpi-label">Total Tickets</div>
                         <div id="ticketTotal" class="ticket-kpi-value">—</div>
                         <div class="ticket-kpi-sub">Matching selected period</div>
                     </div>
-                    <div class="ticket-kpi-card">
+                    <div class="ticket-kpi-card" data-ticket-kpi-view="status:open" role="button" tabindex="0" aria-pressed="false">
                         <div class="ticket-kpi-label">Open</div>
                         <div id="ticketOpen" class="ticket-kpi-value danger">—</div>
                         <div class="ticket-kpi-sub">Awaiting agent action</div>
                     </div>
-                    <div class="ticket-kpi-card">
+                    <div class="ticket-kpi-card" data-ticket-kpi-view="status:progress" role="button" tabindex="0" aria-pressed="false">
                         <div class="ticket-kpi-label">In Progress</div>
                         <div id="ticketProgress" class="ticket-kpi-value progress">—</div>
                         <div class="ticket-kpi-sub">Being worked on</div>
                     </div>
-                    <div class="ticket-kpi-card">
+                    <div class="ticket-kpi-card" data-ticket-kpi-view="status:pending" role="button" tabindex="0" aria-pressed="false">
                         <div class="ticket-kpi-label">Pending Revert</div>
                         <div id="ticketPending" class="ticket-kpi-value warning">—</div>
                         <div class="ticket-kpi-sub">Waiting for response</div>
                     </div>
-                    <div class="ticket-kpi-card">
+                    <div class="ticket-kpi-card" data-ticket-kpi-view="status:resolved" role="button" tabindex="0" aria-pressed="false">
                         <div class="ticket-kpi-label">Resolved</div>
                         <div id="ticketResolved" class="ticket-kpi-value resolved">—</div>
                         <div class="ticket-kpi-sub">Completed tickets</div>
                     </div>
-                    <div class="ticket-kpi-card">
+                    <div class="ticket-kpi-card" data-ticket-kpi-view="status:resolved" role="button" tabindex="0" aria-pressed="false" aria-label="View resolved tickets used for average resolution">
                         <div class="ticket-kpi-label">Avg. Resolution</div>
                         <div id="ticketAvgResolution" class="ticket-kpi-value">—</div>
                         <div class="ticket-kpi-sub">Created to resolved</div>
@@ -9435,12 +9454,12 @@ const slaRisk = filtered.filter(ticket => ["warning","breached","danger"].includ
 const slaMet = resolved ? `${resolved}/${resolved}` : "0/0";
 const active = ticketWorkspaceState.activeView || "all";
 const configurations = [
-    ["Total Tickets",total,"Matching selected period"],
+    ["Total Tickets",total,"In selected period"],
     ["Open",open,"Awaiting agent action"],
     ["In Progress",progress,"Being worked on"],
     ["Pending Revert",pending,"Waiting for response"],
     ["Resolved",resolved,"Completed tickets"],
-    ["Avg. Resolution",avgResolution==="—"?"—":`${avgResolution}h`,"Created to resolved"]
+    ["Avg. Resolution",avgResolution==="—"?"—":`${avgResolution}h`,"Average handling time"]
 ];
 const cards = [...document.querySelectorAll("#panel-tickets .ticket-kpi-card")];
 configurations.forEach((item,index) => {
@@ -9451,6 +9470,11 @@ configurations.forEach((item,index) => {
     card.querySelector(".ticket-kpi-sub").textContent = item[2];
 });
 cards.slice(configurations.length).forEach(card => card.hidden = true);
+cards.forEach((card,index) => {
+    const selected = card.dataset.ticketKpiView === active && !(active === "status:resolved" && index === 5);
+    card.classList.toggle("active", selected);
+    card.setAttribute("aria-pressed", String(selected));
+});
 const tableTitle = document.querySelector("#panel-tickets .table-title");
 if (tableTitle) tableTitle.textContent = document.getElementById("ticketViewSelect")?.selectedOptions?.[0]?.textContent || "All Tickets";
 updateTicketsTable(filtered);
@@ -9551,6 +9575,23 @@ if (value === "needs_reply") {
 }
 ticketWorkspaceState.page = 1;
 refreshTicketWorkspace();
+});
+document.querySelector(".ticket-compact-metrics")?.addEventListener("click", event => {
+const card = event.target.closest("[data-ticket-kpi-view]");
+if (!card) return;
+const value = card.dataset.ticketKpiView;
+ticketWorkspaceState.activeView = value;
+applyTicketFilterValues(value === "all" ? {} : { status:value.slice(7) });
+const select = document.getElementById("ticketViewSelect");
+if (select && [...select.options].some(option => option.value === value)) select.value = value;
+ticketWorkspaceState.page = 1;
+refreshTicketWorkspace();
+document.querySelector("#panel-tickets .ticket-table")?.scrollIntoView({ behavior:"smooth", block:"nearest" });
+});
+document.querySelector(".ticket-compact-metrics")?.addEventListener("keydown", event => {
+if (!["Enter", " "].includes(event.key) || !event.target.matches("[data-ticket-kpi-view]")) return;
+event.preventDefault();
+event.target.click();
 });
 document.getElementById("ticketClearFilters")?.addEventListener("click", () => {
 applyTicketFilterValues({});
