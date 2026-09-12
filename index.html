@@ -2200,6 +2200,14 @@ html[data-text-size="xlarge"] { --ui-text-scale:1.25; }
 .conversation-table th,.report-preview-table th,.pivot-table th,.dashboard-widget-table th { font-size:calc(8px * var(--ui-text-scale)); }
 .conversation-table td,.report-preview-table td,.pivot-table td,.dashboard-widget-table td { font-size:calc(10px * var(--ui-text-scale)); }
 .ticket-badge,.ticket-id,.ticket-age,.ticket-assignee { font-size:calc(9px * var(--ui-text-scale)); }
+/* Use the compact Small-setting proportions as this table's default baseline. */
+:root { --conversation-table-text-scale:.90; }
+html[data-text-size="small"] { --conversation-table-text-scale:.90; }
+html[data-text-size="large"] { --conversation-table-text-scale:1.12; }
+html[data-text-size="xlarge"] { --conversation-table-text-scale:1.25; }
+.conversation-table th { font-size:calc(8px * var(--conversation-table-text-scale)); }
+.conversation-table td { font-size:calc(10px * var(--conversation-table-text-scale)); }
+.conversation-table .ticket-badge { font-size:calc(9px * var(--conversation-table-text-scale)); }
 .report-section-heading h2,.report-preview-head h2,.dashboard-picker-head h2 { font-size:calc(17px * var(--ui-text-scale)); }
 .report-section-heading p,.report-preview-head p,.dashboard-picker-head p { font-size:calc(10px * var(--ui-text-scale)); }
 .report-eyebrow,.report-field>span,.report-summary-strip span { font-size:calc(8px * var(--ui-text-scale)); }
