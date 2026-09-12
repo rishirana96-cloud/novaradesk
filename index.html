@@ -6337,7 +6337,7 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     border:0!important;
     border-right:1px solid var(--border)!important;
     border-radius:0!important;
-    background:color-mix(in srgb,var(--metric-colour,var(--accent)) 2.5%,transparent)!important;
+    background:var(--bg-card)!important;
     box-shadow:none!important;
     transform:none!important;
     overflow:visible!important;
@@ -6380,15 +6380,15 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 .ticket-compact-metrics .ticket-kpi-card:nth-child(5){--metric-colour:var(--success)}
 .ticket-compact-metrics .ticket-kpi-card:nth-child(6){--metric-colour:var(--text-secondary)}
 .ticket-compact-metrics .ticket-kpi-card:hover{
-    background:color-mix(in srgb,var(--metric-colour) 7%,transparent)!important;
+    background:color-mix(in srgb,var(--accent) 4%,var(--bg-card))!important;
 }
 .ticket-compact-metrics .ticket-kpi-card:focus-visible{
     outline:2px solid color-mix(in srgb,var(--metric-colour) 60%,transparent)!important;
     outline-offset:-3px;
 }
 .ticket-compact-metrics .ticket-kpi-card.active{
-    background:color-mix(in srgb,var(--metric-colour) 8%,transparent)!important;
-    box-shadow:inset 0 -3px var(--metric-colour)!important;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 8%,var(--bg-card)),color-mix(in srgb,var(--accent) 3%,var(--bg-card)))!important;
+    box-shadow:inset 0 3px var(--accent),inset 0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent)!important;
 }
 .ticket-compact-metrics .ticket-kpi-sub{
     margin:0!important;
