@@ -5483,6 +5483,23 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
     font-weight: 600;
 }
 
+/* Conversation list: clearer hierarchy at normal dashboard zoom. */
+.conversation-table th {
+    font-size: calc(11px * var(--ui-text-scale));
+}
+.conversation-table td {
+    color: var(--text);
+    font-size: calc(12px * var(--ui-text-scale));
+}
+.conversation-table .conversation-time,
+.conversation-table .session-id {
+    color: var(--text-muted);
+    font-size: calc(11px * var(--ui-text-scale));
+}
+.conversation-table .badge {
+    font-weight: 500;
+}
+
 /* Chatbot tester hierarchy: a compact kicker and a controlled title. */
 #panel-chatbot .live-chatbot-kicker {
     font-size: calc(12px * var(--ui-text-scale));
@@ -8436,7 +8453,7 @@ function formatTicketDate(value) {
 if (!value) return "—";
 const date = new Date(String(value).includes("T") ? value : `${String(value).replace(" ", "T")}Z`);
 if (isNaN(date.getTime())) return "—";
-return `${date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}<br><span style="color:var(--text-muted);font-size:10px;">${date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>`;
+return `${date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}<br><span class="conversation-time">${date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>`;
 }
 function formatTicketAge(createdAt, resolvedAt) {
 if (!createdAt) return "—";
@@ -9767,16 +9784,12 @@ tbody.innerHTML =
                         <td>
                             <span
                                 class="session-id"
+                                title="${escapeHtml(conversation.session_id || "")}"
                             >
                                 ${
                                     conversation.session_id
                                         ? escapeHtml(
-                                            conversation
-                                                .session_id
-                                                .substring(
-                                                    0,
-                                                    8
-                                                )
+                                            "…" + conversation.session_id.slice(-8)
                                         )
                                         : "—"
                                 }
