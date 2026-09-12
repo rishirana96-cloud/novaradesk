@@ -6307,6 +6307,104 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 </style>
 
+<style id="novaradesk-ticket-compact-metrics-v1">
+/* Keep operational counts visible without pushing the ticket queue below the fold. */
+#panel-tickets .table-header{
+    min-height:84px;
+    gap:28px;
+}
+.ticket-compact-metrics{
+    display:flex;
+    align-items:stretch;
+    margin-left:auto;
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+    background:color-mix(in srgb,var(--surface) 76%,transparent);
+}
+.ticket-compact-metrics .ticket-kpi-card,
+.ticket-compact-metrics .ticket-kpi-card[hidden]{
+    display:grid!important;
+    grid-template-columns:auto auto;
+    grid-template-rows:auto auto;
+    align-content:center;
+    column-gap:9px;
+    row-gap:2px;
+    min-width:142px!important;
+    min-height:56px!important;
+    margin:0!important;
+    padding:9px 15px!important;
+    border:0!important;
+    border-right:1px solid var(--border)!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    transform:none!important;
+    overflow:visible!important;
+}
+.ticket-compact-metrics .ticket-kpi-card:last-child{
+    border-right:0!important;
+}
+.ticket-compact-metrics .ticket-kpi-card::before,
+.ticket-compact-metrics .ticket-kpi-card::after{
+    display:none!important;
+    content:none!important;
+}
+.ticket-compact-metrics .ticket-kpi-label{
+    grid-column:1;
+    grid-row:1;
+    align-self:end;
+    color:var(--text-secondary)!important;
+    font-size:calc(9px * var(--ui-text-scale))!important;
+    font-weight:700!important;
+    line-height:1.2!important;
+    letter-spacing:0!important;
+    text-transform:none!important;
+    white-space:nowrap;
+}
+.ticket-compact-metrics .ticket-kpi-value{
+    grid-column:2;
+    grid-row:1 / span 2;
+    align-self:center;
+    justify-self:end;
+    margin:0!important;
+    color:var(--text)!important;
+    font-size:calc(24px * var(--ui-text-scale))!important;
+    font-weight:760!important;
+    line-height:1!important;
+    letter-spacing:-.9px!important;
+}
+.ticket-compact-metrics .ticket-kpi-value.danger{color:var(--danger)!important}
+.ticket-compact-metrics .ticket-kpi-value.warning{color:var(--warning)!important}
+.ticket-compact-metrics .ticket-kpi-sub{
+    grid-column:1;
+    grid-row:2;
+    margin:0!important;
+    color:var(--text-muted)!important;
+    font-size:calc(8px * var(--ui-text-scale))!important;
+    font-weight:450!important;
+    line-height:1.2!important;
+    white-space:nowrap;
+}
+.layout-editing .layout-card{
+    resize:none!important;
+}
+.layout-editing .layout-card::after{
+    content:"Drag to re-arrange"!important;
+}
+@media(max-width:1100px){
+    #panel-tickets .table-header{align-items:flex-start;flex-direction:column;gap:14px}
+    .ticket-compact-metrics{width:100%;margin-left:0}
+    .ticket-compact-metrics .ticket-kpi-card{flex:1;min-width:0!important}
+}
+@media(max-width:680px){
+    .ticket-compact-metrics{display:grid;grid-template-columns:1fr 1fr}
+    .ticket-compact-metrics .ticket-kpi-card{border-bottom:1px solid var(--border)!important}
+    .ticket-compact-metrics .ticket-kpi-card:nth-child(2){border-right:0!important}
+    .ticket-compact-metrics .ticket-kpi-card:last-child{grid-column:1/-1;border-bottom:0!important}
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -6660,14 +6758,14 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
         </div>
         <div class="toolbar-right">
             <div class="layout-controls">
-                <button id="customizeLayoutBtn" class="layout-control-btn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg><span>Customize</span></button>
+                <button id="customizeLayoutBtn" class="layout-control-btn" type="button" aria-label="Re-arrange dashboard data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg><span>Re-arrange</span></button>
                 <button id="saveLayoutBtn" class="layout-control-btn primary" type="button" hidden>Save</button>
                 <button id="cancelLayoutBtn" class="layout-control-btn" type="button" hidden>Cancel</button>
                 <button id="resetLayoutBtn" class="layout-control-btn" type="button" hidden>Reset</button>
             </div>
             <button id="dashboardToolbarAddReport" class="report-secondary-btn dashboard-toolbar-add" type="button">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M9 17h6"/></svg>
-                Customize layout
+                Re-arrange
             </button>
             <div
                 class="period-selector"
@@ -6709,10 +6807,6 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
             </div>
         </div>
     </div>
-    <section id="analyticsLayoutSettings" class="analytics-layout-settings" aria-label="Analytics layout settings">
-        <div class="analytics-layout-head"><div><h2>Customize Analytics</h2><p>Arrange dashboard cards and choose the colour system used across analytics visualizations.</p></div><button id="closeAnalyticsLayoutSettings" class="ticket-close" type="button" aria-label="Close customization settings">✕</button></div>
-        <div class="analytics-layout-grid"><div class="analytics-layout-section"><span>Chart colour palette</span><div id="reportPalettePicker" class="palette-picker"></div><div id="reportCustomColors" class="custom-colors"><input type="color" value="#315f4a" aria-label="Custom colour 1"><input type="color" value="#78a68e" aria-label="Custom colour 2"><input type="color" value="#d6a85f" aria-label="Custom colour 3"><input type="color" value="#cf766c" aria-label="Custom colour 4"><input type="color" value="#668da3" aria-label="Custom colour 5"><input type="color" value="#8a79aa" aria-label="Custom colour 6"></div></div><div class="analytics-layout-section"><span>Dashboard arrangement</span><div class="analytics-layout-actions"><button id="arrangeAnalyticsCards" class="layout-control-btn primary" type="button">Arrange cards</button><button id="resetAnalyticsAppearance" class="layout-control-btn" type="button">Reset appearance</button></div></div></div>
-    </section>
     <!-- =================================================
          AI AGENT
     ================================================== -->
@@ -7304,43 +7398,28 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
                 <span id="ticketViewMessage" role="status"></span>
             </div>
         </section>
-        <div class="ticket-kpi-grid">
-            <div class="ticket-kpi-card">
-                <div class="ticket-kpi-label">Total Tickets</div>
-                <div id="ticketTotal" class="ticket-kpi-value">—</div>
-                <div class="ticket-kpi-sub">AI escalations in selected period</div>
-            </div>
-            <div class="ticket-kpi-card">
-                <div class="ticket-kpi-label">Open</div>
-                <div id="ticketOpen" class="ticket-kpi-value danger">—</div>
-                <div class="ticket-kpi-sub">Awaiting agent action</div>
-            </div>
-            <div class="ticket-kpi-card">
-                <div class="ticket-kpi-label">Pending Revert</div>
-                <div id="ticketPending" class="ticket-kpi-value warning">—</div>
-                <div class="ticket-kpi-sub">Waiting for customer / internal revert</div>
-            </div>
-            <div class="ticket-kpi-card">
-                <div class="ticket-kpi-label">Resolved</div>
-                <div id="ticketResolved" class="ticket-kpi-value accent">—</div>
-                <div class="ticket-kpi-sub">Closed by human agent</div>
-            </div>
-            <div class="ticket-kpi-card">
-                <div class="ticket-kpi-label">Avg. Resolution Time</div>
-                <div id="ticketAvgResolution" class="ticket-kpi-value">—</div>
-                <div class="ticket-kpi-sub">Hours</div>
-            </div>
-            <div class="ticket-kpi-card">
-                <div class="ticket-kpi-label">Reopened</div>
-                <div id="ticketReopened" class="ticket-kpi-value">—</div>
-                <div class="ticket-kpi-sub">Tickets reopened after resolution</div>
-            </div>
-        </div>
         <div class="table-card">
             <div class="table-header">
                 <div>
                     <div class="table-title">All Tickets</div>
                     <div id="ticketTableSubtitle" class="table-subtitle">All tickets matching the selected view and filters</div>
+                </div>
+                <div class="ticket-compact-metrics" aria-label="Ticket summary">
+                    <div class="ticket-kpi-card">
+                        <div class="ticket-kpi-label">Total Tickets</div>
+                        <div id="ticketTotal" class="ticket-kpi-value">—</div>
+                        <div class="ticket-kpi-sub">Matching selected period</div>
+                    </div>
+                    <div class="ticket-kpi-card">
+                        <div class="ticket-kpi-label">Open</div>
+                        <div id="ticketOpen" class="ticket-kpi-value danger">—</div>
+                        <div class="ticket-kpi-sub">Awaiting agent action</div>
+                    </div>
+                    <div class="ticket-kpi-card">
+                        <div class="ticket-kpi-label">Pending / In Progress</div>
+                        <div id="ticketPending" class="ticket-kpi-value warning">—</div>
+                        <div class="ticket-kpi-sub">Active support work</div>
+                    </div>
                 </div>
             </div>
             <div class="table-wrapper">
@@ -7535,7 +7614,6 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
          REPORT BUILDER
     ================================================== -->
     <section id="panel-reports" class="view-panel">
-        <div id="reportLayoutMenu" class="report-layout-menu"><button class="report-secondary-btn" data-report-layout="default" type="button">Builder + Preview</button><button class="report-secondary-btn" data-report-layout="preview-focus" type="button">Preview focused</button><button class="report-secondary-btn" data-report-layout="builder-focus" type="button">Builder focused</button><button class="report-secondary-btn" data-report-layout="stacked" type="button">Stacked</button><button class="report-secondary-btn" data-report-layout="preview-only" type="button">Preview only</button><button class="report-secondary-btn" data-report-layout="free" type="button">Drag & resize</button><button id="reportLayoutReset" class="report-secondary-btn" type="button">Reset layout</button></div>
         <section id="kpiCardStudio" class="kpi-card-studio" hidden aria-label="KPI card builder">
             <div class="kpi-studio-grid">
                 <aside class="kpi-config-pane">
@@ -13668,7 +13746,7 @@ if (!customDatePopover.contains(event.target) && event.target.id !== "customDate
 /* =====================================================
    CUSTOM DASHBOARD LAYOUT
 ====================================================== */
-const layoutCardSelector = ".kpi-card,.chart-card,.table-card,.ticket-kpi-card,.ticket-status-card,.report-builder-card,.report-preview-card,.saved-reports-card";
+const layoutCardSelector = ".kpi-card,.chart-card,.table-card,.ticket-status-card,.report-builder-card,.report-preview-card,.saved-reports-card";
 const defaultLayouts = {};
 let layoutEditSnapshot = null;
 let draggedLayoutCard = null;
@@ -14474,7 +14552,7 @@ document.addEventListener(
     document.body.classList.add("ui-ready");
     initializeUnifiedSelects(document);
     initializeDashboardControls();
-    document.querySelectorAll(".kpi-card[data-kpi-drilldown], .ticket-kpi-card").forEach(card => {
+    document.querySelectorAll(".kpi-card[data-kpi-drilldown]").forEach(card => {
         if (!card.hasAttribute("tabindex")) card.tabIndex = 0;
         if (!card.hasAttribute("role")) card.setAttribute("role", "button");
         card.setAttribute("aria-label", `${card.querySelector(".kpi-label,.ticket-kpi-label")?.textContent?.trim() || "Metric"}. Open underlying data`);
@@ -14496,7 +14574,7 @@ if (currentTab !== "dashboards") return;
 event.preventDefault();
 event.stopImmediatePropagation();
 setDashboardArrangeMode(!dashboardArrangeMode);
-dashboardLayoutButton.lastChild.textContent = dashboardArrangeMode ? " Done arranging" : " Customize layout";
+dashboardLayoutButton.lastChild.textContent = dashboardArrangeMode ? " Done arranging" : " Re-arrange";
 }, true);
 const reportName = document.getElementById("reportName");
 const savedControl = document.getElementById("sqlSavedDatasetControl");
@@ -15487,6 +15565,20 @@ document.addEventListener("click",async event=>{
         setTimeout(()=>{button.classList.remove("copied");button.title="Copy session ID"},900);
     }catch(_){}
 });
+</script>
+
+<script id="novaradesk-rearrange-only-v1">
+/* Re-arrange enters drag ordering directly; layout presets and resizing are intentionally removed. */
+document.getElementById("customizeLayoutBtn")?.addEventListener("click",event=>{
+    if(!["ai","human","dashboards","reports"].includes(currentTab))return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if(window.innerWidth<=768)return;
+    document.getElementById("reportLayoutMenu")?.classList.remove("open");
+    document.getElementById("analyticsLayoutSettings")?.classList.remove("open");
+    layoutEditSnapshot=capturePanelLayout(activeLayoutPanel());
+    setLayoutEditing(true);
+},true);
 </script>
 
 </body>
