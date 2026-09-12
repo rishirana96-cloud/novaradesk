@@ -6311,16 +6311,18 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 /* Keep operational counts visible without pushing the ticket queue below the fold. */
 #panel-tickets .table-header{
     min-height:84px;
-    gap:28px;
+    padding:0;
+    gap:0;
 }
 .ticket-compact-metrics{
     display:flex;
     align-items:stretch;
-    margin-left:auto;
-    border:1px solid var(--border);
-    border-radius:12px;
+    width:100%;
+    margin-left:0;
+    border:0;
+    border-radius:0;
     overflow:hidden;
-    background:color-mix(in srgb,var(--surface) 76%,transparent);
+    background:transparent;
 }
 .ticket-compact-metrics .ticket-kpi-card,
 .ticket-compact-metrics .ticket-kpi-card[hidden]{
@@ -6330,10 +6332,11 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     align-content:center;
     column-gap:9px;
     row-gap:2px;
-    min-width:142px!important;
-    min-height:56px!important;
+    flex:1 1 0;
+    min-width:0!important;
+    min-height:84px!important;
     margin:0!important;
-    padding:9px 15px!important;
+    padding:16px 28px!important;
     border:0!important;
     border-right:1px solid var(--border)!important;
     border-radius:0!important;
@@ -6393,8 +6396,7 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     content:"Drag to re-arrange"!important;
 }
 @media(max-width:1100px){
-    #panel-tickets .table-header{align-items:flex-start;flex-direction:column;gap:14px}
-    .ticket-compact-metrics{width:100%;margin-left:0}
+    #panel-tickets .table-header{gap:0}
     .ticket-compact-metrics .ticket-kpi-card{flex:1;min-width:0!important}
 }
 @media(max-width:680px){
@@ -7400,10 +7402,6 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
         </section>
         <div class="table-card">
             <div class="table-header">
-                <div>
-                    <div class="table-title">All Tickets</div>
-                    <div id="ticketTableSubtitle" class="table-subtitle">All tickets matching the selected view and filters</div>
-                </div>
                 <div class="ticket-compact-metrics" aria-label="Ticket summary">
                     <div class="ticket-kpi-card">
                         <div class="ticket-kpi-label">Total Tickets</div>
@@ -9409,7 +9407,8 @@ const activeFilterCount = Object.values(filters).filter(Boolean).length;
 const count = document.getElementById("ticketFilterCount");
 count.textContent = activeFilterCount;
 count.hidden = !activeFilterCount;
-document.getElementById("ticketTableSubtitle").textContent = `${filtered.length.toLocaleString("en-IN")} of ${ticketWorkspaceState.source.length.toLocaleString("en-IN")} tickets · selected view and filters`;
+const ticketTableSubtitle = document.getElementById("ticketTableSubtitle");
+if (ticketTableSubtitle) ticketTableSubtitle.textContent = `${filtered.length.toLocaleString("en-IN")} of ${ticketWorkspaceState.source.length.toLocaleString("en-IN")} tickets · selected view and filters`;
 const total = filtered.length;
 const open = filtered.filter(ticket => ticket.status === "open").length;
 const pending = filtered.filter(ticket => ticket.status === "pending").length;
