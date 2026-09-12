@@ -6072,6 +6072,12 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 @media(max-width:720px){.global-search-wrap.open .global-search-shell,.global-search-wrap:focus-within .global-search-shell{width:min(280px,72vw)}}
 </style>
 
+
+<style id="novaradesk-hide-legacy-updated-time-v1">
+/* NOVARADESK_HIDE_LEGACY_UPDATED_TIME_V1 */
+#lastUpdated{display:none!important;}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -8322,7 +8328,7 @@ if (workspaceToolbar) workspaceToolbar.style.display = ["chatbot","knowledge","t
 tabSwitcher.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tab === workspace));
 const layoutControls = document.querySelector(".layout-controls");
 if (layoutControls) layoutControls.style.display = ["ai","human","tickets","reports"].includes(workspace) ? "flex" : "none";
-document.getElementById("lastUpdated").style.display = ["chatbot","settings"].includes(workspace) ? "none" : "flex";
+document.getElementById("lastUpdated")?.style.setProperty("display","none","important");
 document.getElementById("refreshBtn").style.display = ["chatbot","settings"].includes(workspace) ? "none" : "inline-flex";
 const refreshLabel = document.getElementById("refreshBtnLabel");
 if (refreshLabel) refreshLabel.textContent = analyticsWorkspace ? "Sync Now" : "Refresh";
