@@ -4998,36 +4998,101 @@ html[data-theme="light"] #panel-chatbot .admin-tab.active{
 }
 </style>
 <style id="approved-interface-refinements">
-/* Colourless liquid-glass highlight for the selected analytics mode. */
+/* Compact enterprise workspace command bar. */
+.toolbar{
+    min-height:62px;
+    padding:7px 9px 7px 11px;
+    gap:16px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--bg-card);
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+    backdrop-filter:none;
+}
+#tabSwitcher{align-self:stretch;align-items:center;gap:4px;}
+#tabSwitcher .tab{
+    position:relative;
+    min-width:0;
+    min-height:44px;
+    padding:0 17px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:var(--text-muted);
+    font-size:calc(11px * var(--ui-text-scale));
+    font-weight:680;
+    box-shadow:none;
+}
+#tabSwitcher .tab:hover{background:var(--surface-hover);color:var(--text-secondary);}
 #tabSwitcher .tab.active,
 html[data-theme="light"] #tabSwitcher .tab.active{
-    position:relative;
-    isolation:isolate;
-    overflow:hidden;
+    overflow:visible;
     color:var(--text);
-    border:1px solid rgba(255,255,255,.20);
-    background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.045) 52%,rgba(255,255,255,.10));
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(255,255,255,.08),0 7px 20px rgba(0,0,0,.09);
-    backdrop-filter:blur(22px) saturate(135%);
-    -webkit-backdrop-filter:blur(22px) saturate(135%);
+    border:0;
+    background:color-mix(in srgb,var(--accent) 8%,transparent);
+    box-shadow:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
 }
-#tabSwitcher .tab.active::before{
+#tabSwitcher .tab.active::before{content:none;}
+#tabSwitcher .tab.active::after{
     content:"";
     position:absolute;
-    z-index:-1;
-    inset:-45% 25% 48% -18%;
-    border-radius:50%;
-    background:radial-gradient(ellipse at center,rgba(255,255,255,.42),rgba(255,255,255,.08) 52%,transparent 72%);
-    transform:rotate(-7deg);
-    pointer-events:none;
+    left:16px;
+    right:16px;
+    bottom:3px;
+    height:2px;
+    border-radius:999px;
+    background:var(--accent);
 }
-html[data-theme="light"] #tabSwitcher .tab.active{
-    border-color:rgba(23,35,28,.13);
-    background:linear-gradient(145deg,rgba(255,255,255,.78),rgba(255,255,255,.34) 52%,rgba(255,255,255,.58));
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.98),inset 0 -1px 0 rgba(255,255,255,.46),0 8px 22px rgba(23,35,28,.075);
+#tabSwitcher .tab.active:hover,
+html[data-theme="light"] #tabSwitcher .tab.active:hover{color:var(--text);background:color-mix(in srgb,var(--accent) 10%,transparent);}
+.toolbar-right{gap:8px;}
+.toolbar-right::before{content:"";width:1px;height:28px;margin:0 5px 0 1px;background:var(--border);}
+.layout-control-btn#customizeLayoutBtn{
+    min-height:38px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:0 12px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:transparent;
+    color:var(--text-secondary);
+    font-size:calc(9px * var(--ui-text-scale));
+    font-weight:680;
 }
-#tabSwitcher .tab.active:hover{color:var(--text);background:linear-gradient(145deg,rgba(255,255,255,.19),rgba(255,255,255,.065) 52%,rgba(255,255,255,.12))}
-html[data-theme="light"] #tabSwitcher .tab.active:hover{background:linear-gradient(145deg,rgba(255,255,255,.86),rgba(255,255,255,.42) 52%,rgba(255,255,255,.66))}
+.layout-control-btn#customizeLayoutBtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.layout-control-btn#customizeLayoutBtn:hover{border-color:var(--border-strong);background:var(--surface-hover);color:var(--text);}
+#periodSelector{
+    min-height:40px;
+    padding:3px;
+    gap:1px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    box-shadow:none;
+}
+#periodSelector button{
+    min-width:44px;
+    min-height:32px;
+    padding:0 10px;
+    border-radius:7px;
+    color:var(--text-muted);
+    font-size:calc(9px * var(--ui-text-scale));
+    font-weight:680;
+}
+#periodSelector button:hover{background:var(--surface-hover);color:var(--text-secondary);}
+#periodSelector button.active,
+html[data-theme="light"] #periodSelector button.active{
+    background:color-mix(in srgb,var(--accent) 10%,transparent);
+    color:var(--accent-light);
+    box-shadow:none;
+}
+html[data-theme="light"] .toolbar{background:#fff;box-shadow:0 7px 22px rgba(30,51,40,.055);}
+html[data-theme="light"] #periodSelector{background:#f7f9f8;}
+html[data-theme="light"] #periodSelector button.active{color:var(--accent-dark);}
+@media(max-width:900px){.toolbar{align-items:stretch;flex-direction:column}.toolbar-right::before{display:none}.toolbar-right{justify-content:space-between}}
 /* Retain the card's resting depth and decorative haze, but remove the hover shadow. */
 .kpi-card{box-shadow:var(--shadow-soft);}
 .kpi-card:hover{box-shadow:none;}
@@ -5994,7 +6059,7 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
         </div>
         <div class="toolbar-right">
             <div class="layout-controls">
-                <button id="customizeLayoutBtn" class="layout-control-btn" type="button">Customize layout</button>
+                <button id="customizeLayoutBtn" class="layout-control-btn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg><span>Customize</span></button>
                 <button id="saveLayoutBtn" class="layout-control-btn primary" type="button" hidden>Save</button>
                 <button id="cancelLayoutBtn" class="layout-control-btn" type="button" hidden>Cancel</button>
                 <button id="resetLayoutBtn" class="layout-control-btn" type="button" hidden>Reset</button>
