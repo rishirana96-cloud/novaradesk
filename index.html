@@ -6185,6 +6185,35 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 </style>
 
+
+<style id="novaradesk-global-search-vertical-center-v1">
+/* NOVARADESK_GLOBAL_SEARCH_VERTICAL_CENTER_V1 — vertically center search text and icon with the sibling controls. */
+@media (min-width:721px){
+    .global-search-shell{
+        align-items:center!important;
+    }
+    .global-search-shell input,
+    .global-search-wrap.open .global-search-shell input,
+    .global-search-wrap:focus-within .global-search-shell input{
+        align-self:center!important;
+        height:auto!important;
+        min-height:0!important;
+        padding-top:0!important;
+        padding-bottom:0!important;
+        line-height:20px!important;
+    }
+    .global-search-button{
+        align-self:stretch!important;
+        display:grid!important;
+        place-items:center!important;
+    }
+    .global-search-button svg{
+        display:block!important;
+        margin:0!important;
+    }
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
