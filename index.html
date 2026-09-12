@@ -12670,6 +12670,14 @@ host.innerHTML=tags.map((tag,index)=>`<span class="ticket-tag" style="--tag-colo
 host.querySelectorAll("[data-remove-ticket-tag]").forEach(button=>button.addEventListener("click",()=>{tags.splice(Number(button.dataset.removeTicketTag),1);localStorage.setItem(ticketTagsKey(ticketId),JSON.stringify(tags));renderTicketTags(ticketId)}));
 const popover=host.querySelector("#ticketTagPopover"),input=host.querySelector("#ticketTagInput"); let selectedColour="#477b62";
 host.querySelector("#ticketAddTag")?.addEventListener("click",event=>{event.stopPropagation();popover.classList.toggle("open");if(popover.classList.contains("open"))requestAnimationFrame(()=>input.focus())});
+popover?.addEventListener("click",event=>event.stopPropagation());
+const closeTagPopover=event=>{
+    if(!popover?.classList.contains("open"))return;
+    if(event.target.closest("#ticketTagPopover")||event.target.closest("#ticketAddTag"))return;
+    popover.classList.remove("open");
+};
+document.addEventListener("pointerdown",closeTagPopover,{once:true});
+if(popover?.classList.contains("open"))document.addEventListener("pointerdown",closeTagPopover,{once:true});
 host.querySelectorAll("[data-tag-colour]").forEach(button=>button.addEventListener("click",()=>{selectedColour=button.dataset.tagColour;host.querySelectorAll("[data-tag-colour]").forEach(item=>item.classList.toggle("active",item===button))}));
 const saveTag=()=>{const value=input.value.trim();if(!value)return input.focus();if(!tags.some(tag=>tag.text.toLowerCase()===value.toLowerCase()))tags.push({text:value.slice(0,30),color:selectedColour});localStorage.setItem(ticketTagsKey(ticketId),JSON.stringify(tags));renderTicketTags(ticketId)};
 host.querySelector("#ticketTagSubmit")?.addEventListener("click",saveTag); input?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();saveTag()}});
@@ -15122,5 +15130,16 @@ html[data-theme="light"] .ticket-call-field textarea{background:#f4f7f5}
 .ticket-context-section.identity{grid-template-columns:1fr!important}
 }
 </style>
+
+<script id="novaradesk-tag-outside-close-v1">
+/* NOVARADESK_TAG_OUTSIDE_CLOSE_V1 */
+document.addEventListener("pointerdown",event=>{
+    const openPopover=document.querySelector("#ticketTagPopover.open");
+    if(!openPopover)return;
+    if(openPopover.contains(event.target)||event.target.closest("#ticketAddTag"))return;
+    openPopover.classList.remove("open");
+},true);
+</script>
+
 </body>
 </html>
