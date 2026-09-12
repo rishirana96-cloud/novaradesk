@@ -5402,6 +5402,41 @@ html[data-theme="dark"] .ticket-sla-state.overdue{color:#df8d82}
     .ticket-sla-state,.ticket-channel-switch{width:100%!important}
 }
 </style>
+
+<!-- Instrument Sans for compact interface headings -->
+<link
+rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap"
+/>
+<style id="novaradesk-instrument-sans-headings">
+/* Sentence-case interface headings: normal tracking, limited to the requested areas. */
+.kpi-label,
+.ticket-kpi-label,
+.chart-title,
+.panel-title,
+.table-title,
+#panel-reports .report-eyebrow,
+#panel-reports .report-section-heading h2,
+#panel-reports .report-preview-head h2,
+#panel-reports .report-field > span,
+#panel-reports .report-summary-strip span,
+#panel-reports .report-preview-table th,
+#panel-reports .pivot-table th,
+#panel-reports .raw-sql-result-table th,
+.conversation-table th,
+.dashboard-widget-table th,
+#panel-chatbot .admin-kpi > span,
+#panel-chatbot .live-chatbot-kicker,
+#panel-chatbot .live-chatbot-head h3,
+#panel-knowledge .admin-kpi > span,
+#panel-knowledge .admin-card h3,
+#panel-knowledge .kb-item h3,
+.report-mode-toolbar > span {
+    font-family: "Instrument Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    text-transform: none;
+    letter-spacing: 0;
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
