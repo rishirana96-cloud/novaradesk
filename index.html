@@ -4998,15 +4998,25 @@ html[data-theme="light"] #panel-chatbot .admin-tab.active{
 }
 </style>
 <style id="approved-interface-refinements">
-/* Analytics mode selection mirrors the date selector's clear active state */
+/* Neutral glass highlight for the selected analytics mode. */
 #tabSwitcher .tab.active,
 html[data-theme="light"] #tabSwitcher .tab.active{
-    background:var(--accent);
-    color:#fff;
-    border-color:var(--accent);
-    box-shadow:0 7px 18px color-mix(in srgb,var(--accent) 28%,transparent);
+    color:var(--text);
+    border:1px solid color-mix(in srgb,var(--text) 13%,transparent);
+    background:color-mix(in srgb,var(--surface-light) 54%,transparent);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 6px 18px rgba(0,0,0,.08);
+    backdrop-filter:blur(16px) saturate(125%);
+    -webkit-backdrop-filter:blur(16px) saturate(125%);
 }
-#tabSwitcher .tab.active:hover{color:#fff;background:var(--accent-dark)}
+html[data-theme="light"] #tabSwitcher .tab.active{
+    background:rgba(255,255,255,.48);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 6px 18px rgba(23,35,28,.07);
+}
+#tabSwitcher .tab.active:hover{color:var(--text);background:color-mix(in srgb,var(--surface-light) 66%,transparent)}
+html[data-theme="light"] #tabSwitcher .tab.active:hover{background:rgba(255,255,255,.60)}
+/* KPI cards stay crisp: no exterior shadow or decorative glow. */
+.kpi-card,.kpi-card:hover{box-shadow:none;}
+.kpi-card::after{background:none;}
 /* Preserve legibility on the primary dashboard action */
 #dashboardAddReportsBtn,
 #dashboardAddReportsBtn svg{
