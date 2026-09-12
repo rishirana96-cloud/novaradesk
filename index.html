@@ -5105,6 +5105,7 @@ html[data-theme="light"] #periodSelector button.active{color:var(--accent-dark);
     font-weight:500;
     letter-spacing:0;
     font-variant-numeric:proportional-nums;
+    font-feature-settings:"pnum" 1,"tnum" 0;
 }
 .kpi-card::before{opacity:0;}
 .kpi-card:has(.kpi-value.accent)::before{opacity:.72;}
@@ -6161,13 +6162,7 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
                 >
                     —
                 </div>
-                <div class="kpi-sub">
-                    Last
-                    <span id="aiTotalSub">
-                        30
-                    </span>
-                    days
-                </div>
+                <div id="aiTotalSub" class="kpi-sub">Last 30 days</div>
             </div>
             <!-- Deflection -->
             <div class="kpi-card">
@@ -6464,13 +6459,7 @@ href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;
                 >
                     —
                 </div>
-                <div class="kpi-sub">
-                    Last
-                    <span id="humanTotalSub">
-                        30
-                    </span>
-                    days
-                </div>
+                <div id="humanTotalSub" class="kpi-sub">Last 30 days</div>
             </div>
             <!-- Escalation Rate -->
             <div class="kpi-card">
@@ -8327,7 +8316,7 @@ try {
             "aiTotalSub"
         )
         .textContent =
-        period;
+        `Last ${period} days`;
     document
         .getElementById(
             "aiDeflectionRate"
@@ -8372,7 +8361,7 @@ try {
             "humanTotalSub"
         )
         .textContent =
-        period;
+        `Last ${period} days`;
     document
         .getElementById(
             "humanEscalationRate"
