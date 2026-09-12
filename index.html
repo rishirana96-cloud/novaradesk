@@ -6418,6 +6418,63 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 </style>
 
+<style id="novaradesk-split-header-controls-v1">
+/* Separate search from the paired Sync / Settings actions. */
+@media(min-width:721px){
+    .topbar-actions{
+        min-height:52px;
+        padding:0;
+        border:0;
+        border-radius:0;
+        background:transparent;
+        box-shadow:none;
+    }
+    .topbar-actions .global-search-wrap{
+        height:52px!important;
+        min-height:52px!important;
+        margin-right:10px;
+        padding:3px;
+        border:1px solid var(--border);
+        border-radius:17px;
+        background:color-mix(in srgb,var(--bg-card) 82%,transparent);
+        box-shadow:0 8px 24px rgba(0,0,0,.075),inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .topbar-actions .refresh-btn{
+        min-height:52px;
+        padding:0 18px;
+        border:1px solid var(--border);
+        border-right:0;
+        border-radius:17px 0 0 17px;
+        background:color-mix(in srgb,var(--bg-card) 82%,transparent);
+        box-shadow:0 8px 24px rgba(0,0,0,.075),inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .topbar-actions .quick-settings-wrap{
+        height:52px;
+        padding:3px;
+        border:1px solid var(--border);
+        border-left:1px solid var(--border);
+        border-radius:0 17px 17px 0;
+        background:color-mix(in srgb,var(--bg-card) 82%,transparent);
+        box-shadow:0 8px 24px rgba(0,0,0,.075),inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .topbar-actions .quick-settings-button{
+        height:44px;
+        min-height:44px;
+        border-radius:0 13px 13px 0;
+    }
+    html[data-theme="light"] .topbar-actions{
+        background:transparent;
+        box-shadow:none;
+    }
+    html[data-theme="light"] .topbar-actions .global-search-wrap,
+    html[data-theme="light"] .topbar-actions .refresh-btn,
+    html[data-theme="light"] .topbar-actions .quick-settings-wrap{
+        background:rgba(255,255,255,.78);
+        box-shadow:0 8px 24px rgba(30,51,40,.06),inset 0 1px 0 #fff;
+    }
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
