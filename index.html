@@ -6048,6 +6048,30 @@ html[data-theme="dark"] .ticket-tag{
 }
 </style>
 
+
+<style id="novaradesk-global-search-v1">
+/* NOVARADESK_GLOBAL_SEARCH_V1 */
+.global-search-wrap{position:relative;display:flex;align-items:center;justify-content:flex-end}
+.global-search-shell{height:40px;width:42px;display:flex;align-items:center;justify-content:flex-end;overflow:hidden;border:1px solid var(--border);border-radius:10px;background:var(--surface);transition:width .2s ease,border-color .16s ease,box-shadow .16s ease}
+.global-search-wrap.open .global-search-shell,.global-search-wrap:focus-within .global-search-shell{width:min(390px,32vw);border-color:var(--border-strong);box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.global-search-shell input{order:1;width:0;min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:11px;opacity:0;transition:width .2s ease,opacity .12s ease,padding .2s ease}
+.global-search-wrap.open .global-search-shell input,.global-search-wrap:focus-within .global-search-shell input{width:100%;padding:0 4px 0 13px;opacity:1}
+.global-search-button{order:2;flex:0 0 40px;width:40px;height:38px;display:grid;place-items:center;border:0;background:transparent;color:var(--text-secondary);cursor:pointer}
+.global-search-button:hover{color:var(--text);background:var(--surface-hover)}
+.global-search-button svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.global-search-results{position:absolute;top:calc(100% + 8px);right:0;z-index:6000;width:min(390px,80vw);max-height:360px;overflow:auto;display:none;padding:6px;border:1px solid var(--border-strong);border-radius:12px;background:var(--bg-card);box-shadow:0 22px 58px rgba(0,0,0,.2)}
+.global-search-wrap.open.has-results .global-search-results{display:block}
+.global-search-result{width:100%;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:10px;border:0;border-radius:9px;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.global-search-result:hover,.global-search-result.active{background:var(--surface-hover)}
+.global-search-result-type{min-width:62px;color:var(--text-muted);font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.global-search-result-copy{min-width:0}
+.global-search-result-copy strong,.global-search-result-copy span{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.global-search-result-copy strong{font-size:10px}.global-search-result-copy span{margin-top:3px;color:var(--text-muted);font-size:9px}
+.global-search-empty{padding:16px;color:var(--text-muted);font-size:10px;text-align:center}
+html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-search-results{background:#fff}
+@media(max-width:720px){.global-search-wrap.open .global-search-shell,.global-search-wrap:focus-within .global-search-shell{width:min(280px,72vw)}}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -6287,9 +6311,16 @@ html[data-theme="dark"] .ticket-tag{
             </p>
         </div>
         <div class="topbar-actions">
-            <div class="updated topbar-updated" id="lastUpdated">
-                Updated —
+            <div class="global-search-wrap" id="globalSearchWrap">
+                <div class="global-search-shell">
+                    <input id="globalSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search tickets, session IDs, dashboards…" aria-label="Search tickets, session IDs and custom dashboards">
+                    <button id="globalSearchBtn" class="global-search-button" type="button" aria-label="Search" title="Search">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+                    </button>
+                </div>
+                <div id="globalSearchResults" class="global-search-results" role="listbox" aria-label="Search results"></div>
             </div>
+            <div id="lastUpdated" hidden></div>
             <label id="chatbotStatusControl" class="chatbot-status-control" title="Customer-facing chatbot status">
                 <select id="chatbotHeaderStatus" aria-label="Chatbot status"><option value="active">Online</option><option value="paused">Paused</option></select>
             </label>
@@ -15150,6 +15181,54 @@ document.addEventListener("pointerdown",event=>{
     if(openPopover.contains(event.target)||event.target.closest("#ticketAddTag"))return;
     openPopover.classList.remove("open");
 },true);
+</script>
+
+
+<script id="novaradesk-global-search-v1-script">
+(()=>{
+const wrap=document.getElementById("globalSearchWrap"),btn=document.getElementById("globalSearchBtn"),input=document.getElementById("globalSearchInput"),results=document.getElementById("globalSearchResults");
+if(!wrap||!btn||!input||!results)return;
+let timer=0,items=[];
+
+function dashboardItems(q){
+    try{return loadCustomDashboards().filter(d=>String(d.name||"").toLowerCase().includes(q)).slice(0,6).map(d=>({type:"Dashboard",title:d.name,sub:"Custom dashboard",action:()=>{localStorage.setItem(DASHBOARD_ACTIVE_KEY,d.id);showWorkspace("dashboards");renderCustomDashboard?.();}}));}catch{return []}
+}
+async function ticketItems(q){
+    let tickets=[];
+    try{
+        if(Array.isArray(ticketWorkspaceState?.source)&&ticketWorkspaceState.source.length) tickets=ticketWorkspaceState.source;
+    }catch{}
+    if(!tickets.length){
+        try{const data=await fetchJSON("/tickets?limit=100");tickets=Array.isArray(data)?data:(data?.tickets||[]);}catch{}
+    }
+    return tickets.filter(t=>{
+        const id=String(t.ticket_number||t.id||"").toLowerCase(), session=String(t.session_id||t.session||"").toLowerCase();
+        return id.includes(q)||session.includes(q);
+    }).slice(0,8).map(t=>({
+        type:String(t.session_id||t.session||"").toLowerCase().includes(q)&&!String(t.ticket_number||t.id||"").toLowerCase().includes(q)?"Session":"Ticket",
+        title:t.ticket_number||t.id||"Ticket",
+        sub:t.session_id||t.session||"",
+        action:()=>{showWorkspace("tickets");const id=t.id||t.dbId||t.ticket_id;if(id!=null&&typeof openTicketDrawer==="function")setTimeout(()=>openTicketDrawer(id),80);}
+    }));
+}
+function render(){
+    results.innerHTML=items.length?items.map((x,i)=>'<button class="global-search-result" type="button" data-global-search-index="'+i+'"><span class="global-search-result-type">'+escapeHtml(x.type)+'</span><span class="global-search-result-copy"><strong>'+escapeHtml(String(x.title))+'</strong><span>'+escapeHtml(String(x.sub||""))+'</span></span></button>').join(""):'<div class="global-search-empty">No matching tickets, sessions or dashboards</div>';
+    wrap.classList.add("has-results");
+    results.querySelectorAll("[data-global-search-index]").forEach(el=>el.addEventListener("click",()=>{items[Number(el.dataset.globalSearchIndex)]?.action();close();}));
+}
+async function search(){
+    const q=input.value.trim().toLowerCase();
+    if(!q){items=[];wrap.classList.remove("has-results");results.innerHTML="";return}
+    const [tickets]=await Promise.all([ticketItems(q)]);
+    items=[...tickets,...dashboardItems(q)].slice(0,12);render();
+}
+function open(){wrap.classList.add("open");requestAnimationFrame(()=>input.focus())}
+function close(){wrap.classList.remove("open","has-results");input.value="";results.innerHTML="";items=[]}
+btn.addEventListener("click",e=>{e.stopPropagation();wrap.classList.contains("open")?input.focus():open()});
+input.addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(search,180)});
+input.addEventListener("keydown",e=>{if(e.key==="Escape"){e.preventDefault();close()}else if(e.key==="Enter"&&items[0]){e.preventDefault();items[0].action();close()}});
+document.addEventListener("pointerdown",e=>{if(!wrap.contains(e.target))close()});
+})();
 </script>
 
 </body>
