@@ -8453,7 +8453,7 @@ ORDER BY ticket_count DESC</textarea>
         </details>
         <details id="ticketCallDetailsPanel" class="ticket-call-panel" open>
             <summary>
-                <span class="ticket-call-summary-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg><span><strong>Call Details</strong><small>Record the outcome after an Exotel call</small></span></span>
+                <span class="ticket-call-summary-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg><span><strong>Capture New Call</strong><small>Record and save a new call outcome</small></span></span>
                 <svg class="ticket-call-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5"/></svg>
             </summary>
             <div class="ticket-call-panel-body ticket-call-details-grid">
@@ -8464,6 +8464,7 @@ ORDER BY ticket_count DESC</textarea>
                 <label class="ticket-call-field"><span>Duration</span><input id="ticketCallDuration" type="text" inputmode="numeric" placeholder="00:00:00"></label>
                 <label class="ticket-call-field wide"><span>Notes</span><textarea id="ticketCallNotes" rows="3" placeholder="Add notes from this call…"></textarea></label>
                 <label class="ticket-call-field wide ticket-call-recording"><span>Recording</span><input id="ticketCallRecording" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg"><small id="ticketCallRecordingHint">Upload a call recording manually when available.</small></label>
+                <div class="ticket-call-save-row wide"><span id="ticketCallSaveStatus" role="status" aria-live="polite"></span><button id="ticketCallSave" class="ticket-call-save" type="button">Save Call Log</button></div>
             </div>
         </details>
     </section>
@@ -14867,10 +14868,13 @@ const callButton = document.getElementById("ticketChannelCall");
 const historyButton = document.getElementById("ticketChannelHistory");
 const HISTORY_KEY = "novaradesk_ticket_activity_v1";
 const CALL_NOTES_KEY = "novaradesk_ticket_call_notes_v1";
+const CALL_LOGS_KEY = "novaradesk_ticket_call_logs_v1";
 const historyStore = () => { try { const value=JSON.parse(localStorage.getItem(HISTORY_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
 const ticketId = () => String((window.lastOpenTicketData?.ticket || lastOpenTicketData?.ticket || {}).id || openTicketId || "");
 const callNotesStore = () => { try { const value=JSON.parse(localStorage.getItem(CALL_NOTES_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
 const saveCallNotes = value => { const id=ticketId();if(!id)return;const store=callNotesStore();store[id]=String(value||"").slice(0,4000);localStorage.setItem(CALL_NOTES_KEY,JSON.stringify(store)); };
+const callLogsStore = () => { try { const value=JSON.parse(localStorage.getItem(CALL_LOGS_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
+const saveCallLog = log => { const id=ticketId();if(!id)return;const store=callLogsStore();(store[id]||=[]).unshift(log);store[id]=store[id].slice(0,100);localStorage.setItem(CALL_LOGS_KEY,JSON.stringify(store)); };
 const recordAction = (type,title,detail,actor="Novara CX Support") => { const id=ticketId();if(!id)return;const store=historyStore();(store[id]||=[]).push({id:`event-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,type,title,detail,actor,created_at:new Date().toISOString()});store[id]=store[id].slice(-120);localStorage.setItem(HISTORY_KEY,JSON.stringify(store));if(drawer?.classList.contains("ticket-history-view"))renderHistoryView(); };
 const historyTime = value => { const date=new Date(value||Date.now());return Number.isNaN(date.getTime())?"—":date.toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
 const renderHistoryView = () => {
@@ -14884,7 +14888,7 @@ if(ticket.resolved_at)events.push({type:"status",title:"Ticket resolved",detail:
 events.push(...(historyStore()[String(ticket.id||openTicketId)]||[]));
 const unique=[...new Map(events.map(event=>[`${event.type}|${event.title}|${event.created_at}|${event.detail}`,event])).values()].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 const host=document.getElementById("ticketHistoryTimeline"),count=document.getElementById("ticketHistoryCount");if(count)count.textContent=`${unique.length} ${unique.length===1?"event":"events"}`;
-if(host)host.innerHTML=unique.length?unique.map(event=>`<article class="ticket-history-event"><strong>${escapeHtml(event.title)}</strong><time>${escapeHtml(historyTime(event.created_at))}</time><p>${escapeHtml(event.detail||"Activity recorded.")}</p><span class="ticket-history-actor">By ${escapeHtml(event.actor||"System")}</span></article>`).join(""):`<div class="empty-state">No ticket activity has been recorded yet.</div>`;
+if(host)host.innerHTML=unique.length?unique.map(event=>`<article class="ticket-history-event" data-event-type="${escapeHtml(event.type||"activity")}"><span class="ticket-history-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${event.type==="created"?"M12 5v14M5 12h14":event.type==="status"?"m5 12 4 4L19 6":event.type==="call"?"M7 4h3l2 5-2 2a14 14 0 0 0 4 4l2-2 5 2v3a2 2 0 0 1-2 2C11 20 4 13 4 5a2 2 0 0 1 3-1Z":event.type==="message"?"M4 5h16v11H8l-4 4Z":"M6 4h12v16H6zM9 8h6M9 12h6"}"/></svg></span><div class="ticket-history-copy"><strong>${escapeHtml(event.title)}</strong><p>${escapeHtml(event.detail||"Activity recorded.")}</p><span class="ticket-history-actor">By ${escapeHtml(event.actor||"System")}</span></div><time>${escapeHtml(historyTime(event.created_at))}</time></article>`).join(""):`<div class="empty-state">No ticket activity has been recorded yet.</div>`;
 };
 const localDateTimeValue = value => {
 const date = value ? new Date(String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z") : new Date();
@@ -14899,26 +14903,29 @@ return date.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeri
 };
 const renderCallView = () => {
 const ticket = window.lastOpenTicketData?.ticket || lastOpenTicketData?.ticket || {};
-const timestamp = ticket.created_at || new Date().toISOString();
-const agent = ticket.agent_name || document.getElementById("ticketAgentSelect")?.value || "Novara CX Support";
 const timestampInput = document.getElementById("ticketCallTimestamp");
 const agentInput = document.getElementById("ticketCallAgent");
 const notesInput = document.getElementById("ticketCallNotes");
-const notes = callNotesStore()[String(ticket.id || openTicketId || "")] || "";
-if (timestampInput && !timestampInput.value) timestampInput.value = localDateTimeValue(timestamp);
-if (agentInput) agentInput.value = agent;
-if (notesInput && document.activeElement !== notesInput) notesInput.value = notes;
+const agent = ticket.agent_name || document.getElementById("ticketAgentSelect")?.value || "Novara CX Support";
+const draftNotes = callNotesStore()[String(ticket.id || openTicketId || "")] || "";
+if (timestampInput && !timestampInput.value) timestampInput.value = localDateTimeValue(new Date().toISOString());
+if (agentInput && document.activeElement !== agentInput) agentInput.value = agent;
+if (notesInput && document.activeElement !== notesInput && !notesInput.value) notesInput.value = draftNotes;
+const logs = callLogsStore()[String(ticket.id || openTicketId || "")] || [];
+const count = document.getElementById("ticketCallAttemptCount");
+if (count) count.textContent = `${logs.length} ${logs.length===1?"attempt":"attempts"}`;
 const body = document.getElementById("ticketCallHistoryBody");
-if (body) body.innerHTML = `<tr>
-    <td>${escapeHtml(callTimestampText(timestamp))}</td>
-    <td><span class="ticket-call-notes-preview" title="${escapeHtml(notes || "No notes added")}">${escapeHtml(notes || "—")}</span></td>
-    <td><span class="ticket-call-outcome">Connected</span></td>
-    <td>${escapeHtml(agent)}</td>
-    <td>Outgoing</td>
-    <td>00:06:14</td>
-    <td><span class="ticket-call-resolution">Resolved</span></td>
-    <td><button class="ticket-call-recording-download" type="button" aria-label="Download recording" title="Recording will be available after Exotel integration"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button></td>
-</tr>`;
+if (!body) return;
+body.innerHTML = logs.length ? logs.map(log => `<tr>
+    <td>${escapeHtml(callTimestampText(log.timestamp))}</td>
+    <td><span class="ticket-call-notes-preview" title="${escapeHtml(log.notes || "No notes added")}">${escapeHtml(log.notes || "—")}</span></td>
+    <td><span class="ticket-call-outcome">${escapeHtml(log.outcomeLabel)}</span></td>
+    <td>${escapeHtml(log.agent)}</td>
+    <td>${escapeHtml(log.typeLabel)}</td>
+    <td>${escapeHtml(log.duration || "—")}</td>
+    <td><span class="ticket-call-resolution">${escapeHtml(log.resolution || "Logged")}</span></td>
+    <td>${log.recording ? `<button class="ticket-call-recording-download" type="button" aria-label="Recording attached" title="${escapeHtml(log.recording)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>` : "—"}</td>
+</tr>`).join("") : '<tr><td colspan="8"><div class="empty-state">No calls have been logged for this ticket.</div></td></tr>';
 };
 const setChannel = channel => {
 const isCall = channel === "call";
@@ -14947,10 +14954,7 @@ if (hint) hint.textContent = event.target.files?.[0] ? `${event.target.files[0].
 });
 document.getElementById("ticketCallNotes")?.addEventListener("input", event => saveCallNotes(event.target.value));
 document.getElementById("ticketCallNotes")?.addEventListener("change", event => {
-const notes=event.target.value.trim();
-saveCallNotes(notes);
-if(notes)recordAction("call","Call notes updated",notes,document.getElementById("ticketCallAgent")?.value||"Novara CX Support");
-renderCallView();
+saveCallNotes(event.target.value.trim());
 });
 document.getElementById("ticketCallHistoryBody")?.addEventListener("click", event => {
 const download = event.target.closest(".ticket-call-recording-download");
@@ -14961,8 +14965,27 @@ document.getElementById("ticketStatusSelect")?.addEventListener("change",event=>
 document.getElementById("ticketAgentSelect")?.addEventListener("change",event=>recordAction("assignment","Ticket assigned",`Assigned to ${event.target.value}.`,event.target.value));
 document.getElementById("ticketSendReply")?.addEventListener("click",()=>{const text=document.getElementById("ticketReplyText")?.value.trim();if(text)recordAction("message","Reply sent",text,document.getElementById("ticketAgentSelect")?.value||"Novara CX Support");},true);
 document.getElementById("ticketSaveNote")?.addEventListener("click",()=>{const text=document.getElementById("ticketNoteText")?.value.trim();if(text)recordAction("note","Internal note added",text,document.getElementById("ticketAgentSelect")?.value||"Novara CX Support");},true);
-document.getElementById("ticketCallRecording")?.addEventListener("change",event=>{if(event.target.files?.[0])recordAction("call","Call recording attached",event.target.files[0].name,document.getElementById("ticketCallAgent")?.value||"Novara CX Support");});
-["ticketCallType","ticketCallOutcome","ticketCallDuration"].forEach(id=>document.getElementById(id)?.addEventListener("change",()=>recordAction("call","Call details updated",`${document.getElementById("ticketCallType")?.selectedOptions[0]?.textContent||"Call"} · ${document.getElementById("ticketCallOutcome")?.selectedOptions[0]?.textContent||"Outcome not set"} · ${document.getElementById("ticketCallDuration")?.value||"Duration not set"}`,document.getElementById("ticketCallAgent")?.value||"Novara CX Support")));
+document.getElementById("ticketCallSave")?.addEventListener("click",()=>{
+const timestamp=document.getElementById("ticketCallTimestamp")?.value;
+const type=document.getElementById("ticketCallType");
+const outcome=document.getElementById("ticketCallOutcome");
+const agent=document.getElementById("ticketCallAgent")?.value.trim()||"Novara CX Support";
+const duration=document.getElementById("ticketCallDuration")?.value.trim()||"—";
+const notes=document.getElementById("ticketCallNotes")?.value.trim()||"";
+const recording=document.getElementById("ticketCallRecording")?.files?.[0]?.name||"";
+const log={id:`call-${Date.now()}`,timestamp:timestamp||new Date().toISOString(),type:type?.value||"outgoing",typeLabel:type?.selectedOptions?.[0]?.textContent||"Outgoing",outcome:outcome?.value||"connected",outcomeLabel:outcome?.selectedOptions?.[0]?.textContent||"Connected",agent,duration,notes,recording,resolution:"Logged",created_at:new Date().toISOString()};
+saveCallLog(log);
+recordAction("call","Call logged",`${log.typeLabel} · ${log.outcomeLabel} · ${duration}`,agent);
+saveCallNotes("");
+const notesInput=document.getElementById("ticketCallNotes");if(notesInput)notesInput.value="";
+const durationInput=document.getElementById("ticketCallDuration");if(durationInput)durationInput.value="";
+const recordingInput=document.getElementById("ticketCallRecording");if(recordingInput)recordingInput.value="";
+const timestampInput=document.getElementById("ticketCallTimestamp");if(timestampInput)timestampInput.value=localDateTimeValue(new Date().toISOString());
+const hint=document.getElementById("ticketCallRecordingHint");if(hint)hint.textContent="Upload a call recording manually when available.";
+const status=document.getElementById("ticketCallSaveStatus");if(status){status.textContent="Call log saved";setTimeout(()=>status.textContent="",1800);}
+renderCallView();
+const panel=document.getElementById("ticketCallDetailsPanel");if(panel)panel.open=false;
+});
 new MutationObserver(()=>{if(drawer?.classList.contains("ticket-history-view"))renderHistoryView();}).observe(document.getElementById("ticketDrawerTitle"),{childList:true,characterData:true,subtree:true});
 window.renderTicketHistory=renderHistoryView;
 setChannel("chat");
@@ -16025,6 +16048,97 @@ sidebar.querySelectorAll(".nav-item").forEach(item=>{
 window.addEventListener("resize",hide,{passive:true});
 window.addEventListener("scroll",hide,{passive:true,capture:true});
 new MutationObserver(()=>{if(!allowed())hide()}).observe(document.body,{attributes:true,attributeFilter:["class"]});
+})();
+</script>
+
+
+<style id="novaradesk-agreed-refinements-batch-v1">
+/* Compact, secondary AI Assist action */
+.ticket-drawer-backdrop.assist-collapsed .agent-assist-dock-toggle{
+    height:31px!important;min-height:31px!important;padding:0 10px!important;
+    border-color:color-mix(in srgb,var(--accent) 42%,var(--border))!important;
+    border-radius:9px!important;box-shadow:none!important;font-size:12.5px!important;font-weight:720!important;
+}
+.ticket-drawer-backdrop.assist-collapsed .agent-assist-dock-toggle>span{font-size:11px!important}
+
+/* Saved-call workflow */
+.ticket-call-save-row{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding-top:2px}
+.ticket-call-save-row>span{margin-right:auto;color:var(--accent-dark);font-size:10px;font-weight:700}
+.ticket-call-save{min-width:132px;min-height:40px;padding:0 16px;border:1px solid var(--accent-dark);border-radius:10px;background:var(--accent-dark);color:#fff;font:inherit;font-size:10px;font-weight:800;cursor:pointer}
+.ticket-call-save:hover{filter:brightness(1.05)}
+
+/* Enterprise audit log: no decorative rail or dots */
+.ticket-history-timeline{padding:6px 20px 16px!important}
+.ticket-history-timeline::before,.ticket-history-event::before{display:none!important;content:none!important}
+.ticket-history-event{grid-template-columns:34px minmax(0,1fr) auto!important;gap:0 14px!important;align-items:start;padding:16px 0!important}
+.ticket-history-icon{grid-column:1;grid-row:1;display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-muted)}
+.ticket-history-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ticket-history-event[data-event-type="status"] .ticket-history-icon{color:var(--success);background:color-mix(in srgb,var(--success) 7%,var(--bg-card))}
+.ticket-history-copy{grid-column:2;min-width:0}.ticket-history-copy strong{display:block}.ticket-history-copy p{margin:4px 0 0!important}.ticket-history-copy .ticket-history-actor{display:block;margin-top:5px}
+.ticket-history-event time{grid-column:3;grid-row:1;color:var(--text-muted);font-size:9px;white-space:nowrap}
+
+/* Stable KPI selection: colour, never scale */
+.ticket-compact-metrics .ticket-kpi-card,.ticket-compact-metrics .ticket-kpi-card:hover,.ticket-compact-metrics .ticket-kpi-card:active,.ticket-compact-metrics .ticket-kpi-card.active{transform:none!important}
+.ticket-compact-metrics .ticket-kpi-card:hover{background:#f7f9f8!important}
+.ticket-compact-metrics .ticket-kpi-card.active{background:#edf2ef!important;box-shadow:inset 0 -3px 0 color-mix(in srgb,var(--accent-dark) 70%,transparent)!important}
+
+/* Consistent table header bars, preserving their existing size */
+.table-card table thead th,.customer-directory-card table thead th,.ticket-call-history-table thead th,.data-explorer-table thead th{
+    background:#edf3ef!important;color:var(--text-secondary)!important;font-weight:700!important;
+    letter-spacing:0!important;text-transform:none!important;
+}
+
+/* Optical header alignment only; header height remains unchanged */
+.ticket-title-copy .ticket-drawer-title{position:relative;top:-3px}
+.ticket-assignment-copy .ticket-agent-select{position:relative;top:-3px}
+
+/* Compact, independent chatbot availability control */
+#panel-chatbot .chatbot-status-control.open{display:inline-flex!important;align-items:center!important;justify-content:space-between!important;width:160px!important;height:52px!important;min-height:52px!important;margin:0 10px!important;padding:0 14px!important;border-radius:17px!important}
+#panel-chatbot .chatbot-status-control select{width:100%!important;font-size:11px!important}
+
+/* Copy glyph only grows; hit area stays fixed */
+.session-copy-btn svg{width:15px!important;height:15px!important}
+
+/* Report Type matches Ticket View label */
+.report-mode-toolbar>span{color:var(--text-muted)!important;font-size:8px!important;font-weight:850!important;letter-spacing:.1em!important;text-transform:uppercase!important}
+</style>
+<script id="novaradesk-agreed-refinements-batch-v1-script">
+(()=>{
+/* Copy is an isolated action and must never open its parent conversation. */
+const isolateCopy=button=>{
+    if(button.dataset.copyIsolated)return;
+    button.dataset.copyIsolated="true";
+    button.addEventListener("click",event=>event.stopPropagation());
+    button.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" ")event.stopPropagation()});
+};
+document.querySelectorAll(".session-copy-btn").forEach(isolateCopy);
+new MutationObserver(mutations=>mutations.forEach(m=>m.addedNodes.forEach(node=>{
+    if(node.nodeType!==1)return;
+    if(node.matches?.(".session-copy-btn"))isolateCopy(node);
+    node.querySelectorAll?.(".session-copy-btn").forEach(isolateCopy);
+}))).observe(document.body,{childList:true,subtree:true});
+
+/* Human KPI drill-downs mirror AI KPI behaviour and retain the active date range. */
+const humanKpis={
+ humanTotalEscalations:{title:"Total escalations",source:"conversations",predicate:r=>r.resolution_status==="escalated",kind:"human"},
+ humanEscalationRate:{title:"Escalation rate",source:"conversations",predicate:r=>r.resolution_status==="escalated",kind:"human"},
+ humanAvgHandlingTime:{title:"Average handling time",source:"tickets",predicate:()=>true},
+ humanCsatScore:{title:"Human CSAT",source:"conversations",predicate:r=>r.resolution_status==="escalated",kind:"human"},
+ humanResolutionRate:{title:"Resolution rate",source:"tickets",predicate:r=>String(r.status||"").toLowerCase()==="resolved"},
+ humanActiveAgents:{title:"Active agents",source:"tickets",predicate:r=>Boolean(r.agent_name||r.agent)}
+};
+Object.entries(humanKpis).forEach(([id,config])=>{
+ const card=document.getElementById(id)?.closest(".kpi-card");if(!card)return;
+ card.dataset.kpiDrilldown=id;card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label",config.title+": view underlying records");
+ const open=()=>openChartDrilldown(config.source,{title:config.title,predicate:config.predicate,conversationKind:config.kind||"human"});
+ card.addEventListener("click",open);
+ card.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();open();}});
+});
+
+/* Normalize visible table headings to the Ticket table's title-case language. */
+const acronyms=new Set(["CSAT","ID","SLA","AI"]);
+const titleCase=value=>value.trim().split(/(\s+|\/)/).map(word=>acronyms.has(word.toUpperCase())?word.toUpperCase():word==="/" ? word : word.charAt(0).toUpperCase()+word.slice(1).toLowerCase()).join("");
+document.querySelectorAll(".table-card thead th,.customer-directory-card thead th,.ticket-call-history-table thead th,.data-explorer-table thead th").forEach(th=>{th.textContent=titleCase(th.textContent);});
 })();
 </script>
 
