@@ -4737,7 +4737,6 @@ body.customizer-dragging { cursor:grabbing!important;user-select:none!important;
 @media(max-width:700px){#panel-settings .customizer-grid{grid-template-columns:1fr!important}#panel-settings .inline-label-row{grid-template-columns:1fr}#panel-settings .inline-edit-actions{justify-content:flex-end}}
 </style>
 <!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 window.NOVARA_GOOGLE_CLIENT_ID = "336502224847-jafsk347pho7kr929jlgf4uh10n7aveu.apps.googleusercontent.com";
 window.NOVARA_AUTH_TOKEN_KEY = "novara_google_id_token";
@@ -4870,40 +4869,11 @@ window.NOVARA_DEMO_API = (() => {
     window.fetch = function (input, init) {
         const url = typeof input === "string" ? input : (input && input.url) || "";
         const isApi = url.indexOf("https://novara-cx-ai.rishi-rana96.workers.dev") === 0;
-        const isSignIn = isApi && url.indexOf("/auth/google") !== -1;
         if (window.NOVARA_DEMO_MODE && isApi) return window.NOVARA_DEMO_API(url, init);
-        if (!isApi || isSignIn) return nativeFetch(input, init);
-        const token = sessionStorage.getItem(window.NOVARA_AUTH_TOKEN_KEY);
-        if (!token) return Promise.reject(new Error("Authentication required"));
-        const options = Object.assign({}, init || {});
-        options.headers = new Headers(options.headers || (input instanceof Request ? input.headers : undefined));
-        options.headers.set("Authorization", "Bearer " + token);
-        return nativeFetch(input, options);
+        return nativeFetch(input, init);
     };
 })();
 </script>
-<style>
-:root{--auth-ink:#0b2118;--auth-green:#082d20;--auth-mint:#a7d8bd;--auth-line:#d4e1d9;--auth-paper:#f6f7f2}
-body:not(.novara-authenticated){overflow:hidden!important}
-body:not(.novara-authenticated) .app{visibility:hidden}
-.novara-auth-screen{position:fixed;inset:0;z-index:100000;display:grid;grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr);min-height:100dvh;color:var(--auth-ink);background:var(--auth-paper)}
-body.novara-authenticated .novara-auth-screen{display:none}
-body.novara-demo-mode .authenticated-profile::after{content:"DEMO";position:absolute;right:9px;top:50%;transform:translateY(-50%);padding:3px 6px;border:1px solid rgba(167,216,189,.35);border-radius:999px;background:rgba(167,216,189,.12);color:#9fd3b4;font-size:8px;font-weight:800;letter-spacing:.08em}
-.novara-auth-brand{position:relative;overflow:hidden;padding:clamp(36px,6vw,84px);display:flex;flex-direction:column;justify-content:space-between;color:#f7fbf8;background:var(--auth-green)}
-.novara-auth-brand::before{content:"";position:absolute;width:520px;height:520px;right:-230px;bottom:-230px;border:1px solid rgba(167,216,189,.22);border-radius:50%;box-shadow:0 0 0 80px rgba(167,216,189,.035),0 0 0 160px rgba(167,216,189,.025)}
-.novara-auth-logo,.novara-auth-promise{position:relative;z-index:1}
-.novara-auth-logo{display:flex;align-items:center;gap:14px;font-size:25px;font-weight:750;letter-spacing:-.04em}
-.novara-auth-logo img{width:44px;height:44px;object-fit:contain}.novara-auth-logo span{color:var(--auth-mint)}
-.novara-auth-promise{max-width:560px}.novara-auth-eyebrow{color:var(--auth-mint);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
-.novara-auth-promise h1{margin:20px 0;max-width:620px;font-size:clamp(42px,5.2vw,76px);line-height:.98;letter-spacing:-.065em}
-.novara-auth-promise p{margin:0;max-width:500px;color:rgba(247,251,248,.7);font-size:17px;line-height:1.65}
-.novara-auth-points{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}.novara-auth-points span{padding:9px 12px;border:1px solid rgba(167,216,189,.2);border-radius:999px;color:rgba(247,251,248,.78);font-size:12px}
-.novara-auth-panel{display:grid;place-items:center;padding:32px}.novara-auth-card{width:min(100%,450px);padding:clamp(30px,5vw,52px);border:1px solid var(--auth-line);border-radius:28px;background:rgba(255,255,255,.9);box-shadow:0 28px 80px rgba(8,45,32,.09)}
-.novara-auth-card h2{margin:0 0 12px;font-size:34px;line-height:1.08;letter-spacing:-.04em}.novara-auth-card>p{margin:0 0 30px;color:#68776f;line-height:1.6}
-#novaraGoogleButton{min-height:44px;display:flex;justify-content:center}.novara-auth-status{min-height:20px;margin-top:18px;color:#9a5d12;font-size:13px;line-height:1.5;text-align:center}
-.novara-auth-legal{margin-top:28px!important;font-size:12px;text-align:center}.novara-auth-legal a{color:var(--auth-green)}
-@media(max-width:850px){.novara-auth-screen{grid-template-columns:1fr}.novara-auth-brand{min-height:34vh;padding:30px}.novara-auth-promise h1{font-size:42px}.novara-auth-promise p,.novara-auth-points{display:none}.novara-auth-panel{padding:22px}.novara-auth-card{padding:30px 24px}}
-</style>
 <style id="chatbot-tabs-elegance">
 /* AI Agent navigation: refined without changing its established sizing or spacing */
 #panel-chatbot .admin-tabs{
@@ -6477,26 +6447,6 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 
 </head>
 <body>
-<div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
-<section class="novara-auth-brand">
-<div class="novara-auth-logo"><img src="assets/logo-mark.png" alt=""><div>Novara<span>Desk</span></div></div>
-<div class="novara-auth-promise">
-    <div class="novara-auth-eyebrow">Your customer experience workspace</div>
-    <h1>One clear view of every customer conversation.</h1>
-    <p>Monitor AI performance, manage escalations and give your team the context they need—all from one secure workspace.</p>
-    <div class="novara-auth-points"><span>AI + human support</span><span>Live performance visibility</span><span>Secure access</span></div>
-</div>
-</section>
-<section class="novara-auth-panel">
-<div class="novara-auth-card">
-    <h2>Welcome to NovaraDesk</h2>
-    <p>Continue with the approved Google account connected to your workspace.</p>
-    <div id="novaraGoogleButton"></div>
-    <div class="novara-auth-status" id="novaraAuthStatus" role="status" aria-live="polite">Checking your session…</div>
-    <p class="novara-auth-legal">By continuing, you agree to the <a href="https://novaracx.com/terms.html">Terms of Service</a>.</p>
-</div>
-</section>
-</div>
 <div class="app">
 <!-- =====================================================
  SIDEBAR
@@ -15371,77 +15321,6 @@ cancel.addEventListener('click',()=>finish(false));
   const launcher=document.getElementById('ticketWorkspaceFloater');
   const icon=launcher?.querySelector('.ticket-floater-message-icon');
   if(icon)icon.innerHTML='<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/>';
-})();
-</script>
-<script id="novara-google-auth">
-(function(){
-const API="https://novara-cx-ai.rishi-rana96.workers.dev";
-const tokenKey=window.NOVARA_AUTH_TOKEN_KEY;
-const status=document.getElementById("novaraAuthStatus");
-const setStatus=message=>{if(status)status.textContent=message||""};
-function showWorkspace(user){
-const name=String(user?.name||user?.email||"Signed in").trim();
-const initials=name.split(/\\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase()||"U";
-const company=user?.company_name||(user?.workspace_id==="novara"?"Novara CX":"Workspace");
-const role=user?.role==="admin"?company+" Administrator":company+" Member";
-document.getElementById("sidebarUserInitials").textContent=initials;
-document.getElementById("sidebarUserName").textContent=name;
-document.getElementById("sidebarUserRole").textContent=role;
-document.body.classList.add("novara-authenticated");
-}
-async function verifySession(){
-const token=sessionStorage.getItem(tokenKey);
-if(!token){setStatus("");return false;}
-try{
-    const response=await fetch(API+"/auth/me");
-    const data=await response.json();
-    if(!response.ok||!data.success)throw new Error(data.error||"Session rejected");
-    showWorkspace(data.user);
-    return true;
-}catch(error){
-    sessionStorage.removeItem(tokenKey);
-    setStatus(error.message==="Your workspace access is awaiting approval."?error.message:"Your session has expired. Please sign in again.");
-    return false;
-}
-}
-async function handleCredential(response){
-if(!response?.credential){setStatus("Google sign-in could not be completed. Please try again.");return}
-setStatus("Verifying your workspace access…");
-try{
-    const authResponse=await fetch(API+"/auth/google",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:response.credential})});
-    const data=await authResponse.json();
-    if(authResponse.status===202||data.status==="pending"){
-        setStatus("Your account was created and is awaiting approval from the NovaraDesk administrator.");
-        return;
-    }
-    if(!authResponse.ok||!data.success)throw new Error(data.error||"Access could not be verified.");
-    sessionStorage.setItem(tokenKey,response.credential);
-    window.location.reload();
-}catch(error){setStatus(error.message||"Google sign-in could not be verified.")}
-}
-function renderGoogle(attempt=0){
-if(window.google?.accounts?.id){
-    google.accounts.id.initialize({client_id:window.NOVARA_GOOGLE_CLIENT_ID,callback:handleCredential,auto_select:false,cancel_on_tap_outside:true});
-    google.accounts.id.renderButton(document.getElementById("novaraGoogleButton"),{theme:"outline",size:"large",shape:"pill",text:"continue_with",width:340,logo_alignment:"left"});
-}else if(attempt<50)setTimeout(()=>renderGoogle(attempt+1),120);
-else setStatus("Google sign-in is temporarily unavailable. Please refresh the page.");
-}
-if(window.NOVARA_DEMO_MODE){
-document.body.classList.add("novara-demo-mode");
-showWorkspace(window.NOVARA_DEMO_USER);
-setStatus("");
-document.getElementById("sidebarLogout")?.addEventListener("click",()=>{
-    Object.keys(localStorage).filter(key=>key.startsWith("novara_")||key.startsWith("novaradesk_")).forEach(key=>localStorage.removeItem(key));
-    window.location.reload();
-});
-}else{
-document.getElementById("sidebarLogout")?.addEventListener("click",()=>{
-    try{window.google?.accounts?.id?.disableAutoSelect()}catch(error){}
-    sessionStorage.removeItem(tokenKey);
-    window.location.replace(window.location.pathname);
-});
-verifySession().then(active=>{if(!active)renderGoogle()});
-}
 })();
 </script>
 <style id="ticket-sla-final-placement">
