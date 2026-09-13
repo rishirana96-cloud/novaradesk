@@ -6726,6 +6726,28 @@ html[data-theme="light"] .raw-sql-result-table th {
     }
 }
 </style>
+
+<style id="novaradesk-last-updated-v1">
+@media (min-width: 721px) {
+    .topbar-actions { position: relative; }
+    #lastUpdated {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        display: none;
+        color: var(--text-muted);
+        font-size: calc(10px * var(--ui-text-scale));
+        font-weight: 450;
+        line-height: 1.2;
+        letter-spacing: 0;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+}
+@media (max-width: 720px) {
+    #lastUpdated { display: none !important; }
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -6974,7 +6996,7 @@ html[data-theme="light"] .raw-sql-result-table th {
                 </div>
                 <div id="globalSearchResults" class="global-search-results" role="listbox" aria-label="Search results"></div>
             </div>
-            <div id="lastUpdated" hidden></div>
+            <div id="lastUpdated" aria-live="polite"></div>
             <label id="chatbotStatusControl" class="chatbot-status-control" title="Customer-facing chatbot status">
                 <select id="chatbotHeaderStatus" aria-label="Chatbot status"><option value="active">Online</option><option value="paused">Paused</option></select>
             </label>
@@ -9027,7 +9049,7 @@ if (workspaceToolbar) workspaceToolbar.style.display = ["chatbot","knowledge","t
 tabSwitcher.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tab === workspace));
 const layoutControls = document.querySelector(".layout-controls");
 if (layoutControls) layoutControls.style.display = ["ai","human","tickets","reports"].includes(workspace) ? "flex" : "none";
-document.getElementById("lastUpdated")?.style.setProperty("display","none","important");
+document.getElementById("lastUpdated")?.style.setProperty("display", analyticsWorkspace ? "block" : "none", "important");
 document.getElementById("refreshBtn").style.display = ["chatbot","settings"].includes(workspace) ? "none" : "inline-flex";
 const refreshLabel = document.getElementById("refreshBtnLabel");
 if (refreshLabel) refreshLabel.textContent = analyticsWorkspace ? "Sync Now" : "Refresh";
@@ -9606,23 +9628,18 @@ try {
     /* =================================================
        UPDATED
     ================================================== */
-    document
-        .getElementById(
-            "lastUpdated"
-        )
-        .textContent =
-        `Updated ${
-            new Date()
-                .toLocaleTimeString(
-                    "en-IN",
-                    {
-                        hour:
-                            "2-digit",
-                        minute:
-                            "2-digit"
-                    }
-                )
-        }`;
+    const updatedAt = new Date();
+    const lastUpdatedElement = document.getElementById("lastUpdated");
+    if (lastUpdatedElement) {
+        lastUpdatedElement.textContent = `Last updated ${updatedAt.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit"
+        })}`;
+        lastUpdatedElement.title = updatedAt.toLocaleString("en-IN", {
+            dateStyle: "medium",
+            timeStyle: "medium"
+        });
+    }
     /* =================================================
        CHART LABELS
     ================================================== */
