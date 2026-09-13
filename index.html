@@ -10888,6 +10888,7 @@ container.innerHTML =
 /* =====================================================
    CONVERSATION TABLE
 ====================================================== */
+const RECENT_CONVERSATION_LIMIT = 5;
 function updateConversationsTable(
 conversations,
 containerId
@@ -10913,6 +10914,7 @@ if (
 }
 tbody.innerHTML =
     conversations
+        .slice(0, RECENT_CONVERSATION_LIMIT)
         .map(
             (conversation, index) => {
                 /* =====================================
