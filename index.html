@@ -15879,5 +15879,51 @@ window.syncTicketFilterPanelUi();
 })();
 </script>
 
+<style id="novaradesk-sidebar-tooltips-v1">
+.sidebar-nav-tooltip{position:fixed;z-index:10000;display:flex;align-items:center;min-height:36px;max-width:220px;padding:8px 12px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#17211c;color:#f7faf8;box-shadow:0 12px 30px rgba(7,18,12,.2);font:700 11px/1.2 var(--font-family,inherit);letter-spacing:.005em;white-space:nowrap;opacity:0;visibility:hidden;transform:translateX(-4px) scale(.98);transform-origin:left center;pointer-events:none;transition:opacity .13s ease,transform .13s ease,visibility 0s linear .13s}
+.sidebar-nav-tooltip::before{content:"";position:absolute;left:-5px;top:50%;width:9px;height:9px;border-left:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.09);background:#17211c;transform:translateY(-50%) rotate(45deg)}
+.sidebar-nav-tooltip.visible{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+html[data-theme="dark"] .sidebar-nav-tooltip{background:#eef4f0;color:#122018;border-color:rgba(0,0,0,.08);box-shadow:0 12px 30px rgba(0,0,0,.25)}
+html[data-theme="dark"] .sidebar-nav-tooltip::before{background:#eef4f0;border-color:rgba(0,0,0,.08)}
+@media(max-width:720px){.sidebar-nav-tooltip{display:none!important}}
+</style>
+
+<script id="novaradesk-sidebar-tooltips-v1-script">
+(()=>{
+const sidebar=document.getElementById("appSidebar");
+if(!sidebar)return;
+const tooltip=document.createElement("div");
+tooltip.className="sidebar-nav-tooltip";
+tooltip.setAttribute("role","tooltip");
+tooltip.setAttribute("aria-hidden","true");
+document.body.appendChild(tooltip);
+let timer=0;
+const allowed=()=>window.innerWidth>720&&!document.body.classList.contains("sidebar-pinned");
+const hide=()=>{clearTimeout(timer);timer=0;tooltip.classList.remove("visible");tooltip.setAttribute("aria-hidden","true")};
+const show=item=>{
+    if(!allowed())return hide();
+    tooltip.textContent=item.dataset.sidebarTooltip;
+    tooltip.classList.add("visible");
+    tooltip.setAttribute("aria-hidden","false");
+    const rect=item.getBoundingClientRect();
+    tooltip.style.left=`${Math.round(rect.right+12)}px`;
+    tooltip.style.top=`${Math.round(rect.top+rect.height/2-tooltip.offsetHeight/2)}px`;
+};
+sidebar.querySelectorAll(".nav-item").forEach(item=>{
+    const label=item.querySelector(":scope > span")?.textContent?.trim();
+    if(!label)return;
+    item.dataset.sidebarTooltip=label;
+    item.removeAttribute("title");
+    item.addEventListener("pointerenter",event=>{if(event.pointerType&&event.pointerType!=="mouse")return;clearTimeout(timer);timer=setTimeout(()=>show(item),280)});
+    item.addEventListener("pointerleave",hide);
+    item.addEventListener("focus",()=>{clearTimeout(timer);timer=setTimeout(()=>show(item),180)});
+    item.addEventListener("blur",hide);
+});
+window.addEventListener("resize",hide,{passive:true});
+window.addEventListener("scroll",hide,{passive:true,capture:true});
+new MutationObserver(()=>{if(!allowed())hide()}).observe(document.body,{attributes:true,attributeFilter:["class"]});
+})();
+</script>
+
 </body>
 </html>
