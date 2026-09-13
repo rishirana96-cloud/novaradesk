@@ -6570,6 +6570,91 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
     .kpi-comparison-label { font-size: .68rem; }
 }
 </style>
+
+<style id="novara-surface-refinement">
+html[data-theme="light"] body {
+    --bg: #f4f7f5;
+    --bg-soft: #eef2f0;
+    --surface: #ffffff;
+    --surface-light: #f8faf9;
+    --surface-hover: #f2f6f4;
+    --border: #dce4df;
+    --border-strong: #bdcec4;
+    --shadow-soft: 0 8px 24px rgba(35, 67, 50, .045);
+    --shadow-lift: 0 10px 28px rgba(35, 67, 50, .065);
+    background: #f4f7f5 !important;
+}
+html[data-theme="light"] body::before {
+    display: none !important;
+    background: none !important;
+}
+html[data-theme="light"] .sidebar {
+    background: #f8faf9 !important;
+    border-right-color: #dce4df !important;
+    box-shadow: none !important;
+}
+html[data-theme="light"] .toolbar,
+html[data-theme="light"] .dashboard-command-bar,
+html[data-theme="light"] .ticket-workspace-toolbar,
+html[data-theme="light"] .chatbot-tabs {
+    background: #ffffff !important;
+    border-color: #dce4df !important;
+    box-shadow: 0 8px 24px rgba(35, 67, 50, .045) !important;
+}
+html[data-theme="light"] .kpi-card,
+html[data-theme="light"] .ticket-kpi-card {
+    background: #ffffff !important;
+    border-color: #dce4df !important;
+    box-shadow: none !important;
+}
+html[data-theme="light"] .kpi-card::after,
+html[data-theme="light"] .ticket-kpi-card::after {
+    background: none !important;
+}
+html[data-theme="light"] .kpi-card[data-kpi-drilldown],
+html[data-theme="light"] .ticket-kpi-card {
+    transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+html[data-theme="light"] .kpi-card[data-kpi-drilldown]:hover,
+html[data-theme="light"] .ticket-kpi-card:hover {
+    transform: none !important;
+    background: #f8faf9 !important;
+    border-color: #bdcec4 !important;
+    box-shadow: 0 4px 14px rgba(35, 67, 50, .04) !important;
+}
+html[data-theme="light"] .kpi-card[data-kpi-drilldown]:focus-visible,
+html[data-theme="light"] .ticket-kpi-card:focus-visible {
+    background: #f2f6f4 !important;
+    border-color: #91ad9d !important;
+    box-shadow: 0 0 0 3px rgba(95, 142, 118, .12) !important;
+}
+html[data-theme="light"] .kpi-card.is-selected,
+html[data-theme="light"] .kpi-card[aria-pressed="true"],
+html[data-theme="light"] .ticket-kpi-card.is-selected {
+    background: #f1f5f3 !important;
+    border-color: #9eb6a9 !important;
+}
+html[data-theme="light"] .chart-card,
+html[data-theme="light"] .panel-card,
+html[data-theme="light"] .ticket-status-card,
+html[data-theme="light"] .table-card,
+html[data-theme="light"] .admin-card,
+html[data-theme="light"] .report-builder-card,
+html[data-theme="light"] .report-preview-card,
+html[data-theme="light"] .saved-reports-card,
+html[data-theme="light"] .dashboard-widget {
+    background: #ffffff !important;
+    border-color: #dce4df !important;
+    box-shadow: 0 10px 30px rgba(35, 67, 50, .05) !important;
+}
+html[data-theme="light"] .conversation-table th,
+html[data-theme="light"] .report-preview-table th,
+html[data-theme="light"] .pivot-table th,
+html[data-theme="light"] .dashboard-widget-table th,
+html[data-theme="light"] .raw-sql-result-table th {
+    background: #f0f4f2 !important;
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
