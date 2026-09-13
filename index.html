@@ -9360,6 +9360,7 @@ return {
     session: ticket.session_id || "",
     customer: ticket.customer_name || ticket.customer || ticket.email || "Customer",
     phone: ticket.customer_phone || "",
+    channel: String(ticket.channel || ticket.source_channel || ticket.source || ticket.origin || "website").toLowerCase(),
     query: ticket.customer_query || ticket.subject || ticket.issue || ticket.first_query || ticket.query || "Escalated conversation",
     agent,
     status,
@@ -12966,6 +12967,16 @@ document.addEventListener("click",event=>{const menu=document.getElementById("da
 document.addEventListener("keydown",event=>{if(event.key!=="Escape")return;closeDashboardWidgetFocus();if(document.getElementById("panel-dashboards")?.classList.contains("dashboard-presenting"))setDashboardPresenting(false);document.getElementById("dashboardMoreMenu")?.classList.remove("open");});
 let ticketQueuePage = 1;
 const TICKET_QUEUE_PAGE_SIZE = 5;
+function ticketQueueChannelIcon(channel) {
+const value=String(channel||"website").toLowerCase();
+let label="Website",path='<circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4a13 13 0 0 1 0 16M12 4a13 13 0 0 0 0 16"></path>';
+if(value.includes("whatsapp")){label="WhatsApp";path='<path d="M20 11.6a8 8 0 0 1-11.8 7L4 20l1.4-4.1A8 8 0 1 1 20 11.6Z"></path><path d="M9 8.5c.5 2.6 2 4.1 4.6 4.8"></path>'}
+else if(value.includes("instagram")){label="Instagram";path='<rect x="4" y="4" width="16" height="16" rx="5"></rect><circle cx="12" cy="12" r="3.4"></circle><path d="M17.4 6.7h.01"></path>'}
+else if(value.includes("mail")||value.includes("email")){label="Email";path='<rect x="3.5" y="5" width="17" height="14" rx="2"></rect><path d="m4.5 7 7.5 6 7.5-6"></path>'}
+else if(value.includes("phone")||value.includes("call")){label="Phone";path='<path d="M7 4 4.5 6.5c1 6.5 6.5 12 13 13L20 17l-4-3-2 2c-2.5-1-5-3.5-6-6l2-2-3-4Z"></path>'}
+else if(value.includes("chat")){label="Chat";path='<path d="M20 15a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8Z"></path>'}
+return `<span class="ticket-queue-channel" title="${label}" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg></span>`;
+}
 function renderTicketQueue(searchTerm = "") {
 const list = document.getElementById("ticketQueueList");
 if (!list) return;
@@ -12984,9 +12995,12 @@ const totalPages = Math.max(1, Math.ceil(rows.length / TICKET_QUEUE_PAGE_SIZE));
 ticketQueuePage = Math.min(ticketQueuePage, totalPages);
 const visibleRows = rows.slice((ticketQueuePage - 1) * TICKET_QUEUE_PAGE_SIZE, ticketQueuePage * TICKET_QUEUE_PAGE_SIZE);
 list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
-    const created = ticket.createdAt ? new Date(String(ticket.createdAt).includes("T") ? ticket.createdAt : `${String(ticket.createdAt).replace(" ","T")}Z`) : null;
-    const date = created && !isNaN(created) ? created.toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
-    return `<button class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" type="button" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><time>${escapeHtml(date)}</time></span><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No query")}</span></button>`;
+    const ageSource=ticket.status==="resolved"&&ticket.resolvedAt?ticket.resolvedAt:ticket.createdAt;
+    const created = ageSource ? new Date(String(ageSource).includes("T") ? ageSource : `${String(ageSource).replace(" ","T")}Z`) : null;
+    const age = created && !isNaN(created) ? formatTicketAge(ageSource) : "—";
+    const statusLabel=ticketStatusLabel(ticket.status).replace(/^Resolved by .+$/,"Resolved");
+    const unread=ticket.unreadCustomerMessages?`<span class="ticket-queue-unread" aria-label="${ticket.unreadCustomerMessages} unread messages">${ticket.unreadCustomerMessages}</span>`:"";
+    return `<button class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" type="button" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong>${ticketQueueChannelIcon(ticket.channel)}</span><span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${ticket.status==="resolved"?"Resolved":"Waiting"} ${escapeHtml(age)}${ticket.status==="resolved"?" ago":""}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${unread}</button>`;
 }).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
 list.querySelectorAll("[data-queue-ticket-id]").forEach(button => button.addEventListener("click", () => openTicket(Number(button.dataset.queueTicketId))));
 const pagination = document.getElementById("ticketQueuePagination");
@@ -15880,6 +15894,29 @@ chips?.addEventListener("click",event=>{
 window.syncTicketFilterPanelUi();
 })();
 </script>
+
+<style id="novaradesk-ticket-queue-cards-v2">
+.ticket-queue-list{gap:6px!important}
+.ticket-queue-card{position:relative;display:grid!important;gap:7px!important;min-height:96px!important;padding:12px 13px!important;border:1px solid var(--border)!important;border-radius:10px!important;background:var(--bg-card)!important;box-shadow:none!important;transform:none!important;overflow:hidden}
+.ticket-queue-card:hover{border-color:color-mix(in srgb,var(--accent) 34%,var(--border))!important;background:color-mix(in srgb,var(--accent) 3%,var(--bg-card))!important;box-shadow:0 7px 18px rgba(17,39,26,.055)!important}
+.ticket-queue-card.active{border-color:color-mix(in srgb,var(--accent) 62%,var(--border))!important;background:color-mix(in srgb,var(--accent) 6%,var(--bg-card))!important;box-shadow:0 7px 20px rgba(17,39,26,.07)!important}
+.ticket-queue-card-top,.ticket-queue-card-middle{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.ticket-queue-ticket-meta{display:flex;align-items:center;gap:7px;min-width:0}
+.ticket-queue-ticket-meta strong{color:var(--text)!important;font-size:11px!important;font-weight:850!important;line-height:1.2;white-space:nowrap}
+.ticket-queue-channel{display:grid;place-items:center;flex:0 0 23px;width:23px;height:23px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text-muted)}
+.ticket-queue-channel svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ticket-queue-status{flex:0 0 auto;max-width:90px;padding:4px 7px;border-radius:999px;background:var(--surface);color:var(--text-muted);font-size:7px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticket-queue-status.open,.ticket-queue-status.reopened{background:color-mix(in srgb,var(--danger) 9%,var(--bg-card));color:var(--danger)}
+.ticket-queue-status.progress{background:color-mix(in srgb,var(--accent) 10%,var(--bg-card));color:var(--accent-dark)}
+.ticket-queue-status.pending{background:color-mix(in srgb,var(--warning) 11%,var(--bg-card));color:color-mix(in srgb,var(--warning) 78%,var(--text))}
+.ticket-queue-status.resolved{background:color-mix(in srgb,var(--success) 9%,var(--bg-card));color:var(--success)}
+.ticket-queue-card-middle{min-height:16px}
+.ticket-queue-card-name{min-width:0;color:var(--text-secondary)!important;font-size:9.5px!important;font-weight:720!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket-queue-card-middle time{flex:0 0 auto;color:var(--text-muted);font-size:7.5px;white-space:nowrap}
+.ticket-queue-card-query{display:block!important;min-width:0;color:var(--text-muted)!important;font-size:8.5px!important;line-height:1.3!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.ticket-queue-unread{position:absolute;right:8px;bottom:7px;display:grid;place-items:center;min-width:17px;height:17px;padding:0 5px;border:2px solid var(--bg-card);border-radius:999px;background:var(--accent-dark);color:#fff;font-size:7px;font-weight:850}
+.ticket-queue-card:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-2px}
+</style>
 
 <style id="novaradesk-sidebar-profile-overlap-fix-v1">
 @media(min-width:721px){
