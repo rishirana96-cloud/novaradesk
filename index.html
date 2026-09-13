@@ -6475,6 +6475,73 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 }
 </style>
 
+
+<style id="kpi-comparison-design">
+.kpi-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 8.75rem;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 1.25rem;
+    align-items: start;
+}
+.kpi-card > .kpi-label,
+.kpi-card > .kpi-value,
+.kpi-card > .kpi-sub {
+    grid-column: 1;
+}
+.kpi-card > .kpi-label { grid-row: 1; }
+.kpi-card > .kpi-value { grid-row: 2; align-self: center; }
+.kpi-card > .kpi-sub { grid-row: 3; }
+.kpi-comparison {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    align-self: stretch;
+    border-left: 1px solid var(--border, #dce3df);
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .9rem;
+    min-width: 0;
+}
+.kpi-comparison-row {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+.kpi-comparison-label {
+    color: var(--muted, #8b9490);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .055em;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+.kpi-comparison-value {
+    color: var(--text, #17221c);
+    font-size: .95rem;
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+.kpi-comparison-value.is-positive { color: #2f7d59; }
+.kpi-comparison-value.is-negative { color: #c35f58; }
+.kpi-comparison.is-empty {
+    align-items: center;
+    color: var(--muted, #8b9490);
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+.kpi-comparison.is-empty .kpi-comparison-row { display: none; }
+.kpi-comparison.is-empty::after { content: "—"; }
+@media (max-width: 1180px) {
+    .kpi-card { grid-template-columns: minmax(0, 1fr) 7.5rem; column-gap: 1rem; }
+    .kpi-comparison { padding-left: 1rem; }
+}
+@media (max-width: 720px) {
+    .kpi-card { grid-template-columns: minmax(0, 1fr) 7rem; }
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -8849,6 +8916,131 @@ sidebarChatbot?.addEventListener("click", event => { event.preventDefault(); sho
 sidebarKnowledge?.addEventListener("click", event => { event.preventDefault(); showWorkspace("knowledge"); });
 sidebarWorkflows?.addEventListener("click", event => { event.preventDefault(); showWorkspace("workflows"); });
 sidebarSettings?.addEventListener("click", event => { event.preventDefault(); showWorkspace("settings"); });
+
+const KPI_COMPARISON_CONFIG = {
+    aiTotalConversations: { key: "total", format: "number" },
+    aiDeflectionRate: { key: "deflection", format: "percent" },
+    aiResolutionRate: { key: "resolution", format: "percent" },
+    aiSentimentScore: { key: "sentiment", format: "decimal" },
+    humanTotalEscalations: { key: "escalated", format: "number", lowerIsBetter: true },
+    humanEscalationRate: { key: "escalation", format: "percent", lowerIsBetter: true },
+    humanCsatScore: { key: "rating", format: "decimal" },
+    humanResolutionRate: { key: "resolution", format: "percent" }
+};
+function ensureKpiComparisonUi() {
+    document.querySelectorAll("#panel-ai .kpi-card, #panel-human .kpi-card").forEach(card => {
+        if (card.querySelector(".kpi-comparison")) return;
+        const panel = document.createElement("aside");
+        panel.className = "kpi-comparison is-empty";
+        panel.setAttribute("aria-label", "Previous-period comparison");
+        panel.innerHTML = `
+            <div class="kpi-comparison-row">
+                <span class="kpi-comparison-label kpi-previous-label">Previous period</span>
+                <strong class="kpi-comparison-value kpi-previous-value">—</strong>
+            </div>
+            <div class="kpi-comparison-row">
+                <span class="kpi-comparison-label">Change</span>
+                <strong class="kpi-comparison-value kpi-change-value">—</strong>
+            </div>`;
+        card.appendChild(panel);
+    });
+}
+function previousPeriodQuery(period) {
+    const iso = date => date.toISOString().slice(0, 10);
+    let start;
+    let end;
+    if (currentDateRange?.start && currentDateRange?.end) {
+        const currentStart = new Date(currentDateRange.start + "T00:00:00Z");
+        const currentEnd = new Date(currentDateRange.end + "T00:00:00Z");
+        const span = Math.max(1, Math.round((currentEnd - currentStart) / 86400000) + 1);
+        end = new Date(currentStart);
+        end.setUTCDate(end.getUTCDate() - 1);
+        start = new Date(end);
+        start.setUTCDate(start.getUTCDate() - span + 1);
+        return { query: `start=${iso(start)}&end=${iso(end)}`, label: `Previous ${span} days` };
+    }
+    const days = Math.max(1, Number(period) || 14);
+    end = new Date();
+    end.setUTCHours(0, 0, 0, 0);
+    end.setUTCDate(end.getUTCDate() - days);
+    start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - days + 1);
+    return { query: `start=${iso(start)}&end=${iso(end)}`, label: `Previous ${days} days` };
+}
+function summarizeKpiPeriod(analytics, resolution, ratings, sentiment) {
+    const totals = (Array.isArray(analytics) ? analytics : []).reduce((acc, day) => {
+        acc.total += parseInt(day.total_conversations) || 0;
+        acc.resolved += parseInt(day.resolved) || 0;
+        acc.escalated += parseInt(day.escalated) || 0;
+        return acc;
+    }, { total: 0, resolved: 0, escalated: 0 });
+    const resolutionTotals = (Array.isArray(resolution) ? resolution : []).reduce((acc, day) => {
+        acc.total += parseInt(day.total) || 0;
+        acc.resolved += parseInt(day.resolved_count) || 0;
+        return acc;
+    }, { total: 0, resolved: 0 });
+    let ratingPoints = 0, ratingCount = 0;
+    (Array.isArray(ratings) ? ratings : []).forEach(item => {
+        const count = parseInt(item.count) || 0;
+        const points = item.rating === "yes" ? 5 : item.rating === "partial" ? 3 : item.rating === "no" ? 1 : 0;
+        if (points) { ratingPoints += points * count; ratingCount += count; }
+    });
+    let sentimentPoints = 0, sentimentCount = 0;
+    (Array.isArray(sentiment) ? sentiment : []).forEach(item => {
+        const count = parseInt(item.count) || 0;
+        if (item.avg_score != null) {
+            sentimentPoints += (parseFloat(item.avg_score) || 0) * count;
+            sentimentCount += count;
+        }
+    });
+    return {
+        total: totals.total,
+        escalated: totals.escalated,
+        deflection: totals.total ? totals.resolved / totals.total * 100 : null,
+        escalation: totals.total ? totals.escalated / totals.total * 100 : null,
+        resolution: resolutionTotals.total ? resolutionTotals.resolved / resolutionTotals.total * 100 : null,
+        rating: ratingCount ? ratingPoints / ratingCount : null,
+        sentiment: sentimentCount ? sentimentPoints / sentimentCount : null
+    };
+}
+function formatKpiComparisonValue(value, format) {
+    if (value == null || !Number.isFinite(Number(value))) return "—";
+    if (format === "percent") return `${Math.round(value)}%`;
+    if (format === "decimal") return Number(value).toFixed(value < 1 ? 2 : 1);
+    return Math.round(value).toLocaleString();
+}
+function updateKpiComparisons(currentSummary, previousSummary, label) {
+    ensureKpiComparisonUi();
+    document.querySelectorAll("#panel-ai .kpi-value, #panel-human .kpi-value").forEach(valueNode => {
+        const card = valueNode.closest(".kpi-card");
+        const panel = card?.querySelector(".kpi-comparison");
+        const config = KPI_COMPARISON_CONFIG[valueNode.id];
+        if (!panel || !config) {
+            panel?.classList.add("is-empty");
+            return;
+        }
+        const current = currentSummary[config.key];
+        const previous = previousSummary[config.key];
+        if (current == null || previous == null) {
+            panel.classList.add("is-empty");
+            return;
+        }
+        panel.classList.remove("is-empty");
+        panel.querySelector(".kpi-previous-label").textContent = label;
+        panel.querySelector(".kpi-previous-value").textContent = formatKpiComparisonValue(previous, config.format);
+        const changeNode = panel.querySelector(".kpi-change-value");
+        changeNode.classList.remove("is-positive", "is-negative");
+        if (previous === 0) {
+            changeNode.textContent = "—";
+            return;
+        }
+        const change = (current - previous) / Math.abs(previous) * 100;
+        const improving = config.lowerIsBetter ? change < 0 : change > 0;
+        changeNode.textContent = `${change > 0 ? "▲" : change < 0 ? "▼" : ""} ${Math.abs(change).toFixed(1)}%`.trim();
+        if (change !== 0) changeNode.classList.add(improving ? "is-positive" : "is-negative");
+    });
+}
+
 /* =====================================================
    DASHBOARD
 ====================================================== */
@@ -8878,6 +9070,7 @@ document
         );
     });
 document.getElementById("customDateBtn").classList.toggle("active", Boolean(currentDateRange));
+const comparisonPeriod = previousPeriodQuery(period);
 try {
     const [
         analyticsData,
@@ -8886,7 +9079,11 @@ try {
         ratingsData,
         resolutionData,
         sentimentData,
-        ticketsData
+        ticketsData,
+        previousAnalyticsData,
+        previousResolutionData,
+        previousRatingsData,
+        previousSentimentData
     ] = await Promise.all([
         fetchAnalytics(
             period
@@ -8909,7 +9106,11 @@ try {
         ),
         fetchTickets(
             period
-        )
+        ),
+        fetchJSON(`/analytics?${comparisonPeriod.query}`),
+        fetchJSON(`/resolution?${comparisonPeriod.query}`),
+        fetchJSON(`/ratings?${comparisonPeriod.query}`),
+        fetchJSON(`/sentiment?${comparisonPeriod.query}`)
     ]);
     reportDataCache = {
         analytics: Array.isArray(analyticsData) ? analyticsData : [],
@@ -9194,6 +9395,9 @@ try {
         "—";
     document.getElementById("humanFirstResponseTime").textContent = "—";
     document.getElementById("humanSlaAttainment").textContent = "—";
+    const currentKpiSummary = summarizeKpiPeriod(analyticsData, resolutionData, ratingsData, sentimentData);
+    const previousKpiSummary = summarizeKpiPeriod(previousAnalyticsData, previousResolutionData, previousRatingsData, previousSentimentData);
+    updateKpiComparisons(currentKpiSummary, previousKpiSummary, comparisonPeriod.label);
     /* =================================================
        PERFORMANCE
     ================================================== */
