@@ -16142,5 +16142,170 @@ document.querySelectorAll(".table-card thead th,.customer-directory-card thead t
 })();
 </script>
 
+<style id="novaradesk-typography-audit-final-v1">
+/*
+  Final role-based type scale.
+  This block intentionally loads last so legacy component overrides resolve
+  to one consistent visual hierarchy. User text-size preferences still apply.
+*/
+:root{
+    --desk-type-label:calc(9.5px * var(--ui-text-scale));
+    --desk-type-meta:calc(10.5px * var(--ui-text-scale));
+    --desk-type-body:calc(11.5px * var(--ui-text-scale));
+    --desk-type-control:calc(12px * var(--ui-text-scale));
+    --desk-type-card-title:calc(15px * var(--ui-text-scale));
+    --desk-type-section:calc(20px * var(--ui-text-scale));
+    --desk-type-page:calc(34px * var(--ui-text-scale));
+    --desk-type-kpi:calc(36px * var(--ui-text-scale));
+}
+body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,BlinkMacSystemFont,sans-serif}
+
+/* Workspace hierarchy */
+.page-title h1{font-size:var(--desk-type-page)!important;font-weight:720!important;line-height:1.08!important;letter-spacing:-1.35px!important}
+.page-title p{font-size:calc(12.5px * var(--ui-text-scale))!important;line-height:1.5!important}
+.chart-title,.panel-title,.table-title{font-size:var(--desk-type-card-title)!important;font-weight:650!important;line-height:1.3!important;letter-spacing:-.15px!important}
+.chart-subtitle,.panel-subtitle,.table-subtitle{font-size:var(--desk-type-meta)!important;line-height:1.45!important}
+.admin-command h2{font-size:calc(18px * var(--ui-text-scale))!important;font-weight:680!important;line-height:1.25!important}
+.admin-command p{font-size:var(--desk-type-body)!important;line-height:1.5!important}
+.admin-card h3{font-size:var(--desk-type-card-title)!important;font-weight:650!important;line-height:1.3!important}
+.admin-card p{font-size:var(--desk-type-meta)!important;line-height:1.5!important}
+
+/* Navigation and tabs */
+.nav-item{font-size:var(--desk-type-control)!important;font-weight:600!important}
+.tab,.admin-tab,.ticket-channel-switch button{font-size:var(--desk-type-control)!important;font-weight:650!important}
+.sidebar-heading,.settings-nav-group{font-size:var(--desk-type-label)!important;font-weight:700!important;letter-spacing:.09em!important}
+
+/* Controls, form labels and supporting text */
+.admin-field>span,.ticket-call-field>span,.settings-form-grid>label>span,
+#panel-settings .settings-form-grid>label>span,.workflow-editor .workflow-field>span,
+#panel-reports .report-field>span,.kpi-builder-controls label{
+    font-size:var(--desk-type-label)!important;font-weight:700!important;letter-spacing:.065em!important;
+}
+.admin-field input,.admin-field select,.admin-field textarea,
+.ticket-call-field input,.ticket-call-field select,.ticket-call-field textarea,
+#panel-settings .settings-form-grid input:not([type="checkbox"]),
+#panel-settings .settings-form-grid select,
+#panel-settings .settings-inline-form input,#panel-settings .settings-inline-form select,
+.workflow-editor .workflow-field input,.workflow-editor .workflow-field select,.workflow-editor .workflow-field textarea,
+.report-field input,.report-field select,.report-filter-row input,.report-filter-row select{
+    font-size:var(--desk-type-control)!important;line-height:1.45!important;
+}
+.admin-btn,.report-primary-btn,.report-secondary-btn,.settings-primary-btn,.settings-secondary-btn,.settings-text-btn,
+.customer-primary-btn,.customer-secondary-btn{
+    font-size:var(--desk-type-control)!important;font-weight:680!important;
+}
+.admin-status,.settings-save-state,.ticket-action-error,.ticket-call-field small{
+    font-size:var(--desk-type-meta)!important;line-height:1.45!important;
+}
+
+/* Primary KPI cards */
+.kpi-card .kpi-label{font-size:calc(11px * var(--ui-text-scale))!important;font-weight:620!important;line-height:1.3!important;letter-spacing:0!important;text-transform:none!important}
+.kpi-card .kpi-value{font-size:var(--desk-type-kpi)!important;font-weight:700!important;line-height:1!important;letter-spacing:-1.4px!important}
+.kpi-card .kpi-sub{font-size:var(--desk-type-meta)!important;line-height:1.4!important}
+/* Compact ticket metric bar remains compact by design */
+.ticket-compact-metrics .ticket-kpi-label{font-size:calc(9px * var(--ui-text-scale))!important}
+.ticket-compact-metrics .ticket-kpi-value{font-size:calc(24px * var(--ui-text-scale))!important}
+.ticket-compact-metrics .ticket-kpi-sub{font-size:calc(8.5px * var(--ui-text-scale))!important}
+
+/* All data tables share one readable hierarchy */
+.conversation-table th,.ticket-table th,.customer-profile-table th,
+.report-preview-table th,.pivot-table th,.raw-sql-result-table th,
+.dashboard-widget-table th,.data-explorer-table th,.ticket-call-history-table th{
+    font-size:calc(10px * var(--ui-text-scale))!important;font-weight:650!important;
+    line-height:1.3!important;letter-spacing:0!important;text-transform:none!important;
+}
+.conversation-table td,.ticket-table td,.customer-profile-table td,
+.report-preview-table td,.pivot-table td,.raw-sql-result-table td,
+.dashboard-widget-table td,.data-explorer-table td,.ticket-call-history-table td{
+    font-size:var(--desk-type-body)!important;line-height:1.45!important;
+}
+.conversation-table .conversation-time,.conversation-table .session-id,
+.ticket-table .ticket-age,.customer-directory-meta,.data-explorer-footer{
+    font-size:var(--desk-type-meta)!important;
+}
+.conversation-table .badge,.ticket-table .ticket-badge,.ticket-table .sla-badge,
+.customer-profile-table .customer-status{
+    font-size:calc(10px * var(--ui-text-scale))!important;font-weight:600!important;
+}
+.customer-cell-identity strong{font-size:var(--desk-type-body)!important}
+.customer-cell-identity span,.customer-cell-secondary{font-size:var(--desk-type-meta)!important}
+
+/* Report builder */
+#panel-reports .report-section-heading h2,#panel-reports .report-preview-head h2,
+#panel-reports.sql-runner-mode .report-section-heading h2,#panel-reports.sql-runner-mode .report-preview-head h2{
+    font-size:var(--desk-type-section)!important;font-weight:670!important;line-height:1.25!important;letter-spacing:-.35px!important;
+}
+#panel-reports .report-section-heading p,#panel-reports .report-preview-head p{font-size:var(--desk-type-meta)!important;line-height:1.5!important}
+#panel-reports .report-eyebrow,.report-mode-toolbar>span{font-size:var(--desk-type-label)!important;font-weight:700!important;letter-spacing:.09em!important}
+.report-summary-strip strong{font-size:var(--desk-type-card-title)!important}
+.saved-report-main strong,.dashboard-widget-title strong,.dashboard-picker-item strong{font-size:var(--desk-type-body)!important}
+.saved-report-main span,.dashboard-widget-title span,.dashboard-picker-item span{font-size:var(--desk-type-meta)!important}
+
+/* Customer profiles */
+.customer-profile-name-row .customer-inline-input{font-size:calc(20px * var(--ui-text-scale))!important;font-weight:700!important}
+.customer-profile-section h3,.customer-drawer-section h3{font-size:var(--desk-type-card-title)!important}
+.customer-profile-section p,.customer-drawer-section p{font-size:var(--desk-type-body)!important;line-height:1.55!important}
+
+/* Workflows */
+#panel-workflows .workflow-table-head{font-size:calc(10px * var(--ui-text-scale))!important;font-weight:650!important;letter-spacing:0!important;text-transform:none!important}
+#panel-workflows .workflow-name strong{font-size:var(--desk-type-body)!important}
+#panel-workflows .workflow-name p{font-size:var(--desk-type-meta)!important;line-height:1.4!important}
+#panel-workflows .workflow-summary strong,#panel-workflows .workflow-updated strong,
+#panel-workflows .workflow-actions-summary,#panel-workflows .workflow-tab{font-size:var(--desk-type-meta)!important}
+.workflow-editor-head h2{font-size:var(--desk-type-section)!important}
+.workflow-editor-head p,.workflow-editor .workflow-step p{font-size:var(--desk-type-body)!important}
+.workflow-editor .workflow-step h3{font-size:var(--desk-type-card-title)!important}
+
+/* AI Chatbot and Knowledge Base */
+#chatbotTab-versions .admin-card-head h3,#chatbotTab-model .admin-card-head h3{
+    font-size:calc(18px * var(--ui-text-scale))!important;font-weight:670!important;
+}
+#chatbotTab-versions .admin-card-head p,#chatbotTab-model .admin-card-head p{font-size:var(--desk-type-body)!important}
+#chatbotTab-instructions .prompt-section-head strong,.custom-instruction-title{font-size:var(--desk-type-card-title)!important}
+#chatbotTab-instructions .prompt-section textarea,#chatbotTab-instructions .custom-instruction-card textarea{font-size:var(--desk-type-control)!important}
+#panel-chatbot .live-chatbot-kicker{font-size:var(--desk-type-label)!important}
+#panel-chatbot .live-chatbot-head h3{font-size:var(--desk-type-section)!important}
+#panel-knowledge .admin-card h3,#panel-knowledge .kb-item h3{font-size:var(--desk-type-card-title)!important}
+.kb-row strong,.version-row strong{font-size:var(--desk-type-body)!important}
+.kb-row span,.version-row span{font-size:var(--desk-type-meta)!important}
+
+/* Settings */
+#panel-settings .settings-content-head h2{font-size:calc(26px * var(--ui-text-scale))!important;font-weight:690!important;line-height:1.1!important}
+#panel-settings .settings-content-head p{font-size:var(--desk-type-body)!important;line-height:1.5!important}
+#panel-settings .settings-block-head h3{font-size:var(--desk-type-card-title)!important}
+#panel-settings .settings-block-head p{font-size:var(--desk-type-meta)!important}
+#panel-settings .settings-navigation nav button{font-size:var(--desk-type-body)!important}
+#panel-settings .settings-switch-row strong,#panel-settings .settings-agent-row strong,
+#panel-settings .settings-field-row strong,#panel-settings .settings-connection-row strong{font-size:var(--desk-type-body)!important}
+#panel-settings .settings-switch-row small,#panel-settings .settings-agent-row small,
+#panel-settings .settings-field-row small,#panel-settings .settings-connection-row small{font-size:var(--desk-type-meta)!important}
+
+/* Ticket detail, calls and history */
+.ticket-drawer-title{font-size:calc(23px * var(--ui-text-scale))!important;font-weight:760!important}
+.ticket-call-summary-title strong{font-size:var(--desk-type-card-title)!important;font-weight:680!important}
+.ticket-call-summary-title small,.ticket-call-summary-meta strong{font-size:var(--desk-type-meta)!important}
+.ticket-history-head h3{font-size:var(--desk-type-card-title)!important}
+.ticket-history-head p{font-size:var(--desk-type-meta)!important}
+.ticket-history-head span:first-child,.ticket-history-count{font-size:var(--desk-type-label)!important}
+.ticket-history-event strong{font-size:var(--desk-type-body)!important}
+.ticket-history-event p{font-size:var(--desk-type-meta)!important;line-height:1.5!important}
+.ticket-history-event time,.ticket-history-event .ticket-history-actor{font-size:calc(10px * var(--ui-text-scale))!important}
+.ticket-composer-tab,.ticket-action-btn{font-size:var(--desk-type-control)!important}
+
+/* Preserve the approved Current View ticket-card scale exactly */
+.ticket-queue-ticket-meta strong{font-size:12px!important}
+.ticket-queue-status{font-size:8.5px!important}
+.ticket-queue-card-name{font-size:10.5px!important}
+.ticket-queue-card-middle time{font-size:8.5px!important}
+.ticket-queue-card-query{font-size:9.5px!important}
+.ticket-queue-unread{font-size:7px!important}
+
+/* Correct Save Call Log placement without changing the form width */
+.ticket-call-save-row{
+    grid-column:1/-1!important;width:100%!important;margin-top:4px!important;padding-top:16px!important;
+    border-top:1px solid var(--border)!important;justify-content:flex-end!important;
+}
+</style>
+
 </body>
 </html>
