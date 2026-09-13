@@ -15881,6 +15881,58 @@ window.syncTicketFilterPanelUi();
 })();
 </script>
 
+<style id="novaradesk-sidebar-profile-overlap-fix-v1">
+@media(min-width:721px){
+    body:not(.sidebar-pinned) #appSidebar .authenticated-profile{
+        width:58px;
+        min-width:58px;
+        padding:10px!important;
+        justify-content:center;
+        gap:0;
+        overflow:hidden;
+    }
+    body:not(.sidebar-pinned) #appSidebar .authenticated-profile .agent-profile-copy,
+    body:not(.sidebar-pinned) #appSidebar .authenticated-profile .sidebar-profile-logout{
+        position:absolute;
+        width:1px;
+        height:1px;
+        overflow:hidden;
+        clip-path:inset(50%);
+        opacity:0;
+        visibility:hidden;
+        pointer-events:none;
+    }
+    body.sidebar-pinned #appSidebar .authenticated-profile{
+        width:100%;
+        justify-content:flex-start;
+        gap:10px;
+        padding:10px 42px 10px 10px!important;
+        overflow:visible;
+    }
+    body.sidebar-pinned #appSidebar .authenticated-profile .agent-profile-copy{
+        position:static;
+        width:auto;
+        height:auto;
+        min-width:0;
+        overflow:visible;
+        clip-path:none;
+        opacity:1;
+        visibility:visible;
+        pointer-events:auto;
+    }
+    body.sidebar-pinned #appSidebar .authenticated-profile .sidebar-profile-logout{
+        position:absolute;
+        width:27px;
+        height:27px;
+        overflow:visible;
+        clip-path:none;
+        opacity:1;
+        visibility:visible;
+        pointer-events:auto;
+    }
+}
+</style>
+
 <style id="novaradesk-report-header-density-v1">
 #panel-reports:not(.sql-runner-mode) .report-section-heading{align-items:flex-start;margin-bottom:14px}
 #panel-reports:not(.sql-runner-mode) .report-heading-actions{gap:8px}
