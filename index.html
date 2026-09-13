@@ -7747,9 +7747,11 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
                         </div>
                         <button id="rawSqlSaveBtnTitle" class="report-primary-btn" type="button">Save report</button>
                     </div>
-                    <div class="report-heading-actions"><button id="reportSaveBtn" class="report-primary-btn report-save-primary" type="button">Save report</button></div>
+                    <div class="report-heading-actions">
+                        <button id="reportClearInputs" class="report-reset-icon" type="button" aria-label="Reset report inputs" title="Reset report inputs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7v5h5"></path><path d="M5.6 16.5A8 8 0 1 0 6 6.8L4 12"></path></svg></button>
+                        <button id="reportSaveBtn" class="report-primary-btn report-save-primary" type="button">Save report</button>
+                    </div>
                 </div>
-                <div class="report-clear-row"><button id="reportClearInputs" class="report-inline-clear" type="button">Clear main inputs</button></div>
                 <div class="report-form-grid">
                     <label class="report-field report-field-wide">
                         <span>Report name</span>
@@ -15878,6 +15880,17 @@ chips?.addEventListener("click",event=>{
 window.syncTicketFilterPanelUi();
 })();
 </script>
+
+<style id="novaradesk-report-header-density-v1">
+#panel-reports:not(.sql-runner-mode) .report-section-heading{align-items:flex-start;margin-bottom:14px}
+#panel-reports:not(.sql-runner-mode) .report-heading-actions{gap:8px}
+#panel-reports .report-reset-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;padding:0;border:1px solid var(--border);border-radius:9px;background:var(--bg-card);color:var(--text-muted);cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease}
+#panel-reports .report-reset-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#panel-reports .report-reset-icon:hover{border-color:color-mix(in srgb,var(--accent) 32%,var(--border));background:color-mix(in srgb,var(--accent) 6%,var(--bg-card));color:var(--accent-dark)}
+#panel-reports .report-reset-icon:active{transform:scale(.96)}
+#panel-reports .report-reset-icon:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+@media(max-width:520px){#panel-reports .report-reset-icon{width:36px;height:36px;flex-basis:36px}#panel-reports .report-save-primary{min-height:36px}}
+</style>
 
 <style id="novaradesk-sidebar-tooltips-v1">
 .sidebar-nav-tooltip{position:fixed;z-index:10000;display:flex;align-items:center;min-height:36px;max-width:220px;padding:8px 12px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#17211c;color:#f7faf8;box-shadow:0 12px 30px rgba(7,18,12,.2);font:700 11px/1.2 var(--font-family,inherit);letter-spacing:.005em;white-space:nowrap;opacity:0;visibility:hidden;transform:translateX(-4px) scale(.98);transform-origin:left center;pointer-events:none;transition:opacity .13s ease,transform .13s ease,visibility 0s linear .13s}
