@@ -12999,8 +12999,9 @@ list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
     const created = ageSource ? new Date(String(ageSource).includes("T") ? ageSource : `${String(ageSource).replace(" ","T")}Z`) : null;
     const age = created && !isNaN(created) ? formatTicketAge(ageSource) : "—";
     const statusLabel=ticketStatusLabel(ticket.status).replace(/^Resolved by .+$/,"Resolved");
+    const ageLabel=ticket.status==="resolved"?`${age} ago`:`Waiting ${age}`;
     const unread=ticket.unreadCustomerMessages?`<span class="ticket-queue-unread" aria-label="${ticket.unreadCustomerMessages} unread messages">${ticket.unreadCustomerMessages}</span>`:"";
-    return `<button class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" type="button" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong>${ticketQueueChannelIcon(ticket.channel)}</span><span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${ticket.status==="resolved"?"Resolved":"Waiting"} ${escapeHtml(age)}${ticket.status==="resolved"?" ago":""}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${unread}</button>`;
+    return `<button class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" type="button" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong>${ticketQueueChannelIcon(ticket.channel)}</span><span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${unread}</button>`;
 }).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
 list.querySelectorAll("[data-queue-ticket-id]").forEach(button => button.addEventListener("click", () => openTicket(Number(button.dataset.queueTicketId))));
 const pagination = document.getElementById("ticketQueuePagination");
@@ -15905,11 +15906,11 @@ window.syncTicketFilterPanelUi();
 .ticket-queue-ticket-meta strong{color:var(--text)!important;font-size:10.5px!important;font-weight:820!important;line-height:1.2;white-space:nowrap}
 .ticket-queue-channel{display:grid;place-items:center;flex:0 0 23px;width:23px;height:23px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text-muted)}
 .ticket-queue-channel svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.ticket-queue-status{flex:0 0 auto;max-width:90px;padding:4px 7px;border-radius:999px;background:var(--surface);color:var(--text-muted);font-size:8px;font-weight:740;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ticket-queue-status.open,.ticket-queue-status.reopened{background:color-mix(in srgb,var(--danger) 9%,var(--bg-card));color:var(--danger)}
-.ticket-queue-status.progress{background:color-mix(in srgb,var(--accent) 10%,var(--bg-card));color:var(--accent-dark)}
-.ticket-queue-status.pending{background:color-mix(in srgb,var(--warning) 11%,var(--bg-card));color:color-mix(in srgb,var(--warning) 78%,var(--text))}
-.ticket-queue-status.resolved{background:color-mix(in srgb,var(--success) 9%,var(--bg-card));color:var(--success)}
+.ticket-queue-status{flex:0 0 auto;max-width:96px;padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text-muted);font-size:8.5px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticket-queue-status.open,.ticket-queue-status.reopened{border-color:color-mix(in srgb,var(--danger) 24%,var(--border));background:color-mix(in srgb,var(--danger) 13%,var(--bg-card));color:var(--danger)}
+.ticket-queue-status.progress{border-color:color-mix(in srgb,var(--accent) 28%,var(--border));background:color-mix(in srgb,var(--accent) 14%,var(--bg-card));color:var(--accent-dark)}
+.ticket-queue-status.pending{border-color:color-mix(in srgb,var(--warning) 28%,var(--border));background:color-mix(in srgb,var(--warning) 15%,var(--bg-card));color:color-mix(in srgb,var(--warning) 78%,var(--text))}
+.ticket-queue-status.resolved{border-color:color-mix(in srgb,var(--success) 26%,var(--border));background:color-mix(in srgb,var(--success) 13%,var(--bg-card));color:var(--success)}
 .ticket-queue-card-middle{min-height:16px}
 .ticket-queue-card-name{min-width:0;color:var(--text-secondary)!important;font-size:10.5px!important;font-weight:680!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ticket-queue-card-middle time{flex:0 0 auto;color:var(--text-muted);font-size:8.5px;font-weight:500;white-space:nowrap}
