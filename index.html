@@ -6479,9 +6479,9 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 <style id="kpi-comparison-design">
 .kpi-card {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 8.25rem;
+    grid-template-columns: minmax(0, 1fr) 8.75rem;
     grid-template-rows: auto 1fr auto;
-    column-gap: 1.25rem;
+    column-gap: 1.4rem;
     align-items: start;
 }
 .kpi-card > .kpi-label,
@@ -6501,41 +6501,51 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 .kpi-comparison {
     grid-column: 2;
     grid-row: 1 / 4;
-    align-self: center;
-    min-width: 0;
+    align-self: start;
+    justify-self: end;
+    min-width: 8.25rem;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: .32rem;
+    align-items: flex-end;
+    gap: .55rem;
+    padding-top: .05rem;
+    text-align: right;
+}
+.kpi-change-value {
+    order: 1;
+    color: var(--text-secondary, #56615b);
+    font-size: .98rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.kpi-previous-group {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .15rem;
 }
 .kpi-comparison-label {
     color: var(--muted, #8b9490);
-    font-size: .73rem;
-    font-weight: 600;
+    font-size: .72rem;
+    font-weight: 550;
     letter-spacing: 0;
     line-height: 1.25;
     text-transform: none;
     white-space: nowrap;
 }
-.kpi-comparison-metrics {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: .18rem;
-}
-.kpi-comparison-value {
+.kpi-previous-value {
     color: var(--text-secondary, #56615b);
-    font-size: .98rem;
+    font-size: .92rem;
     font-weight: 650;
-    line-height: 1.25;
+    line-height: 1.2;
     white-space: nowrap;
-}
-.kpi-change-value {
-    font-size: .86rem;
 }
 .kpi-comparison-value.is-positive { color: #2f7d59; }
 .kpi-comparison-value.is-negative { color: #b85851; }
 .kpi-comparison.is-empty {
+    align-self: center;
     align-items: center;
     color: var(--muted, #8b9490);
     font-size: 1.15rem;
@@ -6545,16 +6555,19 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 .kpi-comparison.is-empty::after { content: "—"; }
 @media (max-width: 1180px) {
     .kpi-card {
-        grid-template-columns: minmax(0, 1fr) 7.4rem;
-        column-gap: .9rem;
+        grid-template-columns: minmax(0, 1fr) 7.75rem;
+        column-gap: 1rem;
     }
+    .kpi-comparison { min-width: 7.25rem; }
 }
 @media (max-width: 720px) {
     .kpi-card {
-        grid-template-columns: minmax(0, 1fr) 6.8rem;
+        grid-template-columns: minmax(0, 1fr) 6.75rem;
+        column-gap: .75rem;
     }
     .kpi-card > .kpi-value { font-size: 2.35rem !important; }
-    .kpi-comparison-value { font-size: .9rem; }
+    .kpi-comparison { min-width: 6.4rem; }
+    .kpi-change-value { font-size: .9rem; }
 }
 </style>
 </head>
@@ -8949,10 +8962,10 @@ function ensureKpiComparisonUi() {
         panel.className = "kpi-comparison is-empty";
         panel.setAttribute("aria-label", "Previous-period comparison");
         panel.innerHTML = `
-            <span class="kpi-comparison-label kpi-previous-label">Previous period</span>
-            <span class="kpi-comparison-metrics">
+            <strong class="kpi-comparison-value kpi-change-value">—</strong>
+            <span class="kpi-previous-group">
+                <span class="kpi-comparison-label kpi-previous-label">Previous period</span>
                 <strong class="kpi-comparison-value kpi-previous-value">—</strong>
-                <strong class="kpi-comparison-value kpi-change-value">—</strong>
             </span>`;
         card.appendChild(panel);
     });
