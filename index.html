@@ -6931,6 +6931,12 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
                     Seconds
                 </div>
             </div>
+            <!-- Confidence -->
+            <div class="kpi-card">
+                <div class="kpi-label">Avg. AI Confidence</div>
+                <div id="aiAvgConfidence" class="kpi-value">—</div>
+                <div class="kpi-sub">Across AI responses</div>
+            </div>
             <!-- Resolution -->
             <div class="kpi-card">
                 <div class="kpi-label">
@@ -6975,6 +6981,12 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
                 <div class="kpi-sub">
                     Per conversation
                 </div>
+            </div>
+            <!-- Knowledge usage -->
+            <div class="kpi-card">
+                <div class="kpi-label">Knowledge Usage</div>
+                <div id="aiKnowledgeUsage" class="kpi-value">—</div>
+                <div class="kpi-sub">Responses using knowledge</div>
             </div>
         </div>
         <!-- =================================================
@@ -7228,6 +7240,12 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
                     Minutes
                 </div>
             </div>
+            <!-- First response -->
+            <div class="kpi-card">
+                <div class="kpi-label">First Response Time</div>
+                <div id="humanFirstResponseTime" class="kpi-value">—</div>
+                <div class="kpi-sub">Average initial response</div>
+            </div>
             <!-- CSAT -->
             <div class="kpi-card">
                 <div class="kpi-label">
@@ -7257,6 +7275,12 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
                 <div class="kpi-sub">
                     Resolved by humans
                 </div>
+            </div>
+            <!-- SLA -->
+            <div class="kpi-card">
+                <div class="kpi-label">SLA Attainment</div>
+                <div id="humanSlaAttainment" class="kpi-value accent">—</div>
+                <div class="kpi-sub">Within service target</div>
             </div>
             <!-- Agents -->
             <div class="kpi-card">
@@ -9121,6 +9145,8 @@ try {
         )
         .textContent =
         "—";
+    document.getElementById("aiAvgConfidence").textContent = "—";
+    document.getElementById("aiKnowledgeUsage").textContent = "—";
     /* =================================================
        HUMAN KPI
     ================================================== */
@@ -9166,6 +9192,8 @@ try {
         )
         .textContent =
         "—";
+    document.getElementById("humanFirstResponseTime").textContent = "—";
+    document.getElementById("humanSlaAttainment").textContent = "—";
     /* =================================================
        PERFORMANCE
     ================================================== */
@@ -11190,7 +11218,9 @@ aiAvgResponseTime: { title:"Average response time", subtitle:"Conversations cont
 aiResolutionRate: { title:"Resolution rate", subtitle:"Resolved and unresolved conversations behind this rate", filterField:"resolution_status", filterLabel:"All resolution outcomes" },
 aiDeflectionRate: { title:"Deflection rate", subtitle:"AI-resolved and escalated conversations behind this rate", filterField:"resolution_status", filterLabel:"AI resolved or escalated" },
 aiSentimentScore: { title:"Sentiment score", subtitle:"Conversation-level sentiment behind the average score", filterField:"sentiment", filterLabel:"All sentiment labels" },
-aiAvgMessages: { title:"Average messages", subtitle:"Message count for each conversation behind this average", filterField:"resolution_status", filterLabel:"All statuses" }
+aiAvgMessages: { title:"Average messages", subtitle:"Message count for each conversation behind this average", filterField:"resolution_status", filterLabel:"All statuses" },
+aiAvgConfidence: { title:"Average AI confidence", subtitle:"Conversation-level confidence records", filterField:"resolution_status", filterLabel:"All statuses" },
+aiKnowledgeUsage: { title:"Knowledge usage", subtitle:"Conversations evaluated for knowledge usage", filterField:"resolution_status", filterLabel:"All statuses" }
 };
 async function openAiKpiDrilldown(metricId) {
 const config = aiKpiDrilldowns[metricId];
@@ -16163,6 +16193,8 @@ const humanKpis={
  humanAvgHandlingTime:{title:"Average handling time",source:"tickets",predicate:()=>true},
  humanCsatScore:{title:"Human CSAT",source:"conversations",predicate:r=>r.resolution_status==="escalated",kind:"human"},
  humanResolutionRate:{title:"Resolution rate",source:"tickets",predicate:r=>String(r.status||"").toLowerCase()==="resolved"},
+ humanFirstResponseTime:{title:"First response time",source:"tickets",predicate:r=>Boolean(r.first_response_at)},
+ humanSlaAttainment:{title:"SLA attainment",source:"tickets",predicate:r=>Boolean(r.first_response_at)},
  humanActiveAgents:{title:"Active agents",source:"tickets",predicate:r=>Boolean(r.agent_name||r.agent)}
 };
 Object.entries(humanKpis).forEach(([id,config])=>{
@@ -16445,6 +16477,19 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
 
 @media(max-width:980px){.chatbot-simulator-grid{grid-template-columns:1fr}.chatbot-test-main{border-right:0;border-bottom:1px solid #d8e0da}.chatbot-test-context{display:none}}
 @media(max-width:680px){#chatbotTab-overview .chatbot-overview-kpis{grid-template-columns:1fr 1fr}#chatbotTab-overview .live-chatbot-head{align-items:flex-start;flex-direction:column}.chatbot-test-reset{width:100%;justify-content:center}#chatbotTab-overview .test-message{max-width:86%}}
+</style>
+
+<style id="novaradesk-ai-human-kpi-density-v1">
+@media(min-width:1181px){
+    #panel-ai>.kpi-grid,#panel-human>.kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important}
+}
+#panel-ai>.kpi-grid,#panel-human>.kpi-grid{margin-bottom:18px!important}
+#panel-ai>.kpi-grid .kpi-card,#panel-human>.kpi-grid .kpi-card{min-height:126px!important;padding:17px 18px!important;border-radius:15px!important}
+#panel-ai>.kpi-grid .kpi-value,#panel-human>.kpi-grid .kpi-value{margin-top:10px!important;font-size:calc(32px * var(--ui-text-scale))!important;letter-spacing:-1.1px!important}
+#panel-ai>.kpi-grid .kpi-sub,#panel-human>.kpi-grid .kpi-sub{margin-top:8px!important}
+@media(max-width:1180px) and (min-width:641px){
+    #panel-ai>.kpi-grid,#panel-human>.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
 </style>
 
 </body>
