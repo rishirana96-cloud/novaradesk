@@ -9064,7 +9064,7 @@ function updateKpiComparisons(currentSummary, previousSummary, label) {
         const change = (current - previous) / Math.abs(previous) * 100;
         const improving = config.lowerIsBetter ? change < 0 : change > 0;
         const changeMagnitude = Math.abs(change) > 999 ? ">999%" : `${Math.abs(change).toFixed(1)}%`;
-        changeNode.textContent = `${change > 0 ? "↑" : change < 0 ? "↓" : ""} ${changeMagnitude}`.trim();
+        changeNode.textContent = `${change > 0 ? "▲" : change < 0 ? "▼" : ""} ${changeMagnitude}`.trim();
         if (change !== 0) changeNode.classList.add(improving ? "is-positive" : "is-negative");
     });
 }
