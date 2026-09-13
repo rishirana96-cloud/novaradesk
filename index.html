@@ -16307,5 +16307,60 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
 }
 </style>
 
+<style id="novaradesk-command-bar-size-consistency-v1">
+/* Screenshot 1 is the desktop command-bar sizing reference. */
+@media(min-width:901px){
+    .toolbar,
+    #panel-tickets .ticket-workspace-toolbar,
+    #panel-chatbot .admin-tabs{
+        width:100%!important;
+        height:62px!important;
+        min-height:62px!important;
+        max-height:62px!important;
+        padding:7px 9px 7px 11px!important;
+        margin-bottom:22px!important;
+        align-items:center!important;
+        border:1px solid var(--border)!important;
+        border-radius:14px!important;
+        box-sizing:border-box!important;
+    }
+
+    /* Analytics reference controls */
+    #tabSwitcher{height:48px!important;min-height:48px!important;align-items:center!important}
+    #tabSwitcher .tab{height:44px!important;min-height:44px!important}
+
+    /* Tickets */
+    #panel-tickets .ticket-view-control{height:46px!important;min-height:46px!important;align-items:center!important}
+    #panel-tickets .ticket-view-control select,
+    #panel-tickets .ticket-view-control .unified-select-trigger{
+        height:44px!important;min-height:44px!important;max-height:44px!important;
+    }
+    #panel-tickets .ticket-toolbar-right{height:46px!important;align-items:center!important}
+    #panel-tickets .ticket-period-selector{height:46px!important;min-height:46px!important;max-height:46px!important}
+    #panel-tickets .ticket-period-selector button{height:36px!important;min-height:36px!important}
+    #panel-tickets .ticket-filter-toggle{height:44px!important;min-height:44px!important;max-height:44px!important}
+
+    /* Reports: compact the nested report selector so the outer bar stays at reference height. */
+    .toolbar .report-mode-toolbar,
+    .toolbar .report-mode-toolbar.open{
+        height:46px!important;min-height:46px!important;max-height:46px!important;
+        padding:4px 7px 4px 10px!important;box-sizing:border-box!important;
+    }
+    .toolbar .report-mode-toolbar select,
+    .toolbar .report-mode-toolbar .unified-select-trigger{
+        height:36px!important;min-height:36px!important;max-height:36px!important;
+    }
+    .toolbar .report-workspace-jump{width:36px!important;height:36px!important;flex-basis:36px!important}
+    .toolbar .toolbar-right{height:46px!important;align-items:center!important}
+
+    /* AI Chatbot tabs */
+    #panel-chatbot .admin-tabs{gap:5px!important;overflow:hidden!important}
+    #panel-chatbot .admin-tab{
+        height:44px!important;min-height:44px!important;max-height:44px!important;
+        padding-top:0!important;padding-bottom:0!important;border-radius:9px!important;
+    }
+}
+</style>
+
 </body>
 </html>
