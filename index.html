@@ -17061,5 +17061,84 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
 }
 </style>
 
+
+<style id="novaradesk-chatbot-density-polish-v2">
+/* Denser, clearer AI Agent overview. */
+#panel-chatbot .admin-tabs{justify-content:flex-start!important}
+#panel-chatbot .admin-tab:hover:not(.active){
+    background:color-mix(in srgb,var(--accent) 4%,transparent)!important;
+    box-shadow:none!important;
+}
+#panel-chatbot .admin-tab.active{
+    background:color-mix(in srgb,var(--accent) 8%,var(--surface))!important;
+    box-shadow:none!important;
+}
+#chatbotTab-overview .chatbot-overview-kpis{gap:10px!important}
+#chatbotTab-overview .admin-kpi{
+    min-height:96px!important;
+    padding:14px 16px!important;
+}
+#chatbotTab-overview .admin-kpi strong{
+    margin-top:8px!important;
+    font-size:25px!important;
+}
+#chatbotModelKpi{font-size:23px!important}
+#chatbotTab-overview .admin-kpi small{margin-top:5px!important}
+#chatbotTab-overview .live-chatbot-head{
+    padding:14px 18px!important;
+}
+#chatbotTab-overview .live-chatbot-head p{margin-top:3px!important}
+#chatbotTab-overview .chatbot-simulator-grid{
+    grid-template-columns:minmax(0,1fr) 264px!important;
+    min-height:390px!important;
+}
+#chatbotTab-overview .test-chat{
+    height:390px!important;
+    min-height:390px!important;
+    max-height:390px!important;
+}
+#chatbotTab-overview .test-chat-thread{padding:18px 20px 12px!important}
+#chatbotTab-overview .chatbot-test-context{padding:16px!important}
+#chatbotTab-overview .chatbot-test-context-head{padding-bottom:10px!important}
+#chatbotTab-overview .test-meta-item{
+    grid-template-columns:92px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:10px!important;
+    padding:11px 0!important;
+}
+#chatbotTab-overview .test-meta-item strong{text-align:right!important}
+@media(max-width:980px){
+    #chatbotTab-overview .chatbot-simulator-grid{grid-template-columns:1fr!important}
+}
+</style>
+<script id="novaradesk-chatbot-copy-polish-v2">
+(()=>{
+  const polish=()=>{
+    if(window.workspaceCopy?.chatbot){
+      window.workspaceCopy.chatbot[0]='AI Agent';
+      window.workspaceCopy.chatbot[1]='Configure, test and deploy your customer-facing AI.';
+    }
+    const status=document.getElementById('chatbotHeaderStatus');
+    const online=status?.querySelector('option[value="active"]');
+    if(online)online.textContent='Chatbot online';
+    const prompts=document.getElementById('chatbotStarterPrompts');
+    if(prompts&&!prompts.querySelector('[data-chatbot-starter="My payment was deducted twice"]')){
+      const button=document.createElement('button');
+      button.type='button';
+      button.dataset.chatbotStarter='My payment was deducted twice';
+      button.textContent='Payment deducted twice';
+      prompts.appendChild(button);
+    }
+    const chatbotNav=document.getElementById('sidebarChatbot');
+    if(chatbotNav){
+      const label=chatbotNav.querySelector('span');
+      if(label)label.textContent='AI Agent';
+    }
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',polish,{once:true});
+  else polish();
+})();
+</script>
+
 </body>
 </html>
