@@ -4807,12 +4807,23 @@ window.NOVARA_DEMO_API = (() => {
             channel: ["website", "whatsapp", "instagram"][index % 3]
         };
     });
-    const analytics = Array.from({ length: 28 }, (_, index) => {
-        const date = new Date(now - (27 - index) * 86400000).toISOString().slice(0, 10);
+    const analytics = Array.from({ length: 180 }, (_, index) => {
+        const date = new Date(now - (179 - index) * 86400000).toISOString().slice(0, 10);
         const total = 31 + (index % 7) * 4 + Math.round(index / 6);
         const escalated = 4 + (index % 4);
         return { date, total_conversations: total, resolved: total - escalated, escalated };
     });
+    const rowsForRange = (rows, parsed, dateKey = "date") => {
+        const start = parsed.searchParams.get("start");
+        const end = parsed.searchParams.get("end");
+        if (start && end) return rows.filter(item => String(item[dateKey] || "").slice(0, 10) >= start && String(item[dateKey] || "").slice(0, 10) <= end);
+        const period = Math.max(1, Number(parsed.searchParams.get("period")) || 14);
+        const cutoff = new Date(now);
+        cutoff.setUTCHours(0, 0, 0, 0);
+        cutoff.setUTCDate(cutoff.getUTCDate() - period + 1);
+        const cutoffDate = cutoff.toISOString().slice(0, 10);
+        return rows.filter(item => String(item[dateKey] || "").slice(0, 10) >= cutoffDate);
+    };
     const detail = id => {
         const ticket = tickets.find(item => Number(item.id) === Number(id)) || tickets[0];
         return {
@@ -4847,11 +4858,11 @@ window.NOVARA_DEMO_API = (() => {
         const path = parsed.pathname;
         const method = String(init?.method || "GET").toUpperCase();
         if (path.endsWith("/auth/me")) return json({ success: true, user: window.NOVARA_DEMO_USER });
-        if (path.endsWith("/analytics")) return json(analytics);
+        if (path.endsWith("/analytics")) return json(rowsForRange(analytics, parsed));
         if (path.endsWith("/conversations")) return json(conversations);
         if (path.endsWith("/intents")) return json(subjects.map((item, index) => ({ intent: item[1], count: 18 - index * 2 })));
         if (path.endsWith("/ratings")) return json([{ rating: "yes", count: 38 }, { rating: "partial", count: 9 }, { rating: "no", count: 4 }]);
-        if (path.endsWith("/resolution")) return json(analytics.map(day => ({ date: day.date, total: day.total_conversations, resolved_count: day.resolved })));
+        if (path.endsWith("/resolution")) return json(rowsForRange(analytics, parsed).map(day => ({ date: day.date, total: day.total_conversations, resolved_count: day.resolved })));
         if (path.endsWith("/sentiment")) return json([{ sentiment: "positive", count: 34, avg_score: .82 }, { sentiment: "neutral", count: 14, avg_score: .5 }, { sentiment: "negative", count: 6, avg_score: .2 }]);
         if (path.endsWith("/tickets")) return json(tickets);
         if (path.endsWith("/ticket-detail")) return json(detail(parsed.searchParams.get("id")));
@@ -8869,8 +8880,11 @@ ORDER BY ticket_count DESC</textarea>
 /* =====================================================
    STATE
 ====================================================== */
-let currentPeriod = Number(localStorage.getItem("novara_analytics_period") || 28);
+let currentPeriod = window.NOVARA_DEMO_MODE
+    ? 14
+    : Number(localStorage.getItem("novara_analytics_period") || 28);
 let currentDateRange = (() => {
+if (window.NOVARA_DEMO_MODE) return null;
 try { return JSON.parse(localStorage.getItem("novara_analytics_date_range") || "null"); }
 catch { return null; }
 })();
