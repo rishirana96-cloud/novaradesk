@@ -6810,6 +6810,77 @@ html[data-theme="light"] .raw-sql-result-table th {
     #chatbotTab-overview .chatbot-simulator-grid{grid-template-columns:1fr!important}
 }
 </style>
+
+<style id="novaradesk-dashboard-toolbar-selector-v1">
+/* The saved-dashboard selector lives in the command bar only for Custom Dashboards. */
+.dashboard-toolbar-selector{
+    position:relative;
+    display:none;
+    min-width:0;
+    margin-left:10px;
+    z-index:120;
+}
+.dashboard-toolbar-selector.open{display:block}
+.dashboard-toolbar-selector .dashboard-title-trigger{
+    width:clamp(190px,18vw,270px)!important;
+    min-width:190px!important;
+    max-width:270px!important;
+    height:40px!important;
+    min-height:40px!important;
+    padding:0 12px!important;
+    justify-content:space-between!important;
+    gap:12px!important;
+    border:1px solid var(--border)!important;
+    border-radius:10px!important;
+    background:var(--surface)!important;
+    box-shadow:none!important;
+}
+.dashboard-toolbar-selector .dashboard-title-trigger strong{
+    font-size:calc(11.5px * var(--ui-text-scale))!important;
+    font-weight:650!important;
+    line-height:1.2!important;
+}
+.dashboard-toolbar-selector .dashboard-title-trigger>svg{
+    width:16px!important;
+    height:16px!important;
+    flex:0 0 16px;
+    margin:0!important;
+}
+.dashboard-toolbar-selector .dashboard-title-menu{
+    top:calc(100% + 8px)!important;
+    left:0!important;
+    right:auto!important;
+    width:clamp(240px,22vw,320px)!important;
+    max-height:min(360px,calc(100vh - 150px))!important;
+    z-index:5000!important;
+}
+.dashboard-toolbar-selector .dashboard-title-main{
+    width:100%;
+    display:grid;
+    gap:3px;
+    padding:10px 11px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:var(--text);
+    text-align:left;
+    cursor:pointer;
+}
+.dashboard-toolbar-selector .dashboard-title-main:hover,
+.dashboard-toolbar-selector .dashboard-title-main.active{
+    background:color-mix(in srgb,var(--accent) 9%,var(--surface));
+}
+.dashboard-toolbar-selector .dashboard-title-main strong{font-size:11px}
+.dashboard-toolbar-selector .dashboard-title-main span{color:var(--text-muted);font-size:9px}
+#panel-dashboards>.dashboard-enterprise-shell,
+#panel-dashboards>.dashboard-enterprise-head{display:none!important}
+#panel-dashboards{padding-top:0}
+@media(max-width:900px){
+    .dashboard-toolbar-selector{order:2;width:100%;margin:6px 0 0}
+    .dashboard-toolbar-selector .dashboard-title-trigger{width:100%!important;max-width:none!important}
+    .dashboard-toolbar-selector .dashboard-title-menu{width:100%!important}
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -7160,6 +7231,13 @@ html[data-theme="light"] .raw-sql-result-table th {
             <button id="reportWorkspaceJump" class="report-workspace-jump" type="button" title="Go to Build a report" aria-label="Go to Build a report">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </button>
+        </div>
+        <div id="dashboardToolbarSelector" class="dashboard-toolbar-selector dashboard-enterprise-title" aria-hidden="true">
+            <button id="dashboardTitleTrigger" class="dashboard-title-trigger" type="button" aria-haspopup="menu" aria-expanded="false">
+                <span><strong id="dashboardActiveTitle">My Dashboard</strong></span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+            </button>
+            <div id="dashboardTitleMenu" class="dashboard-title-menu" role="menu"></div>
         </div>
         <div class="toolbar-right">
             <div class="layout-controls">
@@ -7900,66 +7978,6 @@ html[data-theme="light"] .raw-sql-result-table th {
          CUSTOM DASHBOARDS
     ================================================== -->
     <section id="panel-dashboards" class="view-panel">
-        <div class="dashboard-enterprise-shell">
-            <header class="dashboard-enterprise-head">
-                <div class="dashboard-enterprise-title">
-                    <button id="dashboardTitleTrigger" class="dashboard-title-trigger" type="button" aria-haspopup="menu" aria-expanded="false">
-                        <span><strong id="dashboardActiveTitle">My Dashboard</strong></span>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
-                    </button>
-                    <div id="dashboardTitleMenu" class="dashboard-title-menu" role="menu"></div>
-                    <p>Monitor the reports that matter together in one operational view.</p>
-                </div>
-                <div class="dashboard-primary-actions" aria-hidden="true">
-                    <button id="dashboardRefreshBtn" class="dashboard-icon-button" type="button" aria-label="Refresh dashboard" title="Refresh dashboard">
-                        <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0 1 5M20 4v7h-7"/></svg>
-                    </button>
-                    <button id="dashboardAddReportsBtn" class="report-primary-btn" type="button">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                        Add report
-                    </button>
-                    <button id="dashboardNewBtn" class="report-secondary-btn" type="button">New dashboard</button>
-                    <div class="dashboard-more-wrap">
-                        <button id="dashboardMoreBtn" class="dashboard-icon-button" type="button" aria-label="Dashboard actions" aria-expanded="false" title="Dashboard actions">
-                            <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
-                        </button>
-                        <div id="dashboardMoreMenu" class="dashboard-more-menu">
-                            <button id="dashboardRenameBtn" type="button">Rename dashboard</button>
-                            <button id="dashboardDuplicateBtn" type="button">Duplicate dashboard</button>
-                            <button id="dashboardDeleteBtn" class="danger" type="button">Delete dashboard</button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-            <div class="dashboard-control-rail">
-                <label class="dashboard-control dashboard-selector-wrap">
-                    <span>Dashboard</span>
-                    <select id="customDashboardSelect" aria-label="Select custom dashboard"></select>
-                </label>
-                <label class="dashboard-control dashboard-widget-search">
-                    <span>Find a widget</span>
-                    <span class="dashboard-search-field"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg><input id="dashboardWidgetSearch" type="search" placeholder="Search this dashboard…"></span>
-                </label>
-                <label class="dashboard-control dashboard-layout-control">
-                    <span>Grid</span>
-                    <select id="dashboardLayoutSelect" aria-label="Dashboard grid layout">
-                        <option value="balanced">Balanced · 2 columns</option>
-                        <option value="compact">Compact · 3 columns</option>
-                        <option value="focus">Focus · 1 column</option>
-                    </select>
-                </label>
-                <div class="dashboard-rail-actions">
-                    <button id="dashboardArrangeBtn" class="report-secondary-btn" type="button"><span>Arrange</span></button>
-                    <button id="dashboardPresentBtn" class="report-secondary-btn" type="button">Present</button>
-                </div>
-            </div>
-            <div class="dashboard-health-strip">
-                <div><span>Widgets</span><strong id="dashboardWidgetCount">0</strong></div>
-                <div><span>Reports available</span><strong id="dashboardReportCount">0</strong></div>
-                <div><span>Last saved</span><strong id="dashboardLastSaved">Just now</strong></div>
-                <div class="dashboard-health-note"><span class="dashboard-health-dot"></span>Saved automatically in this browser</div>
-            </div>
-        </div>
         <div id="dashboardEmptyState" class="custom-dashboard-empty">
             <div class="custom-dashboard-empty-icon">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg>
@@ -9108,6 +9126,9 @@ tabSwitcher.style.display = analyticsWorkspace ? "flex" : "none";
 document.getElementById("reportModeToolbar")?.classList.toggle("open", workspace === "reports");
 document.getElementById("reportWorkspaceJump")?.classList.toggle("open", workspace === "reports");
 document.getElementById("dashboardToolbarAddReport")?.classList.toggle("open", workspace === "dashboards");
+const dashboardToolbarSelector = document.getElementById("dashboardToolbarSelector");
+dashboardToolbarSelector?.classList.toggle("open", workspace === "dashboards");
+dashboardToolbarSelector?.setAttribute("aria-hidden", String(workspace !== "dashboards"));
 const workspaceToolbar = document.querySelector(".toolbar");
 if (workspaceToolbar) workspaceToolbar.style.display = ["chatbot","knowledge","tickets","customers","workflows","settings"].includes(workspace) ? "none" : "flex";
 tabSwitcher.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tab === workspace));
@@ -13115,38 +13136,18 @@ input.addEventListener("keydown", event => { if (event.key === "Escape") { event
 requestAnimationFrame(() => { input.focus(); input.select(); });
 }
 function updateDashboardSelect(dashboards, active) {
-const select = document.getElementById("customDashboardSelect");
-if (select) {
-    select.innerHTML = dashboards.map(dashboard => `<option value="${escapeHtml(dashboard.id)}">${escapeHtml(dashboard.name)}</option>`).join("");
-    select.value = active.id;
-}
 const menu = document.getElementById("dashboardTitleMenu");
 if (!menu) return;
 menu.innerHTML = `<div class="dashboard-title-menu-label">Saved dashboards</div>${dashboards.map(dashboard => `
-    <div class="dashboard-title-row ${dashboard.id === active.id ? "active" : ""}" data-dashboard-row="${escapeHtml(dashboard.id)}">
-        <button class="dashboard-title-main" type="button" data-dashboard-open="${escapeHtml(dashboard.id)}"><strong>${escapeHtml(dashboard.name)}</strong><span>${dashboard.widgets.length} widget${dashboard.widgets.length === 1 ? "" : "s"} · ${escapeHtml(dashboardRelativeTime(dashboard.updatedAt))}</span></button>
-        <div class="dashboard-title-actions">
-            <button type="button" data-dashboard-rename="${escapeHtml(dashboard.id)}" title="Rename dashboard" aria-label="Rename ${escapeHtml(dashboard.name)}"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4ZM13.5 6.5l4 4"/></svg></button>
-            <button class="danger" type="button" data-dashboard-delete="${escapeHtml(dashboard.id)}" title="Delete dashboard" aria-label="Delete ${escapeHtml(dashboard.name)}"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>
-        </div>
-    </div>`).join("")}<div class="dashboard-title-menu-rule"></div><button id="dashboardTitleCreate" class="dashboard-title-create" type="button">＋ Create new dashboard</button>`;
+    <button class="dashboard-title-main ${dashboard.id === active.id ? "active" : ""}" type="button" data-dashboard-open="${escapeHtml(dashboard.id)}">
+        <strong>${escapeHtml(dashboard.name)}</strong>
+        <span>${dashboard.widgets.length} widget${dashboard.widgets.length === 1 ? "" : "s"} · ${escapeHtml(dashboardRelativeTime(dashboard.updatedAt))}</span>
+    </button>`).join("")}`;
 menu.querySelectorAll("[data-dashboard-open]").forEach(button => button.addEventListener("click", () => {
     localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardOpen);
     closeDashboardTitleMenu();
     renderCustomDashboard();
 }));
-menu.querySelectorAll("[data-dashboard-rename]").forEach(button => button.addEventListener("click", event => {
-    event.stopPropagation();
-    beginInlineDashboardRename(button.dataset.dashboardRename);
-}));
-menu.querySelectorAll("[data-dashboard-delete]").forEach(button => button.addEventListener("click", async event => {
-    event.stopPropagation();
-    localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardDelete);
-    await deleteActiveDashboard();
-    document.getElementById("dashboardTitleMenu")?.classList.add("open");
-    document.getElementById("dashboardTitleTrigger")?.setAttribute("aria-expanded", "true");
-}));
-menu.querySelector("#dashboardTitleCreate")?.addEventListener("click", async () => { closeDashboardTitleMenu(); await createNamedDashboard(); });
 }
 function dashboardReportById(reportId) {
 return loadSavedReports().find(report => report.id === reportId);
