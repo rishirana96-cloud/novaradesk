@@ -7322,6 +7322,63 @@ html[data-theme="light"] .dashboard-quick-create:hover{
     margin-left:auto!important;
 }
 </style>
+
+<style id="novaradesk-chatbot-approved-polish-v3">
+/* Connect the selected chatbot tab to its content. */
+#panel-chatbot .admin-workspace{
+    gap:10px!important;
+}
+#panel-chatbot .admin-tabs{
+    margin-bottom:0!important;
+}
+#chatbotTab-overview{
+    padding-top:0!important;
+}
+/* Use a clear icon-only send action. */
+#chatbotTestSend{
+    display:grid!important;
+    place-items:center!important;
+    padding:0!important;
+    font-size:0!important;
+}
+#chatbotTestSend::after{
+    content:none!important;
+    display:none!important;
+}
+#chatbotTestSend svg{
+    display:block;
+    width:18px;
+    height:18px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+#chatbotTestSend:disabled svg{
+    opacity:.55;
+}
+/* Existing and dynamically added instruction cards use opaque surfaces. */
+.custom-instruction-card{
+    background:#111512!important;
+    background-image:none!important;
+    opacity:1!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+}
+.custom-instruction-card textarea{
+    background:#151a17!important;
+    opacity:1!important;
+}
+html[data-theme="light"] .custom-instruction-card{
+    background:#fff!important;
+    border-color:#d8e0da!important;
+}
+html[data-theme="light"] .custom-instruction-card textarea{
+    background:#fff!important;
+    border-color:#d8e0da!important;
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -8900,7 +8957,7 @@ ORDER BY ticket_count DESC</textarea>
                                     <button type="button" data-chatbot-starter="I want to request a refund">Request a refund</button>
                                     <button type="button" data-chatbot-starter="I need to speak to a human">Speak to a human</button>
                                 </div>
-                                <div class="test-composer"><textarea id="chatbotTestInput" rows="1" placeholder="Test a customer question…"></textarea><button id="chatbotTestSend" class="admin-btn primary" type="button" aria-label="Send test message">Send</button></div>
+                                <div class="test-composer"><textarea id="chatbotTestInput" rows="1" placeholder="Test a customer question…"></textarea><button id="chatbotTestSend" class="admin-btn primary" type="button" aria-label="Send message" title="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 16-7-7 16-2.5-6.5L4 11Z"/><path d="m10.5 13.5 4-4"/></svg></button></div>
                             </div>
                         </div>
                         <aside class="chatbot-test-context" aria-label="Test context">
