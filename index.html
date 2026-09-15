@@ -7310,68 +7310,16 @@ html[data-theme="light"] .dashboard-quick-create:hover{
 }
 </style>
 
-<style id="novaradesk-report-toolbar-right-alignment-v1">
-/* Match the right-aligned control hierarchy used by Custom Dashboards. */
-#reportModeToolbar.open{
-    display:flex!important;
-    width:auto!important;
-    max-width:none!important;
-    min-height:40px!important;
-    height:40px!important;
+
+
+<style id="novaradesk-dashboard-selector-left-placement-v1">
+/* Keep dashboard selection attached to the Custom Dashboards tab group. */
+#dashboardToolbarSelector.open{
+    margin-left:12px!important;
+    margin-right:0!important;
+}
+.toolbar:has(#dashboardToolbarSelector.open) .toolbar-right{
     margin-left:auto!important;
-    padding:3px 4px 3px 11px!important;
-    gap:10px!important;
-    flex:0 0 auto;
-    border-radius:11px!important;
-}
-.toolbar:has(#reportModeToolbar.open) .toolbar-right{
-    margin-left:0!important;
-}
-#reportModeToolbar>span{
-    font-size:7.5px!important;
-    letter-spacing:.085em!important;
-}
-#reportModeToolbar .unified-select-trigger,
-#reportModeToolbar select{
-    width:230px!important;
-    min-width:230px!important;
-    max-width:230px!important;
-    min-height:32px!important;
-    height:32px!important;
-    padding-top:0!important;
-    padding-bottom:0!important;
-    border-radius:8px!important;
-    font-size:10.5px!important;
-}
-#reportModeToolbar .report-workspace-jump{
-    display:grid!important;
-    place-items:center;
-    flex:0 0 32px!important;
-    width:32px!important;
-    height:32px!important;
-    min-height:32px!important;
-    padding:0!important;
-    border-radius:8px!important;
-}
-#reportModeToolbar .report-workspace-jump svg{
-    width:15px!important;
-    height:15px!important;
-    fill:none!important;
-    stroke:currentColor!important;
-    stroke-width:1.8!important;
-    stroke-linecap:round!important;
-    stroke-linejoin:round!important;
-}
-.toolbar:has(#reportModeToolbar.open) .toolbar-right::before{
-    height:24px!important;
-    margin:0 3px!important;
-}
-@media(max-width:1100px){
-    #reportModeToolbar .unified-select-trigger,
-    #reportModeToolbar select{
-        width:205px!important;
-        min-width:205px!important;
-    }
 }
 </style>
 </head>
@@ -7721,8 +7669,8 @@ html[data-theme="light"] .dashboard-quick-create:hover{
         <div id="reportModeToolbar" class="report-mode-toolbar">
             <span>Report Type</span>
             <select id="reportMode" aria-label="Report type"><option value="standard">Chart or summary table</option><option value="kpi">KPI Cards</option><option value="pivot">Pivot table</option><option value="sql">Create Custom Data-Set</option></select>
-            <button id="reportWorkspaceJump" class="report-workspace-jump" type="button" title="Build a report" aria-label="Build a report">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+            <button id="reportWorkspaceJump" class="report-workspace-jump" type="button" title="Go to Build a report" aria-label="Go to Build a report">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </button>
         </div>
         <div id="dashboardToolbarSelector" class="dashboard-toolbar-selector dashboard-enterprise-title" aria-hidden="true">
