@@ -6770,6 +6770,46 @@ html[data-theme="light"] .raw-sql-result-table th {
     }
 }
 </style>
+
+<style id="novaradesk-chatbot-context-cleanup-v1">
+/* Keep the overview connected to its tabs and reserve Test context for live signals. */
+@media(min-width:901px){
+    #panel-chatbot .admin-tabs{margin-bottom:10px!important}
+}
+#chatbotTab-overview{padding-top:0!important}
+#chatbotTab-overview .chatbot-simulator-grid{
+    grid-template-columns:minmax(0,1fr) 280px!important;
+}
+#chatbotTab-overview .chatbot-test-context{
+    padding:18px!important;
+}
+#chatbotTab-overview .chatbot-test-context-head{
+    padding-bottom:12px!important;
+}
+#chatbotTab-overview .chatbot-test-meta .test-meta-item{
+    grid-template-columns:88px minmax(0,1fr)!important;
+    gap:12px!important;
+    min-height:54px;
+    padding:14px 0!important;
+    border:0!important;
+    border-bottom:1px solid #e2e7e4!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+}
+#chatbotTab-overview .chatbot-test-meta .test-meta-item:last-child{
+    border-bottom:0!important;
+}
+#chatbotTab-overview .chatbot-test-meta .test-meta-item strong{
+    min-width:0;
+    margin:0!important;
+    text-align:right!important;
+    overflow-wrap:break-word;
+}
+@media(max-width:980px){
+    #chatbotTab-overview .chatbot-simulator-grid{grid-template-columns:1fr!important}
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -8391,11 +8431,10 @@ ORDER BY ticket_count DESC</textarea>
                         <aside class="chatbot-test-context" aria-label="Test context">
                             <div class="chatbot-test-context-head"><span>Test context</span><small>Updates after every response</small></div>
                             <div id="chatbotTestMeta" class="chatbot-test-meta">
-                                <div class="test-meta-item"><span>Prompt</span><strong id="testContextPrompt">Published version</strong></div>
-                                <div class="test-meta-item"><span>Model</span><strong id="testContextModel">—</strong></div>
                                 <div class="test-meta-item"><span>Detected intent</span><strong>Waiting for message</strong></div>
                                 <div class="test-meta-item"><span>AI confidence</span><strong>—</strong></div>
                                 <div class="test-meta-item"><span>Escalation</span><strong>Not evaluated</strong></div>
+                                <div class="test-meta-item"><span>Response time</span><strong>—</strong></div>
                             </div>
                         </aside>
                     </div>
@@ -14872,7 +14911,7 @@ try {
     const confidenceRaw=Number(result.confidence);
 const confidence=Number.isFinite(confidenceRaw)?`${Math.round(confidenceRaw<=1?confidenceRaw*100:confidenceRaw)}%`:"—";
 const escalation=result.escalated===true||result.resolution_status==="escalated"?"Human handoff":result.escalated===false?"Not required":"Not triggered";
-document.getElementById("chatbotTestMeta").innerHTML = `<div class="test-meta-item"><span>Prompt</span><strong>Version ${escapeHtml(String(result.promptVersion))}</strong></div><div class="test-meta-item"><span>Model</span><strong>${escapeHtml(result.model||"—")}</strong></div><div class="test-meta-item"><span>Detected intent</span><strong>${escapeHtml(result.intent||"Not returned")}</strong></div><div class="test-meta-item"><span>AI confidence</span><strong>${escapeHtml(confidence)}</strong></div><div class="test-meta-item"><span>Escalation</span><strong>${escapeHtml(escalation)}</strong></div><div class="test-meta-item"><span>Response time</span><strong>${Math.round(result.responseTimeMs)} ms</strong></div>`;
+document.getElementById("chatbotTestMeta").innerHTML = `<div class="test-meta-item"><span>Detected intent</span><strong>${escapeHtml(result.intent||"Not returned")}</strong></div><div class="test-meta-item"><span>AI confidence</span><strong>${escapeHtml(confidence)}</strong></div><div class="test-meta-item"><span>Escalation</span><strong>${escapeHtml(escalation)}</strong></div><div class="test-meta-item"><span>Response time</span><strong>${Math.round(result.responseTimeMs)} ms</strong></div>`;
 } catch (error) { pending.textContent = error.message; }
 thread.scrollTop = thread.scrollHeight;
 }
