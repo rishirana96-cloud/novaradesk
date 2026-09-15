@@ -7253,6 +7253,62 @@ html[data-theme="light"] .dashboard-quick-create:hover{
     }
 }
 </style>
+
+<style id="novaradesk-dashboard-toolbar-proportions-v2">
+/* Refine proportions without changing the agreed right-side placement. */
+#dashboardToolbarSelector.open{
+    gap:8px!important;
+}
+#dashboardToolbarSelector .dashboard-title-trigger{
+    width:240px!important;
+    min-width:220px!important;
+    max-width:260px!important;
+    height:40px!important;
+    min-height:40px!important;
+    padding:0 12px!important;
+    column-gap:13px!important;
+}
+#dashboardToolbarSelector .dashboard-selector-value strong{
+    font-size:11px!important;
+}
+#dashboardToolbarSelector .dashboard-title-trigger>svg{
+    width:15px!important;
+    height:15px!important;
+}
+#dashboardToolbarSelector .dashboard-quick-create{
+    width:34px!important;
+    height:34px!important;
+    flex-basis:34px!important;
+}
+#dashboardToolbarSelector .dashboard-quick-create svg{
+    width:15px!important;
+    height:15px!important;
+}
+.toolbar-right:has(#dashboardToolbarAddReport.open){
+    gap:9px!important;
+}
+.toolbar-right:has(#dashboardToolbarAddReport.open)::before{
+    height:24px!important;
+    margin:0 3px!important;
+}
+#dashboardToolbarAddReport.layout-control-btn{
+    min-width:112px!important;
+    min-height:40px!important;
+    height:40px!important;
+    padding:0 13px!important;
+    gap:7px!important;
+}
+#dashboardToolbarAddReport.layout-control-btn svg{
+    width:16px!important;
+    height:16px!important;
+}
+@media(max-width:1100px){
+    #dashboardToolbarSelector .dashboard-title-trigger{
+        width:215px!important;
+        min-width:190px!important;
+    }
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
