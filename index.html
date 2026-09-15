@@ -6965,6 +6965,88 @@ html[data-theme="light"] .raw-sql-result-table th {
 .dashboard-toolbar-selector .dashboard-title-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
 @media(max-width:900px){.dashboard-customize-menu{left:auto;right:0}}
 </style>
+
+<style id="novaradesk-dashboard-selector-solid-inline-v1">
+/* Keep the saved-dashboard menu opaque over report content. */
+#dashboardToolbarSelector .dashboard-title-menu{
+    background:#111512!important;
+    background-image:none!important;
+    opacity:1!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    box-shadow:0 20px 52px rgba(0,0,0,.34)!important;
+}
+#dashboardToolbarSelector .dashboard-title-row,
+#dashboardToolbarSelector .dashboard-title-main{
+    background:#111512!important;
+}
+#dashboardToolbarSelector .dashboard-title-row.active,
+#dashboardToolbarSelector .dashboard-title-row:hover,
+#dashboardToolbarSelector .dashboard-title-main:hover{
+    background:#182019!important;
+}
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-menu{
+    background:#fff!important;
+    border-color:#d7e0da!important;
+    box-shadow:0 20px 52px rgba(32,56,43,.18)!important;
+}
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-row,
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-main{
+    background:#fff!important;
+}
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-row.active,
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-row:hover,
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-main:hover{
+    background:#eef3f0!important;
+}
+/* Rename in place without changing the row's geometry. */
+#dashboardToolbarSelector .dashboard-title-row.editing{
+    min-height:58px;
+}
+#dashboardToolbarSelector .dashboard-title-edit-main{
+    min-width:0;
+    cursor:default;
+}
+#dashboardToolbarSelector .dashboard-inline-name-input{
+    width:100%;
+    min-width:0;
+    height:27px;
+    margin:0;
+    padding:3px 7px;
+    border:1px solid var(--accent);
+    border-radius:6px;
+    outline:0;
+    background:var(--surface);
+    color:var(--text);
+    font:inherit;
+    font-size:11px;
+    font-weight:650;
+    line-height:1.2;
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 14%,transparent);
+}
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-inline-name-input{
+    background:#fff;
+    color:#18231d;
+}
+#dashboardToolbarSelector .dashboard-inline-confirm,
+#dashboardToolbarSelector .dashboard-inline-cancel{
+    color:var(--text-secondary);
+}
+#dashboardToolbarSelector .dashboard-inline-confirm:hover{
+    background:color-mix(in srgb,var(--accent) 14%,var(--surface))!important;
+    color:var(--accent-light)!important;
+}
+#dashboardToolbarSelector .dashboard-inline-cancel:hover{
+    background:var(--surface-hover)!important;
+    color:var(--text)!important;
+}
+#dashboardToolbarSelector .dashboard-title-row.editing .dashboard-title-actions{
+    opacity:1!important;
+    transform:none!important;
+    pointer-events:auto!important;
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -13210,13 +13292,17 @@ const dashboards = loadCustomDashboards();
 const dashboard = dashboards.find(item => item.id === dashboardId);
 const row = document.querySelector(`[data-dashboard-row="${CSS.escape(dashboardId)}"]`);
 if (!dashboard || !row) return;
+const main = row.querySelector(".dashboard-title-main");
+const actions = row.querySelector(".dashboard-title-actions");
+if (!main || !actions) return;
 row.classList.add("editing");
-row.innerHTML = `<form class="dashboard-title-inline-edit"><input type="text" maxlength="60" value="${escapeHtml(dashboard.name)}" aria-label="Dashboard name"><button type="submit">Save</button><button type="button" data-inline-rename-cancel>Cancel</button></form>`;
-const form = row.querySelector("form");
-const input = form.querySelector("input");
-const cancel = () => { updateDashboardSelect(loadCustomDashboards(), activeCustomDashboard()); keepDashboardTitleMenuOpen(); };
-form.addEventListener("submit", event => {
-    event.preventDefault();
+const meta = main.querySelector("span")?.textContent || "";
+main.outerHTML = `<div class="dashboard-title-main dashboard-title-edit-main"><input class="dashboard-inline-name-input" type="text" maxlength="60" value="${escapeHtml(dashboard.name)}" aria-label="Dashboard name"><span>${escapeHtml(meta)}</span></div>`;
+actions.innerHTML = `
+    <button class="dashboard-inline-confirm" type="button" title="Save name" aria-label="Save dashboard name"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></button>
+    <button class="dashboard-inline-cancel" type="button" title="Cancel rename" aria-label="Cancel dashboard rename"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>`;
+const input = row.querySelector(".dashboard-inline-name-input");
+const save = () => {
     const name = input.value.trim();
     if (!name) { input.focus(); return; }
     dashboard.name = name;
@@ -13226,9 +13312,18 @@ form.addEventListener("submit", event => {
     updateDashboardSelect(dashboards, active);
     keepDashboardTitleMenuOpen();
     setDashboardStatus("Dashboard name updated.");
+};
+const cancel = () => {
+    updateDashboardSelect(loadCustomDashboards(), activeCustomDashboard());
+    keepDashboardTitleMenuOpen();
+};
+row.querySelector(".dashboard-inline-confirm")?.addEventListener("click", save);
+row.querySelector(".dashboard-inline-cancel")?.addEventListener("click", cancel);
+input.addEventListener("click", event => event.stopPropagation());
+input.addEventListener("keydown", event => {
+    if (event.key === "Enter") { event.preventDefault(); save(); }
+    if (event.key === "Escape") { event.preventDefault(); cancel(); }
 });
-form.querySelector("[data-inline-rename-cancel]").addEventListener("click", cancel);
-input.addEventListener("keydown", event => { if (event.key === "Escape") { event.preventDefault(); cancel(); } });
 requestAnimationFrame(() => { input.focus(); input.select(); });
 }
 function updateDashboardSelect(dashboards, active) {
