@@ -4807,12 +4807,23 @@ window.NOVARA_DEMO_API = (() => {
             channel: ["website", "whatsapp", "instagram"][index % 3]
         };
     });
-    const analytics = Array.from({ length: 28 }, (_, index) => {
-        const date = new Date(now - (27 - index) * 86400000).toISOString().slice(0, 10);
+    const analytics = Array.from({ length: 180 }, (_, index) => {
+        const date = new Date(now - (179 - index) * 86400000).toISOString().slice(0, 10);
         const total = 31 + (index % 7) * 4 + Math.round(index / 6);
         const escalated = 4 + (index % 4);
         return { date, total_conversations: total, resolved: total - escalated, escalated };
     });
+    const rowsForRange = (rows, parsed, dateKey = "date") => {
+        const start = parsed.searchParams.get("start");
+        const end = parsed.searchParams.get("end");
+        if (start && end) return rows.filter(item => String(item[dateKey] || "").slice(0, 10) >= start && String(item[dateKey] || "").slice(0, 10) <= end);
+        const period = Math.max(1, Number(parsed.searchParams.get("period")) || 14);
+        const cutoff = new Date(now);
+        cutoff.setUTCHours(0, 0, 0, 0);
+        cutoff.setUTCDate(cutoff.getUTCDate() - period + 1);
+        const cutoffDate = cutoff.toISOString().slice(0, 10);
+        return rows.filter(item => String(item[dateKey] || "").slice(0, 10) >= cutoffDate);
+    };
     const detail = id => {
         const ticket = tickets.find(item => Number(item.id) === Number(id)) || tickets[0];
         return {
@@ -4847,11 +4858,11 @@ window.NOVARA_DEMO_API = (() => {
         const path = parsed.pathname;
         const method = String(init?.method || "GET").toUpperCase();
         if (path.endsWith("/auth/me")) return json({ success: true, user: window.NOVARA_DEMO_USER });
-        if (path.endsWith("/analytics")) return json(analytics);
+        if (path.endsWith("/analytics")) return json(rowsForRange(analytics, parsed));
         if (path.endsWith("/conversations")) return json(conversations);
         if (path.endsWith("/intents")) return json(subjects.map((item, index) => ({ intent: item[1], count: 18 - index * 2 })));
         if (path.endsWith("/ratings")) return json([{ rating: "yes", count: 38 }, { rating: "partial", count: 9 }, { rating: "no", count: 4 }]);
-        if (path.endsWith("/resolution")) return json(analytics.map(day => ({ date: day.date, total: day.total_conversations, resolved_count: day.resolved })));
+        if (path.endsWith("/resolution")) return json(rowsForRange(analytics, parsed).map(day => ({ date: day.date, total: day.total_conversations, resolved_count: day.resolved })));
         if (path.endsWith("/sentiment")) return json([{ sentiment: "positive", count: 34, avg_score: .82 }, { sentiment: "neutral", count: 14, avg_score: .5 }, { sentiment: "negative", count: 6, avg_score: .2 }]);
         if (path.endsWith("/tickets")) return json(tickets);
         if (path.endsWith("/ticket-detail")) return json(detail(parsed.searchParams.get("id")));
@@ -6748,6 +6759,17 @@ html[data-theme="light"] .raw-sql-result-table th {
     #lastUpdated { display: none !important; }
 }
 </style>
+
+<style id="novaradesk-workspace-top-spacing-v1">
+@media (min-width: 721px) {
+    .main {
+        padding-top: 30px !important;
+    }
+    .topbar {
+        margin-bottom: 16px !important;
+    }
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -8223,9 +8245,987 @@ ORDER BY ticket_count DESC</textarea>
                                 <option value="doughnut">Donut chart</option>
                             </select>
                         </label>
-                     
-... 81231 bytes omitted ...
- / totals.total * 100 : null,
+                        <label class="report-field raw-chart-field" hidden>
+                            <span>Labels</span>
+                            <select id="rawSqlX"></select>
+                        </label>
+                        <label class="report-field raw-chart-field" hidden>
+                            <span>Values</span>
+                            <select id="rawSqlY"></select>
+                        </label>
+                    </div>
+                    <div class="raw-sql-actions">
+                        <button id="rawSqlExampleBtn" class="report-text-btn" type="button">Load grouping example</button>
+                        <span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> to refresh now</span>
+                        <button id="rawSqlRunBtn" class="report-primary-btn" type="button">Run SQL</button>
+                    </div>
+                </div>
+                <div class="report-filter-section visual-report-control">
+                    <div class="report-filter-head">
+                        <div><span class="report-eyebrow">Conditions</span><strong>Filters</strong></div>
+                        <div class="report-filter-actions"><button id="reportClearConditions" class="report-inline-clear" type="button">Clear conditions</button><button id="addReportFilter" class="report-text-btn" type="button">+ Add filter</button></div>
+                    </div>
+                    <div id="reportFilters" class="report-filters-list"></div>
+                </div>
+                <div id="pivotOptions" class="pivot-options" hidden>
+                    <label><input id="pivotRowTotals" type="checkbox" checked> Row totals</label>
+                    <label><input id="pivotColumnTotals" type="checkbox" checked> Column totals</label>
+                    <label><input id="pivotHideZeros" type="checkbox"> Hide empty rows</label>
+                </div>
+                <div id="reportBuilderMessage" class="report-builder-message" role="status"></div>
+            </aside>
+            <div class="report-results-column">
+                <article class="report-preview-card">
+                    <div class="sql-results-tabs" role="tablist" aria-label="SQL output">
+                        <button class="sql-result-tab active" data-sql-result-tab="results" type="button">Results</button>
+                        <button class="sql-result-tab" data-sql-result-tab="chart" type="button">Visualise</button>
+                        <button class="sql-result-tab" data-sql-result-tab="details" type="button">Query details</button>
+                        <span class="sql-result-tab-spacer"></span>
+                        <input id="rawSqlResultSearch" class="sql-result-search" type="search" placeholder="Search results…" aria-label="Search query results">
+                        <button id="rawSqlCopyResultsBtn" class="sql-tool-btn" type="button">Copy table</button>
+                    </div>
+                    <div class="report-preview-head">
+                        <div>
+                            <span class="report-eyebrow">Live preview</span>
+                            <h2 id="reportPreviewTitle">Ticket overview</h2>
+                            <p id="reportPreviewMeta">Current dashboard date range</p>
+                        </div>
+                        <div class="report-preview-actions">
+                            <button id="pivotCopyBtn" class="report-secondary-btn pivot-copy-btn" type="button" hidden>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+                                <span>Copy pivot</span>
+                            </button>
+                            <button id="reportExportBtn" class="report-secondary-btn" type="button" disabled>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="report-summary-strip">
+                        <div><span>Rows analysed</span><strong id="reportRowsAnalysed">—</strong></div>
+                        <div><span>Groups shown</span><strong id="reportGroupsShown">—</strong></div>
+                        <div><span>Total value</span><strong id="reportTotalValue">—</strong></div>
+                    </div>
+                    <div id="reportPreviewEmpty" class="report-preview-empty">
+                        <div class="report-empty-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+                        </div>
+                        <strong>Your report will appear here</strong>
+                        <span>Choose your fields and the preview will update automatically.</span>
+                    </div>
+                    <div id="reportChartWrap" class="report-chart-wrap" hidden>
+                        <canvas id="customReportChart"></canvas>
+                    </div>
+                    <div id="reportTableWrap" class="report-table-wrap" hidden>
+                        <table class="report-preview-table">
+                            <thead><tr><th id="reportTableDimension">Group</th><th id="reportTableMetric">Value</th><th>Share</th></tr></thead>
+                            <tbody id="reportTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="pivotTableWrap" class="pivot-table-wrap" hidden></div>
+                    <div id="rawSqlTableWrap" class="raw-sql-table-wrap" hidden>
+                        <button id="rawSqlCopyTableShortcut" class="raw-sql-copy-table-shortcut" type="button" aria-label="Copy table" title="Copy table"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>Copy table</span></button>
+                        <table id="rawSqlResultTable" class="raw-sql-result-table"></table>
+                    </div>
+                    <div id="sqlQueryDetails" class="sql-query-details">
+                        <div><span>Execution</span><strong id="sqlExecutionState">Not run</strong></div>
+                        <div><span>Duration</span><strong id="sqlExecutionDuration">—</strong></div>
+                        <div><span>Rows returned</span><strong id="sqlExecutionRows">—</strong></div>
+                        <div><span>Access</span><strong>Read only</strong></div>
+                        <div><span>Row limit</span><strong id="sqlExecutionLimit">500</strong></div>
+                        <div><span>Last run</span><strong id="sqlExecutionTime">—</strong></div>
+                    </div>
+                </article>
+                <article class="saved-reports-card">
+                    <div class="report-preview-head">
+                        <div>
+                            <span class="report-eyebrow">Workspace</span>
+                            <h2>Saved reports</h2>
+                            <p>Reusable views stored in this browser.</p>
+                        </div>
+                        <span id="savedReportCount" class="saved-report-count">0 reports</span>
+                    </div>
+                    <div id="savedReportsList" class="saved-reports-list">
+                        <div class="report-preview-empty compact"><strong>No saved reports yet</strong><span>Save a useful report to access it here.</span></div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <!-- =================================================
+         AI CHATBOT CONTROL CENTRE
+    ================================================== -->
+    <section id="panel-chatbot" class="view-panel">
+        <div class="admin-workspace">
+            <div class="admin-tabs" id="chatbotTabs" role="tablist" aria-label="AI Agent settings">
+                <button class="admin-tab active" data-chatbot-tab="overview" type="button" role="tab" aria-selected="true" aria-controls="chatbotTab-overview"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 17a8 8 0 1 1 16 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m12 13 4-4M7 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="13" r="1.35" fill="currentColor"/></svg><span>Overview</span></button>
+                <button class="admin-tab" data-chatbot-tab="instructions" type="button" role="tab" aria-selected="false" aria-controls="chatbotTab-instructions"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3.5h9l3 3V20.5H6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15 3.5v4h3M9 11h6M9 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Instructions</span></button>
+                <button class="admin-tab" data-chatbot-tab="model" type="button" role="tab" aria-selected="false" aria-controls="chatbotTab-model"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 1.15 3.1L16 7.25l-2.85 1.15L12 11.5 10.85 8.4 8 7.25l2.85-1.15L12 3ZM6.5 12.5l.85 2.15L9.5 15.5l-2.15.85L6.5 18.5l-.85-2.15-2.15-.85 2.15-.85.85-2.15ZM17.5 13l.75 1.75 1.75.75-1.75.75L17.5 18l-.75-1.75L15 15.5l1.75-.75L17.5 13Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Model & performance</span></button>
+                <button class="admin-tab" data-chatbot-tab="channels" type="button" role="tab" aria-selected="false" aria-controls="chatbotTab-channels"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="12" r="2.4" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="6" r="2.4" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18" r="2.4" stroke="currentColor" stroke-width="1.8"/><path d="m8.2 10.9 7.6-3.8M8.2 13.1l7.6 3.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Channels</span></button>
+                <button class="admin-tab" data-chatbot-tab="versions" type="button" role="tab" aria-selected="false" aria-controls="chatbotTab-versions"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.2 8.2V4.5m0 0h3.7m-3.7 0 3 3A8 8 0 1 1 4 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4.5l3 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Version history</span></button>
+            </div>
+            <div id="chatbotTab-overview" class="admin-tab-panel active">
+                <div class="admin-kpi-grid chatbot-overview-kpis">
+                    <div class="admin-kpi"><span>Deployment</span><strong id="chatbotStatusKpi">—</strong><small id="chatbotDeploymentMeta">Published configuration</small></div>
+                    <div class="admin-kpi"><span>Prompt version</span><strong id="chatbotVersionKpi">—</strong><small id="chatbotVersionMeta">No version loaded</small></div>
+                    <div class="admin-kpi"><span>Active model</span><strong id="chatbotModelKpi">—</strong><small id="chatbotProviderKpi">Provider</small></div>
+                    <div class="admin-kpi"><span>Connected channels</span><strong id="chatbotChannelsKpi">—</strong><small id="chatbotChannelsMeta">Website chat included</small></div>
+                </div>
+                <div class="admin-card live-chatbot-card">
+                    <div class="live-chatbot-head">
+                        <div><span class="live-chatbot-kicker">Published chatbot preview</span><h3>Test your chatbot</h3><p>See how customers experience your currently published configuration.</p></div>
+                        <button id="chatbotTestReset" class="admin-btn chatbot-test-reset" type="button" aria-label="Reset conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V4m0 0h4M4.5 4.5A8 8 0 1 1 4 13"/></svg><span>Reset conversation</span></button>
+                    </div>
+                    <div class="chatbot-simulator-grid">
+                        <div class="chatbot-test-main">
+                            <div class="test-chat">
+                                <div id="chatbotTestThread" class="test-chat-thread"><div class="test-message ai">Hello! How can I help you today?</div></div>
+                                <div id="chatbotStarterPrompts" class="chatbot-starter-prompts" aria-label="Suggested test messages">
+                                    <button type="button" data-chatbot-starter="Where is my order?">Where is my order?</button>
+                                    <button type="button" data-chatbot-starter="I want to request a refund">Request a refund</button>
+                                    <button type="button" data-chatbot-starter="I need to speak to a human">Speak to a human</button>
+                                </div>
+                                <div class="test-composer"><textarea id="chatbotTestInput" rows="1" placeholder="Test a customer question…"></textarea><button id="chatbotTestSend" class="admin-btn primary" type="button" aria-label="Send test message">Send</button></div>
+                            </div>
+                        </div>
+                        <aside class="chatbot-test-context" aria-label="Test context">
+                            <div class="chatbot-test-context-head"><span>Test context</span><small>Updates after every response</small></div>
+                            <div id="chatbotTestMeta" class="chatbot-test-meta">
+                                <div class="test-meta-item"><span>Prompt</span><strong id="testContextPrompt">Published version</strong></div>
+                                <div class="test-meta-item"><span>Model</span><strong id="testContextModel">—</strong></div>
+                                <div class="test-meta-item"><span>Detected intent</span><strong>Waiting for message</strong></div>
+                                <div class="test-meta-item"><span>AI confidence</span><strong>—</strong></div>
+                                <div class="test-meta-item"><span>Escalation</span><strong>Not evaluated</strong></div>
+                            </div>
+                        </aside>
+                    </div>
+                    <input id="testUseDraft" type="checkbox" hidden>
+                </div>
+            </div>
+            <div id="chatbotTab-instructions" class="admin-tab-panel">
+                <div class="prompt-sections" id="promptSections">
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Identity</strong><span>Who the chatbot is</span></span><textarea data-prompt-field="identity_prompt"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Objective</strong><span>Primary outcome</span></span><textarea data-prompt-field="objective_prompt"></textarea></label>
+                    <label class="prompt-section wide"><span class="prompt-section-head"><strong>Company information</strong><span>Approved business context</span></span><textarea data-prompt-field="company_prompt"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Voice and tone</strong><span>How replies should sound</span></span><textarea data-prompt-field="tone_prompt"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Response rules</strong><span>How replies should work</span></span><textarea data-prompt-field="response_rules"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Knowledge rules</strong><span>Source-of-truth behaviour</span></span><textarea data-prompt-field="knowledge_rules"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Escalation rules</strong><span>When humans take over</span></span><textarea data-prompt-field="escalation_rules"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Data collection</strong><span>Name, phone and consent</span></span><textarea data-prompt-field="data_collection_rules"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Restrictions</strong><span>What must never happen</span></span><textarea data-prompt-field="restriction_rules"></textarea></label>
+                    <label class="prompt-section"><span class="prompt-section-head"><strong>Formatting</strong><span>Markdown and readability</span></span><textarea data-prompt-field="formatting_rules"></textarea></label>
+                    <label class="prompt-section wide" id="legacyCustomInstructions" hidden><span class="prompt-section-head"><strong>Additional instructions</strong><span>Advanced custom rules</span></span><textarea data-prompt-field="custom_instructions"></textarea></label>
+                    <div id="customInstructionCards" class="custom-instruction-cards"></div>
+                    <button id="addCustomInstruction" class="custom-instruction-add" type="button"><span aria-hidden="true">＋</span><strong>Add custom instruction</strong><small>Create a header and instruction for a specialised rule</small></button>
+                </div>
+                <div class="prompt-editor-footer"><div><strong id="promptDraftLabel">Published prompt</strong><div id="promptSaveStatus" class="admin-status">Publish changes when your instructions are ready.</div></div><div class="admin-command-actions"><button id="viewCompiledPrompt" class="admin-btn" type="button">Preview compiled prompt</button><button id="chatbotPublish" class="admin-btn primary" type="button">Publish changes</button></div></div>
+            </div>
+            <div id="chatbotTab-model" class="admin-tab-panel">
+                <div class="admin-grid-2">
+                    <div class="admin-card model-config-card"><div class="admin-card-head"><div><span class="model-eyebrow">Live configuration</span><h3>Model configuration</h3><p>Choose the model used for customer conversations.</p></div></div>
+                        <div class="admin-form-grid">
+                            <label class="admin-field"><span>Provider</span><select id="chatbotProvider"><option value="deepseek">DeepSeek</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="google">Google Gemini</option></select></label>
+                            <label class="admin-field"><span>Model</span><input id="chatbotModel" type="text" placeholder="deepseek-chat"></label>
+                            <label class="admin-field"><span>Operational status</span><select id="chatbotOperationalStatus"><option value="active">Active</option><option value="paused">Paused</option></select></label>
+                            <div class="admin-field wide"><span>Response style</span><div class="response-style-options"><button class="response-style-btn" data-response-style="precise" type="button">Precise</button><button class="response-style-btn active" data-response-style="balanced" type="button">Balanced</button><button class="response-style-btn" data-response-style="creative" type="button">Creative</button></div></div>
+                        </div>
+                        <details class="advanced-settings"><summary>Advanced settings</summary><div class="advanced-settings-body"><p class="advanced-warning">Only change these settings if you understand their impact on response quality, speed and cost.</p><div class="admin-form-grid"><label class="admin-field"><span>Temperature</span><input id="chatbotTemperature" type="number" min="0" max="1.5" step="0.05"></label><label class="admin-field"><span>Maximum output tokens</span><input id="chatbotMaxTokens" type="number" min="100" max="8000" step="100"></label><label class="admin-field"><span>Request timeout (milliseconds)</span><input id="chatbotTimeout" type="number" min="5000" max="90000" step="1000"></label><label class="admin-field"><span>Fallback model</span><input id="chatbotFallbackModel" type="text" placeholder="Optional"></label><label class="admin-field"><span>Retry attempts</span><input id="chatbotRetryAttempts" type="number" min="0" max="5" value="1"></label></div></div></details>
+                        <div class="model-save-row"><div><strong>Configuration changes</strong><span>Changes take effect after you save.</span></div><button id="saveModelSettings" class="admin-btn primary" type="button">Save settings</button></div><div id="modelSaveStatus" class="admin-status model-save-status"></div>
+                    </div>
+                    <div class="admin-card model-profile-card"><div class="admin-card-head"><div><span class="model-eyebrow">Starting points</span><h3>Operating profile</h3><p>Apply a preset, then fine-tune it if needed.</p></div></div>
+                        <div class="model-preset-list">
+                            <button class="model-preset" data-model-preset="economy" type="button" aria-pressed="false"><span class="model-preset-number">01</span><div><strong>Fast & economical</strong><span>Short, focused answers with lower usage</span></div><span class="model-preset-action">Apply</span></button>
+                            <button class="model-preset active" data-model-preset="balanced" type="button" aria-pressed="true"><span class="model-preset-number">02</span><div><strong>Balanced</strong><span>Reliable tone with useful detail</span></div><span class="model-recommended">Recommended</span></button>
+                            <button class="model-preset" data-model-preset="quality" type="button" aria-pressed="false"><span class="model-preset-number">03</span><div><strong>Highest quality</strong><span>Deeper reasoning and longer answers</span></div><span class="model-preset-action">Apply</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbotTab-channels" class="admin-tab-panel">
+                <div class="admin-card"><div class="admin-card-head"><div><h3>Customer channels</h3><p>Deploy the same published intelligence while preserving channel-specific identity and replies.</p></div></div><div id="chatbotChannelGrid" class="channel-grid"><div class="admin-loading">Loading channels…</div></div></div>
+            </div>
+            <div id="chatbotTab-versions" class="admin-tab-panel">
+                <div class="admin-card"><div class="admin-card-head"><div><h3>Prompt version history</h3><p>Restore any earlier configuration as a new draft before publishing.</p></div></div><div id="chatbotVersionList" class="version-list"><div class="admin-loading">Loading versions…</div></div></div>
+            </div>
+        </div>
+    </section>
+    <!-- =================================================
+         KNOWLEDGE BASE MANAGER
+    ================================================== -->
+    <section id="panel-knowledge" class="view-panel">
+        <div class="admin-workspace">
+            <div class="admin-kpi-grid"><div class="admin-kpi"><span>Total content</span><strong id="kbTotal">—</strong><small>All knowledge entries</small></div><div class="admin-kpi"><span>Published</span><strong id="kbPublished">—</strong><small>Available to the AI</small></div><div class="admin-kpi"><span>Drafts</span><strong id="kbDrafts">—</strong><small>Awaiting publication</small></div><div class="admin-kpi"><span>Needs review</span><strong id="kbNeedsReview">—</strong><small>Potentially outdated</small></div></div>
+            <div id="knowledgeListCard" class="admin-card"><div class="kb-toolbar"><input id="kbSearch" type="search" placeholder="Search knowledge…"><select id="kbCategoryFilter"><option value="">All categories</option></select><select id="kbStatusFilter"><option value="">All statuses</option><option value="published">Published</option><option value="draft">Draft</option><option value="inactive">Inactive</option><option value="needs_review">Needs review</option></select><button id="newKnowledgeArticle" class="admin-btn primary" type="button">New article</button></div><div id="knowledgeArticleList" class="kb-list" style="margin-top:15px"><div class="admin-loading">Loading Knowledge Base…</div></div></div>
+            <div id="knowledgeEditor" class="kb-editor admin-card"><div class="admin-card-head"><div><h3 id="knowledgeEditorTitle">New knowledge article</h3><p>Draft content remains unavailable to customers until published.</p></div><button id="closeKnowledgeEditor" class="admin-btn" type="button">Close</button></div>
+                <input id="knowledgeArticleId" type="hidden"><div class="admin-form-grid">
+                    <label class="admin-field"><span>Title</span><input id="knowledgeTitle" type="text" maxlength="200"></label><label class="admin-field"><span>Category</span><input id="knowledgeCategory" type="text" maxlength="120" placeholder="General"></label>
+                    <label class="admin-field wide"><span>Primary customer question</span><input id="knowledgeQuestion" type="text" maxlength="1000"></label>
+                    <label class="admin-field wide"><span>Approved answer</span><textarea id="knowledgeContent" style="min-height:220px"></textarea></label>
+                    <label class="admin-field wide"><span>Alternative questions</span><textarea id="knowledgeAlternatives" placeholder="One variation per line"></textarea></label>
+                    <label class="admin-field"><span>Keywords</span><input id="knowledgeKeywords" type="text" placeholder="refund, return, cancellation"></label><label class="admin-field"><span>Priority (1–100)</span><input id="knowledgePriority" type="number" min="1" max="100" value="50"></label>
+                    <label class="admin-field"><span>Status</span><select id="knowledgeStatus"><option value="draft">Draft</option><option value="published">Published</option><option value="inactive">Inactive</option><option value="needs_review">Needs review</option></select></label><label class="admin-field"><span>Internal notes</span><input id="knowledgeNotes" type="text"></label>
+                </div><div class="admin-command-actions" style="margin-top:16px"><button id="saveKnowledgeDraft" class="admin-btn" type="button">Save draft</button><button id="publishKnowledgeArticle" class="admin-btn primary" type="button">Save & publish</button></div><div id="knowledgeSaveStatus" class="admin-status"></div>
+            </div>
+        </div>
+    </section>
+    <!-- =================================================
+         WORKFLOW AUTOMATION
+    ================================================== -->
+    <section id="panel-workflows" class="view-panel">
+        <div class="workflow-shell">
+            <div class="workflow-kpis">
+                <article class="workflow-kpi"><span>Active workflows</span><strong id="workflowActiveKpi">0</strong><small>Currently monitoring events</small></article>
+                <article class="workflow-kpi"><span>Runs today</span><strong id="workflowRunsKpi">0</strong><small>Automation executions</small></article>
+                <article class="workflow-kpi"><span>Successful</span><strong id="workflowSuccessKpi">—</strong><small>Last 30 executions</small></article>
+                <article class="workflow-kpi"><span>Time saved</span><strong id="workflowTimeKpi">0m</strong><small>Estimated this week</small></article>
+            </div>
+            <article class="workflow-card">
+                <div class="workflow-toolbar">
+                    <label class="workflow-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg><input id="workflowSearch" type="search" placeholder="Search workflows…" aria-label="Search workflows"></label>
+                    <select id="workflowStatusFilter" aria-label="Filter workflows by status"><option value="all">All statuses</option><option value="active">Active</option><option value="paused">Paused</option><option value="draft">Draft</option></select>
+                    <div class="workflow-tabs" role="tablist"><button class="workflow-tab active" data-workflow-view="workflows" type="button">Workflows</button><button class="workflow-tab" data-workflow-view="history" type="button">Run history</button></div>
+                    <div class="workflow-hero-actions">
+                        <button id="workflowTemplatesBtn" class="admin-btn" type="button"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>Templates</button>
+                        <button id="workflowCreateBtn" class="admin-btn primary" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Create workflow</button>
+                    </div>
+                </div>
+                <div id="workflowTableHead" class="workflow-table-head" aria-hidden="true"><span>Workflow</span><span>Trigger</span><span>Actions</span><span>Updated</span><span>Status</span><span></span></div>
+                <div id="workflowList" class="workflow-list"></div>
+                <div id="workflowHistory" class="workflow-history-list" hidden></div>
+            </article>
+        </div>
+    </section>
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+    <footer class="footer">
+        <div>
+            © 2026 Novara CX
+        </div>
+        <div class="footer-links">
+            <a href="https://novaracx.com/">
+                Home
+            </a>
+            <a href="https://novaracx.com/#contact">
+                Contact
+            </a>
+            <a href="https://novaracx.com/terms.html">
+                Terms
+            </a>
+            <a href="https://novaracx.com/privacy.html">
+                Privacy
+            </a>
+        </div>
+    </footer>
+</div>
+</main>
+</div>
+<button id="ticketWorkspaceFloater" class="ticket-workspace-floater" type="button" aria-label="Open ticket workspace" aria-expanded="false" title="Open ticket workspace">
+<svg class="ticket-floater-message-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17.5 3.5 20v-5.2A8.5 8.5 0 1 1 7 17.5Z"/><path d="M8 9h8M8 13h5"/></svg>
+<svg class="ticket-floater-close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+<span id="ticketWorkspaceBadge" class="ticket-workspace-badge" hidden>0</span>
+</button>
+<div id="knowledgeViewerBackdrop" class="kb-viewer-backdrop" aria-hidden="true">
+<aside class="kb-viewer" role="dialog" aria-modal="true" aria-labelledby="knowledgeViewerTitle">
+<header class="kb-viewer-head"><div><span class="report-eyebrow">Knowledge article</span><h2 id="knowledgeViewerTitle">Article</h2></div><div class="kb-viewer-actions"><button id="knowledgeViewerEdit" class="admin-btn" type="button">Edit</button><button id="knowledgeViewerCopy" class="admin-btn" type="button">Copy link</button><button id="knowledgeViewerClose" class="ticket-close" type="button" aria-label="Close">✕</button></div></header>
+<div id="knowledgeViewerBody" class="kb-viewer-body"></div>
+<footer class="kb-viewer-nav"><button id="knowledgeViewerPrevious" class="admin-btn" type="button">← Previous</button><button id="knowledgeViewerNext" class="admin-btn" type="button">Next →</button></footer>
+</aside>
+</div>
+<div id="workflowEditorBackdrop" class="workflow-editor-backdrop" aria-hidden="true">
+<aside class="workflow-editor" role="dialog" aria-modal="true" aria-labelledby="workflowEditorTitle">
+<header class="workflow-editor-head"><div><span class="report-eyebrow">Workflow builder</span><h2 id="workflowEditorTitle">Create workflow</h2><p>Define what starts the workflow and what NovaraDesk should do next.</p></div><button id="workflowEditorClose" class="ticket-close" type="button" aria-label="Close workflow builder">✕</button></header>
+<div class="workflow-editor-body">
+    <div class="workflow-live-preview" aria-live="polite">
+        <div class="workflow-live-preview-label"><span>Workflow map</span><span id="workflowReadyBadge" class="workflow-ready-badge incomplete">Needs setup</span></div>
+        <div class="workflow-flow">
+            <div class="workflow-flow-node"><span>When</span><strong id="workflowPreviewTrigger">Ticket is created</strong></div><i class="workflow-flow-arrow"></i>
+            <div class="workflow-flow-node"><span>Only if</span><strong id="workflowPreviewConditions">No conditions</strong></div><i class="workflow-flow-arrow"></i>
+            <div class="workflow-flow-node"><span>Then</span><strong id="workflowPreviewActions">Set priority</strong></div>
+        </div>
+        <div class="workflow-validation"><span id="workflowCheckName" class="workflow-validation-item missing">Clear name</span><span id="workflowCheckTrigger" class="workflow-validation-item">Trigger selected</span><span id="workflowCheckAction" class="workflow-validation-item">Action configured</span></div>
+    </div>
+    <section id="workflowTemplateSection" class="workflow-section" hidden>
+        <div class="workflow-section-head"><div class="workflow-step"><span class="workflow-step-number">★</span><div><h3>Start from a template</h3><p>Use a proven automation and adapt it to your operation.</p></div></div></div>
+        <div id="workflowTemplateGrid" class="workflow-template-grid"></div>
+    </section>
+    <section class="workflow-section">
+        <div class="workflow-section-head"><div class="workflow-step"><span class="workflow-step-number">1</span><div><h3>Workflow details</h3><p>Give your team a clear name and purpose.</p></div></div></div>
+        <div class="workflow-form-grid"><label class="workflow-field wide"><span>Name</span><input id="workflowNameInput" maxlength="100" placeholder="e.g. Escalate angry customers"></label><label class="workflow-field wide"><span>Description</span><textarea id="workflowDescriptionInput" maxlength="280" placeholder="Explain what this workflow handles."></textarea></label></div>
+    </section>
+    <section class="workflow-section">
+        <div class="workflow-section-head"><div class="workflow-step"><span class="workflow-step-number">2</span><div><h3>When this happens</h3><p>Select the event that starts the workflow.</p></div></div></div>
+        <label class="workflow-field wide"><span>Trigger</span><select id="workflowTriggerInput"><option value="ticket_created">Ticket is created</option><option value="customer_replied">Customer replies</option><option value="status_changed">Ticket status changes</option><option value="ticket_assigned">Ticket is assigned</option><option value="sla_approaching">SLA is approaching</option><option value="rating_received">Rating is received</option><option value="ai_low_confidence">AI confidence is low</option></select></label>
+    </section>
+    <section class="workflow-section">
+        <div class="workflow-section-head"><div class="workflow-step"><span class="workflow-step-number">3</span><div><h3>Only if</h3><p>Add optional conditions to narrow the workflow.</p></div></div><div class="workflow-logic"><button class="active" data-workflow-logic="and" type="button">AND</button><button data-workflow-logic="or" type="button">OR</button></div></div>
+        <div id="workflowConditionList" class="workflow-rule-list"></div><button id="workflowAddCondition" class="admin-btn workflow-add-rule" type="button">＋ Add condition</button>
+    </section>
+    <section class="workflow-section">
+        <div class="workflow-section-head"><div class="workflow-step"><span class="workflow-step-number">4</span><div><h3>Then do this</h3><p>Add one or more actions in execution order.</p></div></div></div>
+        <div id="workflowActionList" class="workflow-rule-list"></div><button id="workflowAddAction" class="admin-btn workflow-add-rule" type="button">＋ Add action</button>
+    </section>
+</div>
+<div id="workflowValidationToast" class="workflow-validation-toast" role="status"></div>
+<footer class="workflow-editor-footer"><div class="workflow-footer-left"><button id="workflowValidateBtn" class="admin-btn workflow-validate-btn" type="button">Validate workflow</button><span id="workflowEditorState" class="workflow-save-state">Changes are saved when you finish.</span></div><div class="admin-command-actions"><button id="workflowSaveDraft" class="admin-btn" type="button">Save draft</button><button id="workflowSaveActive" class="admin-btn primary" type="button">Save & activate</button></div></footer>
+</aside>
+</div>
+<div id="dashboardReportPicker" class="dashboard-picker-backdrop" aria-hidden="true">
+<section class="dashboard-picker" role="dialog" aria-modal="true" aria-labelledby="dashboardPickerTitle">
+<div class="dashboard-picker-head">
+    <div><span class="report-eyebrow">Report library</span><h2 id="dashboardPickerTitle">Add reports to dashboard</h2><p>Select any saved report. You can add the same report more than once.</p></div>
+    <button id="dashboardPickerClose" class="ticket-close" type="button" aria-label="Close report picker">✕</button>
+</div>
+<div class="dashboard-picker-search">
+    <input id="dashboardReportSearch" type="search" placeholder="Search saved reports…" aria-label="Search saved reports">
+    <button id="dashboardOpenReportBuilder" class="report-secondary-btn" type="button">Create report</button>
+</div>
+<div id="dashboardReportPickerList" class="dashboard-picker-list"></div>
+</section>
+</div>
+<div id="conversationDetailBackdrop" class="conversation-detail-backdrop" aria-hidden="true">
+<section class="conversation-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="conversationDetailTitle">
+<div class="conversation-detail-head">
+    <div>
+        <h2 id="conversationDetailTitle">Conversation</h2>
+        <p id="conversationDetailMeta">Complete customer conversation</p>
+    </div>
+    <button id="conversationDetailClose" class="ticket-close" type="button" aria-label="Close conversation">✕</button>
+</div>
+<div id="conversationDetailThread" class="conversation-detail-thread">
+    <div class="empty-state">Loading conversation…</div>
+</div>
+</section>
+</div>
+<div id="dataExplorerBackdrop" class="data-explorer-backdrop" aria-hidden="true">
+<section class="data-explorer-dialog" role="dialog" aria-modal="true" aria-labelledby="dataExplorerTitle">
+<header class="data-explorer-head">
+    <div>
+        <span id="dataExplorerEyebrow" class="report-eyebrow">Underlying data</span>
+        <h2 id="dataExplorerTitle">All records</h2>
+        <p id="dataExplorerMeta">Selected dashboard date range</p>
+    </div>
+    <button id="dataExplorerClose" class="ticket-close" type="button" aria-label="Close data view">✕</button>
+</header>
+<div class="data-explorer-toolbar">
+    <label class="data-explorer-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+        <input id="dataExplorerSearch" type="search" placeholder="Search this data…" aria-label="Search underlying data">
+    </label>
+    <select id="dataExplorerFilter" aria-label="Filter underlying data"><option value="">All records</option></select>
+    <button id="dataExplorerExport" class="report-secondary-btn" type="button">Export CSV</button>
+</div>
+<div id="dataExplorerLoading" class="data-explorer-loading" hidden>Loading complete data…</div>
+<div class="data-explorer-table-wrap">
+    <table id="dataExplorerTable" class="data-explorer-table"></table>
+</div>
+<footer class="data-explorer-footer">
+    <span id="dataExplorerCount">0 records</span>
+    <div class="data-explorer-pagination">
+        <button id="dataExplorerPrevious" class="report-secondary-btn" type="button">Previous</button>
+        <span id="dataExplorerPage">Page 1</span>
+        <button id="dataExplorerNext" class="report-secondary-btn" type="button">Next</button>
+    </div>
+</footer>
+</section>
+</div>
+<div id="customerProfileBackdrop" class="customer-profile-backdrop" aria-hidden="true">
+<aside class="customer-profile-drawer" role="dialog" aria-modal="true" aria-labelledby="customerProfileName">
+<header class="customer-profile-head">
+    <div class="customer-profile-identity">
+        <span id="customerProfileAvatar" class="customer-profile-avatar">AM</span>
+        <div><div class="customer-profile-name-row"><h2 id="customerProfileName">Customer</h2><span id="customerProfileVerified" class="customer-verified-badge">Verified</span></div><p id="customerProfileHeadline">Customer profile</p><div id="customerProfileTags" class="customer-profile-tags"></div></div>
+    </div>
+    <div class="customer-profile-head-actions">
+        <button id="customerProfileNewTicket" class="customer-secondary-btn" type="button">Create ticket</button>
+        <button id="customerProfileEdit" class="customer-primary-btn" type="button">Edit profile</button>
+        <button id="customerProfileClose" class="customer-profile-close" type="button" aria-label="Close customer profile">✕</button>
+    </div>
+</header>
+<div class="customer-profile-summary">
+    <article><span>Customer since</span><strong id="customerSummarySince">—</strong></article>
+    <article><span>Lifetime value</span><strong id="customerSummaryValue">—</strong></article>
+    <article><span>Total tickets</span><strong id="customerSummaryTickets">—</strong></article>
+    <article><span>Average CSAT</span><strong id="customerSummaryCsat">—</strong></article>
+    <article><span>Health score</span><strong id="customerSummaryHealth">—</strong></article>
+</div>
+<nav id="customerProfileTabs" class="customer-profile-tabs" aria-label="Customer profile sections">
+    <button class="active" data-customer-tab="overview" type="button">Overview</button><button data-customer-tab="timeline" type="button">Timeline</button><button data-customer-tab="tickets" type="button">Tickets</button><button data-customer-tab="commerce" type="button">Commerce</button><button data-customer-tab="notes" type="button">Notes</button>
+</nav>
+<div class="customer-profile-scroll">
+    <section id="customerTab-overview" class="customer-profile-tab active">
+        <div class="customer-profile-grid">
+            <article class="customer-profile-card"><header><div><span class="customer-card-eyebrow">Identity</span><h3>Contact details</h3></div></header><div id="customerContactDetails" class="customer-detail-list"></div></article>
+            <article class="customer-profile-card"><header><div><span class="customer-card-eyebrow">Intelligence</span><h3>Customer signals</h3></div><span id="customerRiskBadge" class="customer-risk-badge">Healthy</span></header><div id="customerSignals" class="customer-signal-grid"></div></article>
+            <article class="customer-profile-card"><header><div><span class="customer-card-eyebrow">Preferences</span><h3>Communication & consent</h3></div></header><div id="customerPreferences" class="customer-detail-list"></div></article>
+            <article class="customer-profile-card"><header><div><span class="customer-card-eyebrow">Connected profiles</span><h3>External systems</h3></div></header><div id="customerIntegrations" class="customer-integration-list"></div></article>
+            <article class="customer-profile-card wide"><header><div><span class="customer-card-eyebrow">Service context</span><h3>Agent briefing</h3></div><button id="customerCopyBrief" class="customer-icon-btn" type="button" title="Copy briefing" aria-label="Copy customer briefing"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></header><p id="customerAgentBrief" class="customer-agent-brief"></p></article>
+        </div>
+    </section>
+    <section id="customerTab-timeline" class="customer-profile-tab"><div id="customerTimeline" class="customer-timeline"></div></section>
+    <section id="customerTab-tickets" class="customer-profile-tab"><div class="customer-subtable-card"><table><thead><tr><th>Ticket</th><th>Subject</th><th>Channel</th><th>Status</th><th>Created</th></tr></thead><tbody id="customerTicketsBody"></tbody></table></div></section>
+    <section id="customerTab-commerce" class="customer-profile-tab"><div class="customer-profile-grid"><article class="customer-profile-card wide"><header><div><span class="customer-card-eyebrow">Commerce</span><h3>Order history</h3></div><span id="customerCommerceSource" class="customer-source-badge">Shopify</span></header><div id="customerOrders" class="customer-order-list"></div></article></div></section>
+    <section id="customerTab-notes" class="customer-profile-tab"><div class="customer-notes-layout"><article class="customer-profile-card"><header><div><span class="customer-card-eyebrow">Private context</span><h3>Add customer note</h3></div></header><textarea id="customerNoteInput" placeholder="Add context that should follow this customer across tickets…"></textarea><button id="customerSaveNote" class="customer-primary-btn" type="button">Save note</button></article><div id="customerNotesList" class="customer-notes-list"></div></div></section>
+</div>
+<div id="customerProfileEditor" class="customer-profile-editor" hidden>
+    <div class="customer-profile-editor-head"><div><span class="customer-card-eyebrow">Customer record</span><h3 id="customerEditorTitle">Edit profile</h3></div><button id="customerEditorClose" type="button" aria-label="Close editor">✕</button></div>
+    <div class="customer-editor-grid"><label><span>Full name</span><input id="customerEditName" type="text"></label><label><span>Email</span><input id="customerEditEmail" type="email"></label><label><span>Phone</span><input id="customerEditPhone" type="tel"></label><label><span>Organisation</span><input id="customerEditOrganisation" type="text"></label><label><span>Segment</span><select id="customerEditSegment"><option>VIP</option><option>Loyal</option><option>New</option><option>At risk</option></select></label><label><span>Preferred language</span><select id="customerEditLanguage"><option>English</option><option>Hindi</option><option>Hinglish</option></select></label><label class="wide"><span>Tags</span><input id="customerEditTags" type="text" placeholder="Comma-separated tags"></label></div>
+    <div class="customer-editor-actions"><button id="customerEditorCancel" class="customer-secondary-btn" type="button">Cancel</button><button id="customerEditorSave" class="customer-primary-btn" type="button">Save customer</button></div>
+</div>
+</aside>
+</div>
+<div id="ticketDrawerBackdrop" class="ticket-drawer-backdrop" aria-hidden="true">
+<aside id="ticketQueuePanel" class="ticket-queue-panel" aria-label="Tickets in current view">
+<div class="ticket-queue-head">
+    <div><span>Current view</span><strong id="ticketQueueTitle">All Tickets</strong></div>
+    <button id="agentAssistDockToggle" class="agent-assist-dock-toggle" type="button" aria-label="Open AI Agent Assist" aria-expanded="false">
+        <span aria-hidden="true">✦</span><strong>AI Assist</strong>
+    </button>
+</div>
+<button id="ticketQueueResizeHandle" class="ticket-queue-resize-handle" type="button" aria-label="Resize Current View panel" title="Drag to resize Current View"></button>
+<label class="ticket-queue-view"><span>Switch queue</span><select id="ticketQueueViewSelect" aria-label="Change ticket view"></select></label>
+<label class="ticket-queue-search"><span aria-hidden="true">⌕</span><input id="ticketQueueSearch" type="search" placeholder="Search this queue…" autocomplete="off"></label>
+<div id="ticketQueueList" class="ticket-queue-list"></div>
+<nav id="ticketQueuePagination" class="ticket-queue-pagination" aria-label="Ticket queue pages"></nav>
+</aside>
+<section id="agentAssistPanel" class="agent-assist-panel" aria-label="AI Agent Assist">
+<button id="agentAssistReopen" class="agent-assist-reopen" type="button" aria-label="Open AI Agent Assist">›</button>
+<div class="agent-assist-head">
+    <div><div class="agent-assist-title">AI Agent Assist</div><div class="agent-assist-sub">Smart reply and writing assistance</div></div>
+    <button id="agentAssistCollapse" class="agent-assist-collapse" type="button" aria-label="Collapse AI Agent Assist">‹</button>
+</div>
+<div class="agent-assist-section">
+    <div class="agent-assist-section-head">
+        <div><div class="agent-assist-label">Suggested reply</div><div class="agent-assist-hint">Read-only · generated from the ticket conversation</div></div>
+        <button id="agentCopySuggestion" class="agent-assist-copy" type="button" aria-label="Copy suggested reply" title="Copy suggested reply">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg><span>Copied</span>
+        </button>
+    </div>
+    <div id="agentAssistSuggestion" class="agent-suggestion empty">Generate a reply suggestion using the ticket context.</div>
+    <div class="agent-assist-actions">
+        <button id="agentSuggestReply" class="agent-assist-btn primary" type="button">Suggest reply</button>
+        <button id="agentRegenerate" class="agent-assist-btn" type="button" disabled>Generate another</button>
+        <button id="agentInsertSuggestion" class="agent-assist-btn" type="button" disabled>Insert into reply</button>
+    </div>
+</div>
+<a id="agentKnowledgeSuggestion" class="agent-knowledge-suggestion" href="#knowledge" target="_blank" rel="noopener" hidden>
+    <span class="agent-knowledge-icon" aria-hidden="true">✦</span>
+    <span><small>Suggested knowledge article</small><strong id="agentKnowledgeTitle">Relevant article</strong></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14 21 3M15 3h6v6"/><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/></svg>
+</a>
+<div class="agent-assist-section">
+    <div class="agent-assist-section-head">
+        <div><div class="agent-assist-label">Improve your draft</div><div class="agent-assist-hint">Type or paste the message you want AI to refine</div></div>
+        <button id="agentCopyDraft" class="agent-assist-copy" type="button" aria-label="Copy current draft" title="Copy current draft">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg><span>Copied</span>
+        </button>
+    </div>
+    <textarea id="agentDraftInput" class="agent-draft-input" placeholder="Type or paste your draft here…"></textarea>
+    <div class="agent-tone-actions">
+        <button class="agent-assist-btn" data-assist-mode="refine" type="button">Improve English</button>
+        <button class="agent-assist-btn" data-assist-mode="empathetic" type="button">More empathetic</button>
+        <button class="agent-assist-btn" data-assist-mode="concise" type="button">More concise</button>
+        <button class="agent-assist-btn" data-assist-mode="professional" type="button">More professional</button>
+        <button class="agent-assist-btn" data-assist-mode="simplify" type="button">Simplify</button>
+    </div>
+    <button id="agentOriginalToggle" class="agent-original-toggle" type="button">Show original</button>
+    <div class="agent-draft-footer">
+        <button id="agentClearDraft" class="agent-clear-btn" type="button">Clear</button>
+        <button id="agentInsertDraft" class="agent-assist-btn primary" type="button" disabled>Insert into reply</button>
+    </div>
+    <div id="agentAssistStatus" class="agent-assist-status"></div>
+</div>
+</section>
+<aside class="ticket-drawer" role="dialog" aria-modal="true" aria-labelledby="ticketDrawerTitle">
+<div id="ticketSwitchLoading" class="ticket-switch-loading" role="status" aria-live="polite" aria-label="Loading ticket">
+    <span class="ticket-switch-spinner" aria-hidden="true"></span>
+    <strong>Loading ticket</strong>
+    <small>Fetching the latest ticket information and conversation…</small>
+</div>
+<div class="ticket-drawer-head">
+    <div>
+        <div class="ticket-heading-row">
+            <span class="ticket-title-copy"><span id="ticketDrawerTitle" class="ticket-drawer-title">Ticket</span><button id="ticketCopyId" class="ticket-copy-id" type="button" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>
+            <div id="ticketTags" class="ticket-tags"></div>
+        </div>
+        <div class="ticket-assignment"><span class="ticket-assignment-avatar" aria-hidden="true">NC</span><span class="ticket-assignment-copy"><small>Assigned agent</small><select id="ticketAgentSelect" class="ticket-agent-select" aria-label="Assigned agent"><option>Novara CX Support</option></select></span></div>
+    </div>
+    <div class="ticket-head-side">
+    <div class="ticket-head-controls">
+        <div id="ticketStatusControl" class="ticket-status-control">
+            <select id="ticketStatusSelect" class="ticket-status-select" aria-label="Ticket status"><option value="open">Open</option><option value="in_progress">In Progress</option><option value="pending">Pending</option><option value="resolved">Resolved</option><option value="reopened">Reopened</option></select>
+            <button id="ticketStatusTrigger" class="ticket-status-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span id="ticketStatusTriggerLabel">Open</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div id="ticketStatusMenu" class="ticket-status-menu" role="listbox" aria-label="Change ticket status">
+                <button class="ticket-status-option" data-value="open" type="button"><span class="ticket-status-swatch"></span>Open</button>
+                <button class="ticket-status-option" data-value="in_progress" type="button"><span class="ticket-status-swatch"></span>In Progress</button>
+                <button class="ticket-status-option" data-value="pending" type="button"><span class="ticket-status-swatch"></span>Pending</button>
+                <button class="ticket-status-option" data-value="resolved" type="button"><span class="ticket-status-swatch"></span>Resolved</button>
+                <button class="ticket-status-option" data-value="reopened" type="button"><span class="ticket-status-swatch"></span>Reopened</button>
+            </div>
+        </div>
+        <button id="ticketDrawerClose" class="ticket-close" type="button" aria-label="Close ticket">✕</button>
+    </div>
+    <div id="ticketSlaState" class="ticket-sla-state due" aria-live="polite">Due in 18 minutes</div>
+    <div id="ticketChannelSwitch" class="ticket-channel-switch" role="tablist" aria-label="Ticket channel">
+        <button id="ticketChannelChat" class="active" type="button" role="tab" aria-selected="true" data-ticket-channel="chat"><span class="ticket-channel-dot"></span>Chat</button>
+        <button id="ticketChannelCall" type="button" role="tab" aria-selected="false" data-ticket-channel="call"><span class="ticket-channel-dot"></span>Calls</button>
+        <button id="ticketChannelHistory" type="button" role="tab" aria-selected="false" data-ticket-channel="history"><span class="ticket-channel-dot"></span>History</button>
+    </div>
+    </div>
+</div>
+<div class="ticket-workspace-scroll">
+    <div id="ticketContext" class="ticket-context"></div>
+    <details class="ticket-ai-details">
+        <summary><svg class="ticket-ai-summary-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 14 8l5 2-5 2-2 5-2-5-5-2 5-2 2-5Z"/><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg><span>AI Conversation · Click to view</span></summary>
+        <div id="ticketAiTranscript" class="ticket-ai-transcript"></div>
+    </details>
+    <div class="ticket-thread-label">Human support conversation</div>
+    <div id="ticketThread" class="ticket-thread"><div class="empty-state">Loading ticket…</div></div>
+    <section id="ticketCallSections" class="ticket-call-sections" hidden aria-label="Call information">
+        <details id="ticketCallHistoryPanel" class="ticket-call-panel" open>
+            <summary>
+                <span class="ticket-call-summary-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1.5 1.5 0 0 1 1.6-.35c1.1.36 2.27.55 3.45.55a1.5 1.5 0 0 1 1.5 1.5v3.55a1.5 1.5 0 0 1-1.5 1.5A18.45 18.45 0 0 1 2 3.5 1.5 1.5 0 0 1 3.5 2H7a1.5 1.5 0 0 1 1.5 1.5c0 1.2.2 2.35.55 3.45a1.5 1.5 0 0 1-.35 1.6Z"/></svg><span><strong>Call History</strong><small>Incoming and outgoing attempts linked to this ticket</small></span></span>
+                <span class="ticket-call-summary-meta"><strong id="ticketCallAttemptCount">1 attempt</strong><svg class="ticket-call-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5"/></svg></span>
+            </summary>
+            <div class="ticket-call-panel-body ticket-call-history-wrap">
+                <table class="ticket-call-history-table">
+                    <thead><tr><th>Timestamp</th><th>Notes</th><th>Call outcome</th><th>Agent</th><th>Call type</th><th>Duration</th><th>Resolution outcome</th><th>Recording</th></tr></thead>
+                    <tbody id="ticketCallHistoryBody"></tbody>
+                </table>
+            </div>
+        </details>
+        <details id="ticketCallDetailsPanel" class="ticket-call-panel" open>
+            <summary>
+                <span class="ticket-call-summary-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg><span><strong>Capture New Call</strong><small>Record and save a new call outcome</small></span></span>
+                <svg class="ticket-call-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5"/></svg>
+            </summary>
+            <div class="ticket-call-panel-body ticket-call-details-grid">
+                <label class="ticket-call-field"><span>Timestamp</span><input id="ticketCallTimestamp" type="datetime-local" step="1"></label>
+                <label class="ticket-call-field"><span>Call type</span><select id="ticketCallType"><option value="outgoing">Outgoing</option><option value="incoming">Incoming</option></select></label>
+                <label class="ticket-call-field"><span>Call outcome</span><select id="ticketCallOutcome"><option value="connected">Connected</option><option value="no-answer">No answer</option><option value="busy">Busy</option><option value="callback">Asked to callback later</option></select></label>
+                <label class="ticket-call-field"><span>Agent</span><input id="ticketCallAgent" type="text" value="Novara CX Support"></label>
+                <label class="ticket-call-field"><span>Duration</span><input id="ticketCallDuration" type="text" inputmode="numeric" placeholder="00:00:00"></label>
+                <label class="ticket-call-field wide"><span>Notes</span><textarea id="ticketCallNotes" rows="3" placeholder="Add notes from this call…"></textarea></label>
+                <label class="ticket-call-field wide ticket-call-recording"><span>Recording</span><input id="ticketCallRecording" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg"><small id="ticketCallRecordingHint">Upload a call recording manually when available.</small></label>
+                <div class="ticket-call-save-row wide"><span id="ticketCallSaveStatus" role="status" aria-live="polite"></span><button id="ticketCallSave" class="ticket-call-save" type="button">Save Call Log</button></div>
+            </div>
+        </details>
+    </section>
+    <section id="ticketHistorySection" class="ticket-history-section" hidden aria-label="Ticket history">
+        <header class="ticket-history-head"><div><span>Activity log</span><h3>Ticket history</h3><p>Actions and conversation events recorded for this ticket.</p></div><span id="ticketHistoryCount" class="ticket-history-count">0 events</span></header>
+        <div id="ticketHistoryTimeline" class="ticket-history-timeline"></div>
+    </section>
+</div>
+<div class="ticket-composer">
+    <div class="ticket-composer-tabs">
+        <button id="ticketReplyTab" class="ticket-composer-tab active" type="button">Customer Reply</button>
+        <button id="ticketNoteTab" class="ticket-composer-tab" type="button">Internal Note</button>
+    </div>
+    <div id="ticketReplyPane" class="ticket-reply-pane active">
+        <div class="ticket-reply-compose">
+            <div class="ticket-reply-shell">
+                <textarea id="ticketReplyText" placeholder="Reply to customer…"></textarea>
+                <button id="ticketEmojiButton" class="ticket-emoji-btn" type="button" aria-label="Add emoji" title="Add emoji">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="9" cy="10" r="1"></circle><circle cx="15" cy="10" r="1"></circle><path d="M8.5 14.5c1 1 2.1 1.5 3.5 1.5s2.5-.5 3.5-1.5"></path></svg>
+                </button>
+            </div>
+            <button id="ticketSendReply" class="ticket-send-arrow" type="button" aria-label="Send reply" disabled>
+                <svg viewBox="0 0 24 24"><path d="M22 2 11 13"></path><path d="m22 2-7 20-4-9-9-4Z"></path></svg>
+            </button>
+            <div id="ticketEmojiPicker" class="ticket-emoji-picker" aria-label="Choose an emoji"></div>
+        </div>
+        <div class="ticket-action-row">
+            <button id="ticketMarkPending" class="ticket-action-btn" type="button">Mark pending</button>
+            <button id="ticketReopen" class="ticket-action-btn" type="button">Reopen</button>
+            <button id="ticketResolve" class="ticket-action-btn resolve" type="button">Resolve ticket</button>
+        </div>
+    </div>
+    <div id="ticketNotePane" class="ticket-note-pane">
+        <div class="ticket-composer-box">
+            <textarea id="ticketNoteText" placeholder="Add a private internal note…"></textarea>
+        </div>
+        <div class="ticket-action-row">
+            <button id="ticketSaveNote" class="ticket-action-btn" type="button">Save internal note</button>
+        </div>
+        <div id="ticketNotesHistory" class="ticket-notes-history"></div>
+    </div>
+    <div id="ticketActionError" class="ticket-action-error"></div>
+</div>
+<div id="ticketResolutionOverlay" class="ticket-resolution-overlay">
+    <div class="ticket-resolution-dialog">
+        <h3>Resolve ticket</h3>
+        <p>Add a resolution note. The customer will see this note.</p>
+        <textarea id="ticketResolutionText" placeholder="How was the issue resolved?"></textarea>
+        <div id="ticketResolutionError" class="ticket-action-error"></div>
+        <div class="ticket-action-row">
+            <button id="ticketCancelResolution" class="ticket-action-btn" type="button">Cancel</button>
+            <button id="ticketConfirmResolution" class="ticket-action-btn resolve" type="button">Resolve ticket</button>
+        </div>
+    </div>
+</div>
+</aside>
+</div>
+<div id="nativeDialogBackdrop" class="native-dialog-backdrop" aria-hidden="true">
+<section class="native-dialog" role="dialog" aria-modal="true" aria-labelledby="nativeDialogTitle">
+<h3 id="nativeDialogTitle">Confirm action</h3>
+<p id="nativeDialogMessage"></p>
+<input id="nativeDialogInput" type="text" hidden>
+<div class="native-dialog-actions">
+    <button id="nativeDialogCancel" type="button">Cancel</button>
+    <button id="nativeDialogConfirm" class="primary" type="button">Continue</button>
+</div>
+</section>
+</div>
+<script>
+/* =====================================================
+   STATE
+====================================================== */
+let currentPeriod = window.NOVARA_DEMO_MODE
+    ? 14
+    : Number(localStorage.getItem("novara_analytics_period") || 28);
+let currentDateRange = (() => {
+if (window.NOVARA_DEMO_MODE) return null;
+try { return JSON.parse(localStorage.getItem("novara_analytics_date_range") || "null"); }
+catch { return null; }
+})();
+let currentTab = "ai";
+let aiTrendChart = null;
+let aiSentimentChart = null;
+let humanTrendChart = null;
+let humanReasonsChart = null;
+let ticketTrendChart = null;
+let ticketStatusChart = null;
+let customReportChart = null;
+let chartDateKeys = [];
+let reportDataCache = {
+analytics: [],
+conversations: [],
+intents: [],
+ratings: [],
+resolution: [],
+sentiment: [],
+tickets: []
+};
+let currentReportResult = null;
+let isRefreshing = false;
+/* =====================================================
+   API
+====================================================== */
+const API_URL =
+"https://novara-cx-ai.rishi-rana96.workers.dev";
+/* =====================================================
+   API HELPER
+====================================================== */
+async function fetchJSON(endpoint) {
+try {
+    const response =
+        await fetch(
+            `${API_URL}${endpoint}`
+        );
+    if (!response.ok) {
+        throw new Error(
+            `Request failed: ${response.status}`
+        );
+    }
+    return await response.json();
+}
+catch (error) {
+    console.error(
+        "API error:",
+        error
+    );
+    return [];
+}
+}
+function analyticsDateQuery(period = currentPeriod) {
+if (currentDateRange?.start && currentDateRange?.end) {
+    return `start=${encodeURIComponent(currentDateRange.start)}&end=${encodeURIComponent(currentDateRange.end)}`;
+}
+return `period=${period}`;
+}
+async function fetchAnalytics(period) {
+return fetchJSON(
+    `/analytics?${analyticsDateQuery(period)}`
+);
+}
+async function fetchConversations(limit = 10, period = currentPeriod) {
+return fetchJSON(
+    `/conversations?limit=${limit}&${analyticsDateQuery(period)}`
+);
+}
+async function fetchIntents(period) {
+return fetchJSON(
+    `/intents?${analyticsDateQuery(period)}`
+);
+}
+async function fetchRatings(period) {
+return fetchJSON(
+    `/ratings?${analyticsDateQuery(period)}`
+);
+}
+async function fetchResolution(period) {
+return fetchJSON(
+    `/resolution?${analyticsDateQuery(period)}`
+);
+}
+async function fetchSentiment(period) {
+return fetchJSON(
+    `/sentiment?${analyticsDateQuery(period)}`
+);
+}
+async function fetchTickets(period) {
+return fetchJSON(
+    `/tickets?${analyticsDateQuery(period)}`
+);
+}
+/* =====================================================
+   WORKSPACE NAVIGATION
+====================================================== */
+const sidebarAnalytics = document.getElementById("sidebarAnalytics");
+const sidebarTickets = document.getElementById("sidebarTickets");
+const sidebarCustomers = document.getElementById("sidebarCustomers");
+const sidebarReports = document.getElementById("sidebarReports");
+const sidebarChatbot = document.getElementById("sidebarChatbot");
+const sidebarKnowledge = document.getElementById("sidebarKnowledge");
+const sidebarWorkflows = document.getElementById("sidebarWorkflows");
+const sidebarSettings = document.getElementById("sidebarSettings");
+const analyticsSubnav = document.getElementById("analyticsSubnav");
+const ticketsSubnav = document.getElementById("ticketsSubnav");
+const analyticsNavGroup = document.getElementById("analyticsNavGroup");
+const ticketsNavGroup = document.getElementById("ticketsNavGroup");
+const analyticsNavToggle = document.getElementById("analyticsNavToggle");
+const ticketsNavToggle = document.getElementById("ticketsNavToggle");
+const sidebarPinToggle = document.getElementById("sidebarPinToggle");
+const SIDEBAR_PIN_KEY = "novaradesk_sidebar_pinned_v2";
+function setSidebarPinned(pinned, persist = true) {
+const expanded = Boolean(pinned);
+document.body.classList.toggle("sidebar-pinned", expanded);
+sidebarPinToggle?.setAttribute("aria-pressed", String(expanded));
+sidebarPinToggle?.setAttribute("aria-label", expanded ? "Collapse sidebar" : "Keep sidebar open");
+sidebarPinToggle?.setAttribute("title", expanded ? "Collapse sidebar" : "Keep sidebar open");
+if (sidebarPinToggle) {
+    sidebarPinToggle.innerHTML = expanded
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9 4v16"></path><path d="m16.5 9-3 3 3 3"></path></svg>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9 4v16"></path><path d="m13.5 9 3 3-3 3"></path></svg>';
+}
+if (persist) localStorage.setItem(SIDEBAR_PIN_KEY, expanded ? "true" : "false");
+}
+setSidebarPinned(localStorage.getItem(SIDEBAR_PIN_KEY) === "true", false);
+sidebarPinToggle?.addEventListener("click", event => {
+event.preventDefault();
+event.stopPropagation();
+setSidebarPinned(!document.body.classList.contains("sidebar-pinned"));
+event.currentTarget.blur();
+});
+const analyticsSubitems = {
+ai: document.getElementById("sidebarAiAgent"),
+human: document.getElementById("sidebarHumanAgent"),
+dashboards: document.getElementById("sidebarCustomDashboards")
+};
+document.querySelectorAll("#appSidebar .nav-item").forEach(item => {
+const label = item.querySelector("span")?.textContent.trim();
+if (label && !item.title) item.title = label;
+});
+document.getElementById("appSidebar")?.addEventListener("pointerup", event => {
+if (event.pointerType === "mouse" && event.target.closest("a,button")) event.target.closest("a,button")?.blur();
+});
+const workspaceCopy = {
+ai: ["Analytics", "Monitor AI conversations, resolution and customer experience performance."],
+human: ["Analytics", "Monitor human-agent escalations, outcomes and service performance."],
+dashboards: ["Custom Dashboards", "Arrange saved reports into focused, reusable operational views."],
+tickets: ["Tickets", "Manage escalated customer requests and resolutions."],
+customers: ["Customer Profiles", "Understand every customer across support, commerce and connected channels."],
+reports: ["Report Builder", "Build, save and export focused views of your CX data."],
+chatbot: ["AI Chatbot", "Configure, test and deploy your customer-facing AI."],
+knowledge: ["Knowledge Base", "Manage the governed information used by your AI chatbot."],
+workflows: ["Workflows", "Automate routing, follow-ups and service-level actions."],
+settings: ["Settings", "Configure your workspace, team, channels and security."]
+};
+function showWorkspace(workspace, refresh = true) {
+if (!document.getElementById(`panel-${workspace}`)) workspace = "ai";
+if (document.body.classList.contains("layout-editing")) document.getElementById("cancelLayoutBtn")?.click();
+currentTab = workspace;
+document.querySelectorAll(".view-panel").forEach(panel => panel.classList.remove("active"));
+document.getElementById(`panel-${workspace}`)?.classList.add("active");
+document.querySelectorAll(".sidebar .nav-item").forEach(item => item.classList.remove("active"));
+Object.values(analyticsSubitems).forEach(item => item?.classList.remove("active"));
+const analyticsWorkspace = ["ai", "human", "dashboards"].includes(workspace);
+if (analyticsWorkspace) {
+    sidebarAnalytics?.classList.add("active");
+    analyticsSubitems[workspace]?.classList.add("active");
+} else if (workspace === "tickets") sidebarTickets?.classList.add("active");
+else if (workspace === "customers") sidebarCustomers?.classList.add("active");
+else if (workspace === "reports") sidebarReports?.classList.add("active");
+else if (workspace === "chatbot") sidebarChatbot?.classList.add("active");
+else if (workspace === "knowledge") sidebarKnowledge?.classList.add("active");
+else if (workspace === "workflows") sidebarWorkflows?.classList.add("active");
+else if (workspace === "settings") sidebarSettings?.classList.add("active");
+const [heading, subtitle] = workspaceCopy[workspace];
+document.getElementById("pageHeading").textContent = heading;
+document.getElementById("pageSubtitle").textContent = subtitle;
+document.title = `NovaraDesk — ${heading}`;
+const tabSwitcher = document.getElementById("tabSwitcher");
+tabSwitcher.style.display = analyticsWorkspace ? "flex" : "none";
+document.getElementById("reportModeToolbar")?.classList.toggle("open", workspace === "reports");
+document.getElementById("reportWorkspaceJump")?.classList.toggle("open", workspace === "reports");
+document.getElementById("dashboardToolbarAddReport")?.classList.toggle("open", workspace === "dashboards");
+const workspaceToolbar = document.querySelector(".toolbar");
+if (workspaceToolbar) workspaceToolbar.style.display = ["chatbot","knowledge","tickets","customers","workflows","settings"].includes(workspace) ? "none" : "flex";
+tabSwitcher.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tab === workspace));
+const layoutControls = document.querySelector(".layout-controls");
+if (layoutControls) layoutControls.style.display = ["ai","human","tickets","reports"].includes(workspace) ? "flex" : "none";
+document.getElementById("lastUpdated")?.style.setProperty("display", analyticsWorkspace ? "block" : "none", "important");
+document.getElementById("refreshBtn").style.display = ["chatbot","settings"].includes(workspace) ? "none" : "inline-flex";
+const refreshLabel = document.getElementById("refreshBtnLabel");
+if (refreshLabel) refreshLabel.textContent = analyticsWorkspace ? "Sync Now" : "Refresh";
+document.getElementById("chatbotStatusControl")?.classList.toggle("open", workspace === "chatbot");
+if (!analyticsWorkspace) document.getElementById("analyticsLayoutSettings")?.classList.remove("open");
+const preserveKnowledgeArticle = workspace === "knowledge" && /^#knowledge\/article\/\d+$/.test(location.hash);
+if (!preserveKnowledgeArticle) history.replaceState(null, "", workspace === "ai" ? location.pathname : `#${workspace}`);
+if (workspace === "dashboards") renderCustomDashboard();
+if (workspace === "chatbot") loadChatbotControlCentre();
+if (workspace === "knowledge") loadKnowledgeBase();
+if (workspace === "workflows") renderWorkflowWorkspace();
+if (refresh) window.scrollTo({ top: 0, behavior: "smooth" });
+if (refresh) updateDashboard(currentPeriod);
+}
+sidebarAnalytics?.addEventListener("click", event => {
+event.preventDefault();
+showWorkspace("ai");
+});
+function setSidebarGroup(group, open) {
+const isAnalytics = group === "analytics";
+const activeGroup = isAnalytics ? analyticsNavGroup : ticketsNavGroup;
+const activeSubnav = isAnalytics ? analyticsSubnav : ticketsSubnav;
+const activeToggle = isAnalytics ? analyticsNavToggle : ticketsNavToggle;
+const otherGroup = isAnalytics ? ticketsNavGroup : analyticsNavGroup;
+const otherSubnav = isAnalytics ? ticketsSubnav : analyticsSubnav;
+const otherToggle = isAnalytics ? ticketsNavToggle : analyticsNavToggle;
+activeGroup?.classList.toggle("open", open);
+activeSubnav?.classList.toggle("open", open);
+activeToggle?.setAttribute("aria-expanded", String(open));
+if (open) {
+    otherGroup?.classList.remove("open");
+    otherSubnav?.classList.remove("open");
+    otherToggle?.setAttribute("aria-expanded", "false");
+}
+}
+analyticsNavToggle?.addEventListener("click", event => {
+event.preventDefault();
+event.stopPropagation();
+setSidebarGroup("analytics", !analyticsNavGroup?.classList.contains("open"));
+});
+ticketsNavToggle?.addEventListener("click", event => {
+event.preventDefault();
+event.stopPropagation();
+setSidebarGroup("tickets", !ticketsNavGroup?.classList.contains("open"));
+});
+document.getElementById("tabSwitcher")?.addEventListener("click", event => {
+const tab = event.target.closest(".tab[data-tab]");
+if (tab) showWorkspace(tab.dataset.tab);
+});
+Object.entries(analyticsSubitems).forEach(([workspace, item]) => item?.addEventListener("click", event => { event.preventDefault(); showWorkspace(workspace); }));
+sidebarTickets?.addEventListener("click", event => { event.preventDefault(); showWorkspace("tickets"); });
+ticketsSubnav?.addEventListener("click", event => {
+const item = event.target.closest("[data-ticket-nav-view]");
+if (!item) return;
+event.preventDefault();
+showWorkspace("tickets", false);
+ticketsSubnav.querySelectorAll("[data-ticket-nav-view]").forEach(link => link.classList.toggle("active", link === item));
+const viewSelect = document.getElementById("ticketViewSelect");
+if (viewSelect) {
+    viewSelect.value = item.dataset.ticketNavView;
+    viewSelect.dispatchEvent(new Event("change", { bubbles:true }));
+}
+});
+document.getElementById("ticketViewSelect")?.addEventListener("change", event => {
+ticketsSubnav?.querySelectorAll("[data-ticket-nav-view]").forEach(link => link.classList.toggle("active", link.dataset.ticketNavView === event.target.value));
+});
+sidebarCustomers?.addEventListener("click", event => { event.preventDefault(); showWorkspace("customers"); });
+sidebarReports?.addEventListener("click", event => { event.preventDefault(); showWorkspace("reports"); });
+sidebarChatbot?.addEventListener("click", event => { event.preventDefault(); showWorkspace("chatbot"); });
+sidebarKnowledge?.addEventListener("click", event => { event.preventDefault(); showWorkspace("knowledge"); });
+sidebarWorkflows?.addEventListener("click", event => { event.preventDefault(); showWorkspace("workflows"); });
+sidebarSettings?.addEventListener("click", event => { event.preventDefault(); showWorkspace("settings"); });
+
+const KPI_COMPARISON_CONFIG = {
+    aiTotalConversations: { key: "total", format: "number" },
+    aiDeflectionRate: { key: "deflection", format: "percent" },
+    aiResolutionRate: { key: "resolution", format: "percent" },
+    aiSentimentScore: { key: "sentiment", format: "decimal" },
+    humanTotalEscalations: { key: "escalated", format: "number", lowerIsBetter: true },
+    humanEscalationRate: { key: "escalation", format: "percent", lowerIsBetter: true },
+    humanCsatScore: { key: "rating", format: "decimal" },
+    humanResolutionRate: { key: "resolution", format: "percent" }
+};
+function ensureKpiComparisonUi() {
+    document.querySelectorAll("#panel-ai .kpi-card, #panel-human .kpi-card").forEach(card => {
+        if (card.querySelector(".kpi-comparison")) return;
+        const panel = document.createElement("aside");
+        panel.className = "kpi-comparison is-empty";
+        panel.setAttribute("aria-label", "Previous-period comparison");
+        panel.innerHTML = `
+            <strong class="kpi-comparison-value kpi-change-value">—</strong>
+            <span class="kpi-previous-group">
+                <span class="kpi-comparison-label kpi-previous-label">Prev. period</span>
+                <span class="kpi-comparison-separator" aria-hidden="true">·</span>
+                <strong class="kpi-comparison-value kpi-previous-value">—</strong>
+            </span>`;
+        card.appendChild(panel);
+    });
+}
+function previousPeriodQuery(period) {
+    const iso = date => date.toISOString().slice(0, 10);
+    let start;
+    let end;
+    if (currentDateRange?.start && currentDateRange?.end) {
+        const currentStart = new Date(currentDateRange.start + "T00:00:00Z");
+        const currentEnd = new Date(currentDateRange.end + "T00:00:00Z");
+        const span = Math.max(1, Math.round((currentEnd - currentStart) / 86400000) + 1);
+        end = new Date(currentStart);
+        end.setUTCDate(end.getUTCDate() - 1);
+        start = new Date(end);
+        start.setUTCDate(start.getUTCDate() - span + 1);
+        return { query: `start=${iso(start)}&end=${iso(end)}`, label: `Previous ${span} days` };
+    }
+    const days = Math.max(1, Number(period) || 14);
+    end = new Date();
+    end.setUTCHours(0, 0, 0, 0);
+    end.setUTCDate(end.getUTCDate() - days);
+    start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - days + 1);
+    return { query: `start=${iso(start)}&end=${iso(end)}`, label: `Previous ${days} days` };
+}
+function summarizeKpiPeriod(analytics, resolution, ratings, sentiment) {
+    const totals = (Array.isArray(analytics) ? analytics : []).reduce((acc, day) => {
+        acc.total += parseInt(day.total_conversations) || 0;
+        acc.resolved += parseInt(day.resolved) || 0;
+        acc.escalated += parseInt(day.escalated) || 0;
+        return acc;
+    }, { total: 0, resolved: 0, escalated: 0 });
+    const resolutionTotals = (Array.isArray(resolution) ? resolution : []).reduce((acc, day) => {
+        acc.total += parseInt(day.total) || 0;
+        acc.resolved += parseInt(day.resolved_count) || 0;
+        return acc;
+    }, { total: 0, resolved: 0 });
+    let ratingPoints = 0, ratingCount = 0;
+    (Array.isArray(ratings) ? ratings : []).forEach(item => {
+        const count = parseInt(item.count) || 0;
+        const points = item.rating === "yes" ? 5 : item.rating === "partial" ? 3 : item.rating === "no" ? 1 : 0;
+        if (points) { ratingPoints += points * count; ratingCount += count; }
+    });
+    let sentimentPoints = 0, sentimentCount = 0;
+    (Array.isArray(sentiment) ? sentiment : []).forEach(item => {
+        const count = parseInt(item.count) || 0;
+        if (item.avg_score != null) {
+            sentimentPoints += (parseFloat(item.avg_score) || 0) * count;
+            sentimentCount += count;
+        }
+    });
+    return {
+        total: totals.total,
+        escalated: totals.escalated,
+        deflection: totals.total ? totals.resolved / totals.total * 100 : null,
         escalation: totals.total ? totals.escalated / totals.total * 100 : null,
         resolution: resolutionTotals.total ? resolutionTotals.resolved / resolutionTotals.total * 100 : null,
         rating: ratingCount ? ratingPoints / ratingCount : null,
@@ -15927,50 +16927,218 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
 }
 </style>
 
-<style id="novaradesk-analytics-segmented-tabs-v1">
-/* Analytics workspace switcher: one clear selected state, without an underline. */
-#tabSwitcher {
-    gap: 5px !important;
-}
-#tabSwitcher .tab {
-    border: 1px solid transparent !important;
-    border-radius: 12px !important;
-    color: color-mix(in srgb, var(--text) 52%, transparent) !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    font-weight: 680 !important;
-    transition: color .18s ease, background-color .18s ease, border-color .18s ease !important;
-}
-#tabSwitcher .tab::before,
-#tabSwitcher .tab::after {
-    content: none !important;
-    display: none !important;
-}
-#tabSwitcher .tab:hover {
-    color: color-mix(in srgb, var(--text) 78%, transparent) !important;
-    background: color-mix(in srgb, var(--accent) 5%, transparent) !important;
-}
-#tabSwitcher .tab.active,
-#tabSwitcher .tab.active:hover,
-html[data-theme="light"] #tabSwitcher .tab.active,
-html[data-theme="light"] #tabSwitcher .tab.active:hover {
-    color: #173d2a !important;
-    background: #e7efea !important;
-    border-color: #c9dace !important;
-    box-shadow: none !important;
-    font-weight: 740 !important;
-}
-html:not([data-theme="light"]) #tabSwitcher .tab.active,
-html:not([data-theme="light"]) #tabSwitcher .tab.active:hover {
-    color: #d7eee0 !important;
-    background: color-mix(in srgb, var(--accent) 14%, var(--surface-light)) !important;
-    border-color: color-mix(in srgb, var(--accent) 27%, var(--border)) !important;
-}
-#tabSwitcher .tab:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--accent) 72%, white) !important;
-    outline-offset: 2px !important;
+<style id="novaradesk-report-ticket-label-match-v1">
+.report-mode-toolbar > span {
+    color: var(--text-muted) !important;
+    font-family: "Geist", "Inter", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 8px !important;
+    font-weight: 850 !important;
+    line-height: 1.2 !important;
+    letter-spacing: .1em !important;
+    text-transform: uppercase !important;
 }
 </style>
+
+<style id="novaradesk-command-bar-density-v2">
+@media (min-width: 901px) {
+    .toolbar,
+    #panel-tickets .ticket-workspace-toolbar,
+    #panel-chatbot .admin-tabs {
+        height: 56px !important;
+        min-height: 56px !important;
+        max-height: 56px !important;
+        padding: 5px 7px 5px 9px !important;
+        margin-bottom: 16px !important;
+    }
+
+    #tabSwitcher {
+        height: 44px !important;
+        min-height: 44px !important;
+    }
+    #tabSwitcher .tab {
+        height: 40px !important;
+        min-height: 40px !important;
+    }
+
+    #panel-tickets .ticket-view-control,
+    #panel-tickets .ticket-toolbar-right,
+    #panel-tickets .ticket-period-selector {
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+    }
+    #panel-tickets .ticket-view-control select,
+    #panel-tickets .ticket-view-control .unified-select-trigger,
+    #panel-tickets .ticket-filter-toggle {
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+    }
+    #panel-tickets .ticket-period-selector button {
+        height: 34px !important;
+        min-height: 34px !important;
+    }
+
+    .toolbar .report-mode-toolbar,
+    .toolbar .report-mode-toolbar.open,
+    .toolbar .toolbar-right {
+        height: 42px !important;
+        min-height: 42px !important;
+        max-height: 42px !important;
+    }
+    .toolbar .report-mode-toolbar {
+        flex: 0 0 auto !important;
+        width: max-content !important;
+        max-width: 100% !important;
+        padding: 3px 6px 3px 9px !important;
+    }
+    .toolbar .report-mode-toolbar select,
+    .toolbar .report-mode-toolbar .unified-select-trigger {
+        width: 285px !important;
+        min-width: 285px !important;
+        max-width: 285px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+    }
+    .toolbar .report-workspace-jump {
+        width: 34px !important;
+        height: 34px !important;
+        flex-basis: 34px !important;
+        margin-left: 6px !important;
+    }
+
+    #panel-chatbot .admin-tab {
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+    }
+}
+</style>
+
+<style id="novaradesk-report-header-actions-density-v1">
+@media (min-width: 901px) {
+    #panel-reports .report-heading-actions {
+        gap: 7px !important;
+    }
+    #panel-reports .report-reset-icon {
+        width: 38px !important;
+        height: 38px !important;
+        flex-basis: 38px !important;
+    }
+    #panel-reports .report-save-primary {
+        min-width: 104px !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 0 14px !important;
+    }
+}
+</style>
+
+<style id="novaradesk-dashboard-readability-polish-v1">
+#panel-ai .kpi-change-value,
+#panel-human .kpi-change-value {
+    font-size: calc(13px * var(--ui-text-scale)) !important;
+    font-weight: 680 !important;
+}
+#panel-ai .kpi-sub,
+#panel-human .kpi-sub {
+    color: color-mix(in srgb, var(--text) 66%, transparent) !important;
+    font-size: calc(11.5px * var(--ui-text-scale)) !important;
+}
+#panel-ai .kpi-comparison-label,
+#panel-human .kpi-comparison-label {
+    color: color-mix(in srgb, var(--text) 58%, transparent) !important;
+}
+.chart-subtitle,
+.panel-subtitle,
+.table-subtitle {
+    font-size: calc(11.5px * var(--ui-text-scale)) !important;
+}
+#lastUpdated {
+    color: color-mix(in srgb, var(--text) 54%, transparent) !important;
+    font-size: calc(10.5px * var(--ui-text-scale)) !important;
+}
+</style>
+
+
+<style id="novaradesk-chatbot-density-polish-v2">
+/* Denser, clearer AI Agent overview. */
+#panel-chatbot .admin-tabs{justify-content:flex-start!important}
+#panel-chatbot .admin-tab:hover:not(.active){
+    background:color-mix(in srgb,var(--accent) 4%,transparent)!important;
+    box-shadow:none!important;
+}
+#panel-chatbot .admin-tab.active{
+    background:color-mix(in srgb,var(--accent) 8%,var(--surface))!important;
+    box-shadow:none!important;
+}
+#chatbotTab-overview .chatbot-overview-kpis{gap:10px!important}
+#chatbotTab-overview .admin-kpi{
+    min-height:96px!important;
+    padding:14px 16px!important;
+}
+#chatbotTab-overview .admin-kpi strong{
+    margin-top:8px!important;
+    font-size:25px!important;
+}
+#chatbotModelKpi{font-size:23px!important}
+#chatbotTab-overview .admin-kpi small{margin-top:5px!important}
+#chatbotTab-overview .live-chatbot-head{
+    padding:14px 18px!important;
+}
+#chatbotTab-overview .live-chatbot-head p{margin-top:3px!important}
+#chatbotTab-overview .chatbot-simulator-grid{
+    grid-template-columns:minmax(0,1fr) 264px!important;
+    min-height:390px!important;
+}
+#chatbotTab-overview .test-chat{
+    height:390px!important;
+    min-height:390px!important;
+    max-height:390px!important;
+}
+#chatbotTab-overview .test-chat-thread{padding:18px 20px 12px!important}
+#chatbotTab-overview .chatbot-test-context{padding:16px!important}
+#chatbotTab-overview .chatbot-test-context-head{padding-bottom:10px!important}
+#chatbotTab-overview .test-meta-item{
+    grid-template-columns:92px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:10px!important;
+    padding:11px 0!important;
+}
+#chatbotTab-overview .test-meta-item strong{text-align:right!important}
+@media(max-width:980px){
+    #chatbotTab-overview .chatbot-simulator-grid{grid-template-columns:1fr!important}
+}
+</style>
+<script id="novaradesk-chatbot-copy-polish-v2">
+(()=>{
+  const polish=()=>{
+    if(window.workspaceCopy?.chatbot){
+      window.workspaceCopy.chatbot[0]='AI Agent';
+      window.workspaceCopy.chatbot[1]='Configure, test and deploy your customer-facing AI.';
+    }
+    const status=document.getElementById('chatbotHeaderStatus');
+    const online=status?.querySelector('option[value="active"]');
+    if(online)online.textContent='Chatbot online';
+    const prompts=document.getElementById('chatbotStarterPrompts');
+    if(prompts&&!prompts.querySelector('[data-chatbot-starter="My payment was deducted twice"]')){
+      const button=document.createElement('button');
+      button.type='button';
+      button.dataset.chatbotStarter='My payment was deducted twice';
+      button.textContent='Payment deducted twice';
+      prompts.appendChild(button);
+    }
+    const chatbotNav=document.getElementById('sidebarChatbot');
+    if(chatbotNav){
+      const label=chatbotNav.querySelector('span');
+      if(label)label.textContent='AI Agent';
+    }
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',polish,{once:true});
+  else polish();
+})();
+</script>
 
 </body>
 </html>
