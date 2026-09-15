@@ -6817,7 +6817,7 @@ html[data-theme="light"] .raw-sql-result-table th {
     position:relative;
     display:none;
     min-width:0;
-    margin-left:10px;
+    margin-left:auto;
     z-index:120;
 }
 .dashboard-toolbar-selector.open{display:block}
@@ -6879,6 +6879,42 @@ html[data-theme="light"] .raw-sql-result-table th {
     .dashboard-toolbar-selector{order:2;width:100%;margin:6px 0 0}
     .dashboard-toolbar-selector .dashboard-title-trigger{width:100%!important;max-width:none!important}
     .dashboard-toolbar-selector .dashboard-title-menu{width:100%!important}
+}
+</style>
+
+<style id="novaradesk-dashboard-toolbar-alignment-v2">
+/* Right-align dashboard selection before the shared action divider. */
+#dashboardToolbarSelector.open{
+    display:block;
+    flex:0 0 auto;
+    margin-left:auto!important;
+    margin-right:14px;
+}
+#dashboardToolbarSelector .dashboard-title-trigger{
+    width:260px!important;
+    min-width:220px!important;
+    max-width:280px!important;
+}
+#dashboardToolbarAddReport.layout-control-btn{
+    align-items:center!important;
+    justify-content:center!important;
+    gap:8px!important;
+    white-space:nowrap;
+}
+#dashboardToolbarAddReport.layout-control-btn svg{
+    width:17px!important;
+    height:17px!important;
+    fill:none!important;
+    stroke:currentColor!important;
+    stroke-width:1.8!important;
+    stroke-linecap:round!important;
+    stroke-linejoin:round!important;
+}
+@media(max-width:1100px){
+    #dashboardToolbarSelector .dashboard-title-trigger{
+        width:220px!important;
+        min-width:180px!important;
+    }
 }
 </style>
 </head>
@@ -7246,9 +7282,9 @@ html[data-theme="light"] .raw-sql-result-table th {
                 <button id="cancelLayoutBtn" class="layout-control-btn" type="button" hidden>Cancel</button>
                 <button id="resetLayoutBtn" class="layout-control-btn" type="button" hidden>Reset</button>
             </div>
-            <button id="dashboardToolbarAddReport" class="report-secondary-btn dashboard-toolbar-add" type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M9 17h6"/></svg>
-                Re-arrange
+            <button id="dashboardToolbarAddReport" class="layout-control-btn dashboard-toolbar-add" type="button" aria-label="Re-arrange dashboard reports">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg>
+                <span>Re-arrange</span>
             </button>
             <div
                 class="period-selector"
@@ -15247,7 +15283,7 @@ if (currentTab !== "dashboards") return;
 event.preventDefault();
 event.stopImmediatePropagation();
 setDashboardArrangeMode(!dashboardArrangeMode);
-dashboardLayoutButton.lastChild.textContent = dashboardArrangeMode ? " Done arranging" : " Re-arrange";
+const dashboardLayoutLabel=dashboardLayoutButton.querySelector("span"); if(dashboardLayoutLabel)dashboardLayoutLabel.textContent=dashboardArrangeMode ? "Done arranging" : "Re-arrange";
 }, true);
 const reportName = document.getElementById("reportName");
 const savedControl = document.getElementById("sqlSavedDatasetControl");
