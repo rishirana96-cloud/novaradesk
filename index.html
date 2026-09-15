@@ -7154,6 +7154,105 @@ html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-create:hover
     padding:7px!important;
 }
 </style>
+
+<style id="novaradesk-dashboard-selector-ticket-view-v1">
+#dashboardToolbarSelector.open{
+    display:flex!important;
+    align-items:center;
+    gap:8px;
+}
+#dashboardToolbarSelector .dashboard-title-trigger{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr) 18px!important;
+    align-items:center!important;
+    column-gap:16px!important;
+    width:300px!important;
+    min-width:260px!important;
+    max-width:320px!important;
+    height:44px!important;
+    min-height:44px!important;
+    padding:0 13px!important;
+    border:1px solid var(--border-strong)!important;
+    border-radius:11px!important;
+    background:var(--surface)!important;
+}
+#dashboardToolbarSelector .dashboard-selector-label{
+    color:var(--text-muted)!important;
+    font-size:8px!important;
+    font-weight:820!important;
+    letter-spacing:.09em!important;
+    line-height:1!important;
+    text-transform:uppercase;
+    white-space:nowrap;
+}
+#dashboardToolbarSelector .dashboard-selector-value{
+    min-width:0;
+}
+#dashboardToolbarSelector .dashboard-selector-value strong{
+    display:block;
+    overflow:hidden;
+    color:var(--text)!important;
+    font-size:11.5px!important;
+    font-weight:720!important;
+    line-height:1.2!important;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+#dashboardToolbarSelector .dashboard-title-trigger>svg{
+    width:17px!important;
+    height:17px!important;
+    justify-self:end;
+}
+.dashboard-quick-create{
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    border:1px solid color-mix(in srgb,var(--accent) 48%,var(--border));
+    border-radius:50%;
+    background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+    color:var(--accent-light);
+    cursor:pointer;
+    transition:background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.dashboard-quick-create:hover{
+    border-color:var(--accent);
+    background:color-mix(in srgb,var(--accent) 23%,var(--surface));
+    transform:translateY(-1px);
+}
+.dashboard-quick-create:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+}
+.dashboard-quick-create svg{
+    width:17px;
+    height:17px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+}
+html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-trigger{
+    background:#fff!important;
+}
+html[data-theme="light"] .dashboard-quick-create{
+    background:#edf5f0;
+    border-color:#bad1c3;
+    color:#3f745b;
+}
+html[data-theme="light"] .dashboard-quick-create:hover{
+    background:#e1eee6;
+    border-color:#7fa58f;
+}
+@media(max-width:1100px){
+    #dashboardToolbarSelector .dashboard-title-trigger{
+        width:260px!important;
+        min-width:220px!important;
+    }
+}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -7507,8 +7606,12 @@ html[data-theme="light"] #dashboardToolbarSelector .dashboard-title-create:hover
         </div>
         <div id="dashboardToolbarSelector" class="dashboard-toolbar-selector dashboard-enterprise-title" aria-hidden="true">
             <button id="dashboardTitleTrigger" class="dashboard-title-trigger" type="button" aria-haspopup="menu" aria-expanded="false">
-                <span><strong id="dashboardActiveTitle">My Dashboard</strong></span>
+                <span class="dashboard-selector-label">Dashboard</span>
+                <span class="dashboard-selector-value"><strong id="dashboardActiveTitle">My Dashboard</strong></span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+            </button>
+            <button id="dashboardQuickCreate" class="dashboard-quick-create" type="button" title="Create dashboard" aria-label="Create dashboard">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             </button>
             <div id="dashboardTitleMenu" class="dashboard-title-menu" role="menu"></div>
         </div>
@@ -17531,5 +17634,14 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
 })();
 </script>
 
+
+<script id="novaradesk-dashboard-quick-create-v1">
+document.getElementById("dashboardQuickCreate")?.addEventListener("click",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    closeDashboardTitleMenu();
+    createNamedDashboard();
+});
+</script>
 </body>
 </html>
