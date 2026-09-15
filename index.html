@@ -6888,8 +6888,9 @@ html[data-theme="light"] .raw-sql-result-table th {
     display:block;
     flex:0 0 auto;
     margin-left:auto!important;
-    margin-right:14px;
+    margin-right:0;
 }
+.toolbar-right:has(#dashboardToolbarAddReport.open){margin-left:0!important}
 #dashboardToolbarSelector .dashboard-title-trigger{
     width:260px!important;
     min-width:220px!important;
@@ -6916,6 +6917,53 @@ html[data-theme="light"] .raw-sql-result-table th {
         min-width:180px!important;
     }
 }
+</style>
+
+<style id="novaradesk-dashboard-customize-menu-v1">
+.dashboard-customize-wrap{position:relative;display:flex;align-items:center}
+.dashboard-customize-menu{
+    position:absolute;
+    top:calc(100% + 8px);
+    left:0;
+    z-index:5000;
+    display:none;
+    width:270px;
+    padding:6px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--surface);
+    box-shadow:0 18px 46px rgba(0,0,0,.18);
+}
+.dashboard-customize-menu.open{display:grid;gap:3px}
+.dashboard-customize-menu>button{
+    display:grid;
+    grid-template-columns:30px minmax(0,1fr);
+    gap:10px;
+    align-items:center;
+    width:100%;
+    padding:10px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:var(--text);
+    font:inherit;
+    text-align:left;
+    cursor:pointer;
+}
+.dashboard-customize-menu>button:hover{background:var(--surface-hover)}
+.dashboard-customize-menu svg{
+    width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--text-secondary)
+}
+.dashboard-customize-menu span{display:grid;gap:2px}
+.dashboard-customize-menu strong{font-size:11px;font-weight:680}
+.dashboard-customize-menu small{color:var(--text-muted);font-size:9px;line-height:1.35}
+.dashboard-toolbar-selector .dashboard-title-actions{display:flex;align-items:center;gap:3px}
+.dashboard-toolbar-selector .dashboard-title-actions button{width:27px;height:27px;display:grid;place-items:center;border:0;border-radius:7px;background:transparent;color:var(--text-muted);cursor:pointer}
+.dashboard-toolbar-selector .dashboard-title-actions button:hover{background:var(--surface-hover);color:var(--text)}
+.dashboard-toolbar-selector .dashboard-title-actions button.danger:hover{color:var(--danger)}
+.dashboard-toolbar-selector .dashboard-title-actions svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7}
+.dashboard-toolbar-selector .dashboard-title-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center}
+@media(max-width:900px){.dashboard-customize-menu{left:auto;right:0}}
 </style>
 </head>
 <body>
@@ -7282,10 +7330,22 @@ html[data-theme="light"] .raw-sql-result-table th {
                 <button id="cancelLayoutBtn" class="layout-control-btn" type="button" hidden>Cancel</button>
                 <button id="resetLayoutBtn" class="layout-control-btn" type="button" hidden>Reset</button>
             </div>
-            <button id="dashboardToolbarAddReport" class="layout-control-btn dashboard-toolbar-add" type="button" aria-label="Re-arrange dashboard reports">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg>
-                <span>Re-arrange</span>
-            </button>
+            <div class="dashboard-customize-wrap">
+                <button id="dashboardToolbarAddReport" class="layout-control-btn dashboard-toolbar-add" type="button" aria-haspopup="menu" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg>
+                    <span>Customize</span>
+                </button>
+                <div id="dashboardCustomizeMenu" class="dashboard-customize-menu" role="menu">
+                    <button id="dashboardCustomizeAddReport" type="button" role="menuitem">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                        <span><strong>Add report</strong><small>Add a saved report to this dashboard</small></span>
+                    </button>
+                    <button id="dashboardCustomizeRearrange" type="button" role="menuitem">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg>
+                        <span><strong>Rearrange reports</strong><small>Drag reports into a new order</small></span>
+                    </button>
+                </div>
+            </div>
             <div
                 class="period-selector"
                 id="periodSelector"
@@ -13175,15 +13235,37 @@ function updateDashboardSelect(dashboards, active) {
 const menu = document.getElementById("dashboardTitleMenu");
 if (!menu) return;
 menu.innerHTML = `<div class="dashboard-title-menu-label">Saved dashboards</div>${dashboards.map(dashboard => `
-    <button class="dashboard-title-main ${dashboard.id === active.id ? "active" : ""}" type="button" data-dashboard-open="${escapeHtml(dashboard.id)}">
-        <strong>${escapeHtml(dashboard.name)}</strong>
-        <span>${dashboard.widgets.length} widget${dashboard.widgets.length === 1 ? "" : "s"} · ${escapeHtml(dashboardRelativeTime(dashboard.updatedAt))}</span>
-    </button>`).join("")}`;
+    <div class="dashboard-title-row ${dashboard.id === active.id ? "active" : ""}" data-dashboard-row="${escapeHtml(dashboard.id)}">
+        <button class="dashboard-title-main" type="button" data-dashboard-open="${escapeHtml(dashboard.id)}"><strong>${escapeHtml(dashboard.name)}</strong><span>${dashboard.widgets.length} widget${dashboard.widgets.length === 1 ? "" : "s"} · ${escapeHtml(dashboardRelativeTime(dashboard.updatedAt))}</span></button>
+        <div class="dashboard-title-actions">
+            <button type="button" data-dashboard-rename="${escapeHtml(dashboard.id)}" title="Rename dashboard" aria-label="Rename ${escapeHtml(dashboard.name)}"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4ZM13.5 6.5l4 4"/></svg></button>
+            <button type="button" data-dashboard-duplicate="${escapeHtml(dashboard.id)}" title="Duplicate dashboard" aria-label="Duplicate ${escapeHtml(dashboard.name)}"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+            <button class="danger" type="button" data-dashboard-delete="${escapeHtml(dashboard.id)}" title="Delete dashboard" aria-label="Delete ${escapeHtml(dashboard.name)}"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button>
+        </div>
+    </div>`).join("")}<div class="dashboard-title-menu-rule"></div><button id="dashboardTitleCreate" class="dashboard-title-create" type="button">＋ Create new dashboard</button>`;
 menu.querySelectorAll("[data-dashboard-open]").forEach(button => button.addEventListener("click", () => {
     localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardOpen);
     closeDashboardTitleMenu();
     renderCustomDashboard();
 }));
+menu.querySelectorAll("[data-dashboard-rename]").forEach(button => button.addEventListener("click", event => {
+    event.stopPropagation();
+    beginInlineDashboardRename(button.dataset.dashboardRename);
+}));
+menu.querySelectorAll("[data-dashboard-duplicate]").forEach(button => button.addEventListener("click", event => {
+    event.stopPropagation();
+    localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardDuplicate);
+    duplicateActiveDashboard();
+    closeDashboardTitleMenu();
+}));
+menu.querySelectorAll("[data-dashboard-delete]").forEach(button => button.addEventListener("click", async event => {
+    event.stopPropagation();
+    localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardDelete);
+    await deleteActiveDashboard();
+    document.getElementById("dashboardTitleMenu")?.classList.add("open");
+    document.getElementById("dashboardTitleTrigger")?.setAttribute("aria-expanded", "true");
+}));
+menu.querySelector("#dashboardTitleCreate")?.addEventListener("click", async () => { closeDashboardTitleMenu(); await createNamedDashboard(); });
 }
 function dashboardReportById(reportId) {
 return loadSavedReports().find(report => report.id === reportId);
@@ -15278,13 +15360,36 @@ document.addEventListener(
 <script id="improvements-and-changes-behaviour">
 (() => {
 const dashboardLayoutButton = document.getElementById("dashboardToolbarAddReport");
+const dashboardCustomizeMenu = document.getElementById("dashboardCustomizeMenu");
+const closeDashboardCustomizeMenu = () => {
+    dashboardCustomizeMenu?.classList.remove("open");
+    dashboardLayoutButton?.setAttribute("aria-expanded","false");
+};
 dashboardLayoutButton?.addEventListener("click", event => {
-if (currentTab !== "dashboards") return;
-event.preventDefault();
-event.stopImmediatePropagation();
-setDashboardArrangeMode(!dashboardArrangeMode);
-const dashboardLayoutLabel=dashboardLayoutButton.querySelector("span"); if(dashboardLayoutLabel)dashboardLayoutLabel.textContent=dashboardArrangeMode ? "Done arranging" : "Re-arrange";
+    if (currentTab !== "dashboards") return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const open=!dashboardCustomizeMenu?.classList.contains("open");
+    closeDashboardCustomizeMenu();
+    dashboardCustomizeMenu?.classList.toggle("open",open);
+    dashboardLayoutButton.setAttribute("aria-expanded",String(open));
 }, true);
+document.getElementById("dashboardCustomizeAddReport")?.addEventListener("click",event=>{
+    event.preventDefault();
+    closeDashboardCustomizeMenu();
+    openDashboardReportPicker();
+});
+document.getElementById("dashboardCustomizeRearrange")?.addEventListener("click",event=>{
+    event.preventDefault();
+    closeDashboardCustomizeMenu();
+    setDashboardArrangeMode(!dashboardArrangeMode);
+});
+document.addEventListener("click",event=>{
+    if(!event.target.closest(".dashboard-customize-wrap"))closeDashboardCustomizeMenu();
+});
+document.addEventListener("keydown",event=>{
+    if(event.key==="Escape")closeDashboardCustomizeMenu();
+});
 const reportName = document.getElementById("reportName");
 const savedControl = document.getElementById("sqlSavedDatasetControl");
 const savedTrigger = document.getElementById("sqlSavedDatasetTrigger");
