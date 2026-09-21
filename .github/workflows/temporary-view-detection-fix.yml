@@ -1,0 +1,73 @@
+name: Correct NovaraDesk view detection
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prioritize the visible page heading
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path("index.html")
+          html=path.read_text(encoding="utf-8")
+          old="""            function activeView(){
+              var active=document.querySelector('[aria-current="page"],[aria-selected="true"],.sidebar .active,.nav-item.active,.menu-item.active,[class*="sidebar"] .active');
+              var key=detect(active&&((active.getAttribute('aria-label')||'')+' '+active.textContent));
+              if(key)return key;
+              var headings=[
+                document.querySelector('main h1'),
+                document.querySelector('.main-content h1'),
+                document.querySelector('.page-header h1'),
+                document.querySelector('[data-page-title]'),
+                document.querySelector('h1')
+              ].filter(Boolean);
+              for(var i=0;i<headings.length;i++){
+                key=detect(headings[i].textContent);
+                if(key)return key;
+              }
+              return detect(location.pathname+' '+document.title);
+            }"""
+          new="""            function activeView(){
+              var headings=[
+                document.querySelector('.page-header h1'),
+                document.querySelector('.main-content h1'),
+                document.querySelector('main h1'),
+                document.querySelector('[data-page-title]'),
+                ...document.querySelectorAll('h1')
+              ].filter(Boolean);
+              for(var i=headings.length-1;i>=0;i--){
+                var key=detect(headings[i].textContent);
+                if(key)return key;
+              }
+              var activeItems=[...document.querySelectorAll('[aria-current="page"],[aria-selected="true"],.sidebar .active,.nav-item.active,.menu-item.active,[class*="sidebar"] .active')];
+              for(var j=activeItems.length-1;j>=0;j--){
+                key=detect((activeItems[j].getAttribute('aria-label')||'')+' '+activeItems[j].textContent);
+                if(key)return key;
+              }
+              return detect(location.pathname+' '+document.title);
+            }"""
+          if old not in html:
+              raise SystemExit("Expected activeView block was not found")
+          html=html.replace(old,new,1)
+          html=html.replace("NOVARA_DESK_PARENT_VIEW_BRIDGE_V1","NOVARA_DESK_PARENT_VIEW_BRIDGE_V2",1)
+          path.write_text(html,encoding="utf-8")
+          PY
+      - name: Remove temporary workflow
+        run: git rm .github/workflows/temporary-view-detection-fix.yml
+      - name: Commit correction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Prioritize visible page in view sync"
+          git push
