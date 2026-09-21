@@ -18,26 +18,15 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           path=Path("index.html")
           html=path.read_text(encoding="utf-8")
-          old="""            function activeView(){
-              var active=document.querySelector('[aria-current="page"],[aria-selected="true"],.sidebar .active,.nav-item.active,.menu-item.active,[class*="sidebar"] .active');
-              var key=detect(active&&((active.getAttribute('aria-label')||'')+' '+active.textContent));
-              if(key)return key;
-              var headings=[
-                document.querySelector('main h1'),
-                document.querySelector('.main-content h1'),
-                document.querySelector('.page-header h1'),
-                document.querySelector('[data-page-title]'),
-                document.querySelector('h1')
-              ].filter(Boolean);
-              for(var i=0;i<headings.length;i++){
-                key=detect(headings[i].textContent);
-                if(key)return key;
-              }
-              return detect(location.pathname+' '+document.title);
-            }"""
-          new="""            function activeView(){
+          marker="NOVARA_DESK_PARENT_VIEW_BRIDGE_V1"
+          if marker not in html:
+              raise SystemExit("Bridge marker was not found")
+          before,bridge=html.split(marker,1)
+          pattern=r"function activeView\(\)\{.*?\n\s*\}\n\s*function notify\(\)\{"
+          replacement="""function activeView(){
               var headings=[
                 document.querySelector('.page-header h1'),
                 document.querySelector('.main-content h1'),
@@ -55,11 +44,12 @@ jobs:
                 if(key)return key;
               }
               return detect(location.pathname+' '+document.title);
-            }"""
-          if old not in html:
-              raise SystemExit("Expected activeView block was not found")
-          html=html.replace(old,new,1)
-          html=html.replace("NOVARA_DESK_PARENT_VIEW_BRIDGE_V1","NOVARA_DESK_PARENT_VIEW_BRIDGE_V2",1)
+            }
+            function notify(){"""
+          bridge,count=re.subn(pattern,replacement,bridge,count=1,flags=re.S)
+          if count!=1:
+              raise SystemExit(f"activeView replacement count was {count}")
+          html=before+"NOVARA_DESK_PARENT_VIEW_BRIDGE_V2"+bridge
           path.write_text(html,encoding="utf-8")
           PY
       - name: Remove temporary workflow
