@@ -17770,7 +17770,7 @@ document.getElementById("dashboardQuickCreate")?.addEventListener("click",event=
 });
 </script>
 
-<!-- NOVARA_DESK_PARENT_VIEW_BRIDGE_V1 -->
+<!-- NOVARA_DESK_PARENT_VIEW_BRIDGE_V2 -->
 <script id="novara-desk-parent-view-bridge-v1">
 (function(){
   if(window.parent===window)return;
@@ -17785,18 +17785,20 @@ document.getElementById("dashboardQuickCreate")?.addEventListener("click",event=
     return '';
   }
   function activeView(){
-    var active=document.querySelector('[aria-current="page"],[aria-selected="true"],.sidebar .active,.nav-item.active,.menu-item.active,[class*="sidebar"] .active');
-    var key=detect(active&&((active.getAttribute('aria-label')||'')+' '+active.textContent));
-    if(key)return key;
     var headings=[
-      document.querySelector('main h1'),
-      document.querySelector('.main-content h1'),
       document.querySelector('.page-header h1'),
+      document.querySelector('.main-content h1'),
+      document.querySelector('main h1'),
       document.querySelector('[data-page-title]'),
-      document.querySelector('h1')
+      ...document.querySelectorAll('h1')
     ].filter(Boolean);
-    for(var i=0;i<headings.length;i++){
-      key=detect(headings[i].textContent);
+    for(var i=headings.length-1;i>=0;i--){
+      var key=detect(headings[i].textContent);
+      if(key)return key;
+    }
+    var activeItems=[...document.querySelectorAll('[aria-current="page"],[aria-selected="true"],.sidebar .active,.nav-item.active,.menu-item.active,[class*="sidebar"] .active')];
+    for(var j=activeItems.length-1;j>=0;j--){
+      key=detect((activeItems[j].getAttribute('aria-label')||'')+' '+activeItems[j].textContent);
       if(key)return key;
     }
     return detect(location.pathname+' '+document.title);
