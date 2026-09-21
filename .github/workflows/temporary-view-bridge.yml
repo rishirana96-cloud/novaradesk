@@ -1,0 +1,88 @@
+name: Install NovaraDesk view bridge
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add view bridge
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("index.html")
+          html = path.read_text(encoding="utf-8")
+          marker = "NOVARA_DESK_PARENT_VIEW_BRIDGE_V1"
+          if marker not in html:
+              bridge = r'''
+          <!-- NOVARA_DESK_PARENT_VIEW_BRIDGE_V1 -->
+          <script id="novara-desk-parent-view-bridge-v1">
+          (function(){
+            if(window.parent===window)return;
+            var lastView='';
+            function detect(value){
+              var text=String(value||'').trim().toLowerCase();
+              if(/customer|profile/.test(text))return 'customers';
+              if(/ticket|escalation/.test(text))return 'tickets';
+              if(/custom.?report|\breport/.test(text))return 'reports';
+              if(/workflow|automation/.test(text))return 'workflows';
+              if(/analytic|dashboard|performance/.test(text))return 'analytics';
+              return '';
+            }
+            function activeView(){
+              var active=document.querySelector('[aria-current="page"],[aria-selected="true"],.sidebar .active,.nav-item.active,.menu-item.active,[class*="sidebar"] .active');
+              var key=detect(active&&((active.getAttribute('aria-label')||'')+' '+active.textContent));
+              if(key)return key;
+              var headings=[
+                document.querySelector('main h1'),
+                document.querySelector('.main-content h1'),
+                document.querySelector('.page-header h1'),
+                document.querySelector('[data-page-title]'),
+                document.querySelector('h1')
+              ].filter(Boolean);
+              for(var i=0;i<headings.length;i++){
+                key=detect(headings[i].textContent);
+                if(key)return key;
+              }
+              return detect(location.pathname+' '+document.title);
+            }
+            function notify(){
+              var view=activeView();
+              if(!view)return;
+              lastView=view;
+              window.parent.postMessage({type:'novara-desk-view',view:view},'*');
+            }
+            document.addEventListener('click',function(){
+              setTimeout(notify,20);
+              setTimeout(notify,180);
+              setTimeout(notify,600);
+            },true);
+            new MutationObserver(notify).observe(document.documentElement,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class','aria-current','aria-selected']});
+            window.addEventListener('load',notify);
+            setInterval(notify,500);
+            notify();
+          })();
+          </script>
+          '''
+              if "</body>" not in html:
+                  raise SystemExit("index.html has no closing body tag")
+              html = html.replace("</body>", bridge + "\n</body>")
+              path.write_text(html, encoding="utf-8")
+          PY
+      - name: Remove temporary workflow
+        run: git rm .github/workflows/temporary-view-bridge.yml
+      - name: Commit bridge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add parent view sync bridge"
+          git push
