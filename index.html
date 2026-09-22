@@ -17777,6 +17777,9 @@ document.getElementById("dashboardQuickCreate")?.addEventListener("click",event=
   var lastView='';
   function detect(value){
     var text=String(value||'').trim().toLowerCase();
+    if(/ai.?chatbot|ai agent|chatbot/.test(text))return 'chatbot';
+    if(/knowledge.?base|knowledge/.test(text))return 'knowledge';
+    if(/settings|configuration|workspace/.test(text))return 'settings';
     if(/customer|profile/.test(text))return 'customers';
     if(/ticket|escalation/.test(text))return 'tickets';
     if(/custom.?report|\breport/.test(text))return 'reports';
