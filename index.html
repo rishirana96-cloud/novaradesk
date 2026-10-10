@@ -561,115 +561,62 @@ button {
 ====================================================== */
 .kpi-grid {
     display: grid;
-    grid-template-columns:
-        repeat(3, 1fr);
-    gap:
-        14px;
-    margin-bottom:
-        22px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
 }
 .kpi-card {
     position: relative;
-    min-height:
-        148px;
-    padding:
-        22px;
-    overflow:
-        hidden;
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,0.026),
-            rgba(255,255,255,0.008)
-        );
-    border:
-        1px solid var(--border);
-    border-radius:
-        var(--radius-large);
-    transition:
-        var(--transition);
+    min-width: 0;
+    min-height: 156px;
+    padding: 24px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.018);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-large);
+    transition: border-color 160ms ease, background-color 160ms ease;
 }
 .kpi-card::after {
-    content:
-        "";
-    position:
-        absolute;
-    width:
-        120px;
-    height:
-        120px;
-    right:
-        -65px;
-    bottom:
-        -65px;
-    border-radius:
-        50%;
-    background:
-        rgba(136,169,152,0.055);
-    filter:
-        blur(20px);
+    content: none;
 }
 .kpi-card:hover {
-    transform:
-        translateY(-2px);
-    border-color:
-        var(--border-strong);
+    background: rgba(255, 255, 255, 0.028);
+    border-color: var(--border-strong);
 }
 .kpi-label {
-    position:
-        relative;
-    z-index:
-        1;
-    color:
-        var(--text-muted);
-    font-size:
-        11px;
-    font-weight:
-        650;
-    text-transform:
-        uppercase;
-    letter-spacing:
-        0.8px;
+    position: relative;
+    z-index: 1;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    line-height: 1.4;
 }
 .kpi-value {
-    position:
-        relative;
-    z-index:
-        1;
-    margin-top:
-        11px;
-    color:
-        var(--text);
-    font-size:
-        35px;
-    line-height:
-        1;
-    font-weight:
-        750;
-    letter-spacing:
-        -1.5px;
+    position: relative;
+    z-index: 1;
+    margin-top: 14px;
+    color: var(--text);
+    font-size: clamp(32px, 2.5vw, 40px);
+    line-height: 1.05;
+    font-weight: 720;
+    letter-spacing: -1.6px;
+    font-variant-numeric: tabular-nums;
 }
 .kpi-value.accent {
-    color:
-        var(--accent-light);
+    color: var(--text);
 }
 .kpi-sub {
-    position:
-        relative;
-    z-index:
-        1;
-    display:
-        flex;
-    align-items:
-        center;
-    gap:
-        6px;
-    margin-top:
-        9px;
-    color:
-        var(--text-muted);
-    font-size:
-        10px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.45;
 }
 /* =====================================================
    CHART GRID
@@ -1088,46 +1035,50 @@ button {
 ====================================================== */
 .ticket-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    margin-bottom: 22px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
 }
 .ticket-kpi-card {
     position: relative;
-    min-height: 148px;
-    padding: 22px;
+    min-width: 0;
+    min-height: 156px;
+    padding: 24px;
     overflow: hidden;
-    background: linear-gradient(145deg, rgba(255,255,255,0.026), rgba(255,255,255,0.008));
+    background: rgba(255, 255, 255, 0.018);
     border: 1px solid var(--border);
     border-radius: var(--radius-large);
-    transition: var(--transition);
+    transition: border-color 160ms ease, background-color 160ms ease;
 }
 .ticket-kpi-card:hover {
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.028);
     border-color: var(--border-strong);
 }
 .ticket-kpi-label {
     color: var(--text-muted);
     font-size: 11px;
-    font-weight: 650;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.7px;
+    line-height: 1.4;
 }
 .ticket-kpi-value {
-    margin-top: 11px;
+    margin-top: 14px;
     color: var(--text);
-    font-size: 35px;
-    line-height: 1;
-    font-weight: 750;
-    letter-spacing: -1.5px;
+    font-size: clamp(32px, 2.5vw, 40px);
+    line-height: 1.05;
+    font-weight: 720;
+    letter-spacing: -1.6px;
+    font-variant-numeric: tabular-nums;
 }
-.ticket-kpi-value.accent { color: var(--accent-light); }
-.ticket-kpi-value.warning { color: var(--warning); }
-.ticket-kpi-value.danger { color: var(--danger); }
+.ticket-kpi-value.accent { color: var(--text); }
+.ticket-kpi-value.warning { color: var(--text); }
+.ticket-kpi-value.danger { color: var(--text); }
 .ticket-kpi-sub {
-    margin-top: 9px;
+    margin-top: 12px;
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 11px;
+    line-height: 1.45;
 }
 .ticket-status-grid {
     display: grid;
