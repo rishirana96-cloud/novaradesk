@@ -574,7 +574,20 @@ button {
     background: rgba(255, 255, 255, 0.018);
     border: 1px solid var(--border);
     border-radius: var(--radius-large);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
     transition: border-color 160ms ease, background-color 160ms ease;
+}
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 18px;
+    right: 18px;
+    height: 2px;
+    background: var(--border-strong);
+    opacity: 0.72;
+    border-radius: 0 0 2px 2px;
+    pointer-events: none;
 }
 .kpi-card::after {
     content: none;
@@ -1048,7 +1061,20 @@ button {
     background: rgba(255, 255, 255, 0.018);
     border: 1px solid var(--border);
     border-radius: var(--radius-large);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
     transition: border-color 160ms ease, background-color 160ms ease;
+}
+.ticket-kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 18px;
+    right: 18px;
+    height: 2px;
+    background: var(--border-strong);
+    opacity: 0.72;
+    border-radius: 0 0 2px 2px;
+    pointer-events: none;
 }
 .ticket-kpi-card:hover {
     background: rgba(255, 255, 255, 0.028);
