@@ -17807,7 +17807,9 @@ document.getElementById("dashboardQuickCreate")?.addEventListener("click",event=
 
 
 <style id="kpi-green-edge-fix">
-/* Subtle sage-green segment integrated into the bottom border of KPI cards. */
+/* KPI border accent uses the health state of each metric. */
+.kpi-card,
+.ticket-kpi-card { --metric-colour: #79a98a; }
 .kpi-card::before,
 .ticket-kpi-card::before {
     content: "" !important;
@@ -17821,15 +17823,63 @@ document.getElementById("dashboardQuickCreate")?.addEventListener("click",event=
     width: 44px !important;
     height: 2px !important;
     border-radius: 2px 2px 0 0 !important;
-    background: #79a98a !important;
+    background: var(--metric-colour) !important;
     opacity: 1 !important;
     pointer-events: none !important;
 }
 .ticket-compact-metrics .ticket-kpi-card::before {
     display: block !important;
     content: "" !important;
+    left: 0 !important;
+    width: 44px !important;
 }
+.kpi-card[data-health="good"],
+.ticket-kpi-card[data-health="good"] { --metric-colour: #79c39a; }
+.kpi-card[data-health="medium"],
+.ticket-kpi-card[data-health="medium"] { --metric-colour: #e4b574; }
+.kpi-card[data-health="bad"],
+.ticket-kpi-card[data-health="bad"] { --metric-colour: #df8d82; }
+.ticket-compact-metrics .ticket-kpi-card:has(.ticket-kpi-value.danger) { --metric-colour: #df8d82; }
+.ticket-compact-metrics .ticket-kpi-card:has(.ticket-kpi-value.warning) { --metric-colour: #e4b574; }
+.ticket-compact-metrics .ticket-kpi-card:has(.ticket-kpi-value.resolved) { --metric-colour: #79c39a; }
+.ticket-compact-metrics .ticket-kpi-card:has(.ticket-kpi-value.progress) { --metric-colour: #e4b574; }
 </style>
+<script id="kpi-health-border-colours">
+(function () {
+  const rules = {
+    aiDeflectionRate:       { good: 70, medium: 45, direction: "high" },
+    aiAvgResponseTime:      { good: 2, medium: 5, direction: "low" },
+    aiAvgConfidence:        { good: 85, medium: 70, direction: "high" },
+    aiResolutionRate:       { good: 80, medium: 60, direction: "high" },
+    aiSentimentScore:       { good: 70, medium: 45, direction: "high" },
+    humanEscalationRate:    { good: 20, medium: 35, direction: "low" },
+    humanAvgHandlingTime:   { good: 10, medium: 20, direction: "low" },
+    humanFirstResponseTime: { good: 5, medium: 15, direction: "low" },
+    humanCsatScore:         { good: 90, medium: 75, direction: "high" },
+    humanResolutionRate:    { good: 80, medium: 60, direction: "high" },
+    humanSlaAttainment:     { good: 95, medium: 85, direction: "high" }
+  };
+  function update() {
+    Object.entries(rules).forEach(([id, rule]) => {
+      const valueEl = document.getElementById(id);
+      const card = valueEl && valueEl.closest(".kpi-card");
+      if (!valueEl || !card) return;
+      const raw = valueEl.textContent.trim();
+      const match = raw.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+      if (!match) { card.removeAttribute("data-health"); return; }
+      const value = Number(match[0]);
+      if (!Number.isFinite(value)) return;
+      const good = rule.direction === "high" ? value >= rule.good : value <= rule.good;
+      const medium = rule.direction === "high" ? value >= rule.medium : value <= rule.medium;
+      card.dataset.health = good ? "good" : medium ? "medium" : "bad";
+    });
+  }
+  update();
+  const observer = new MutationObserver(update);
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  document.addEventListener("DOMContentLoaded", update);
+})();
+</script>
 
 </body>
 </html>
