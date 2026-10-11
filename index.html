@@ -18241,3 +18241,32 @@ html[data-theme="light"] #tabSwitcher .tab.active:hover {
     }
 }
 </style>
+
+
+<style id="novaradesk-workspace-tabs-compact-v1">
+/* Compact the AI Agent, Human Agent and Custom Dashboards workspace bar
+   while keeping its contents vertically centered and the toolbar aligned. */
+#tabSwitcher {
+    align-items: center !important;
+    align-self: center !important;
+    min-height: 0 !important;
+}
+#tabSwitcher .tab,
+html[data-theme="light"] #tabSwitcher .tab {
+    min-height: 38px !important;
+    height: 38px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.2 !important;
+}
+#tabSwitcher .tab .tab-icon {
+    align-self: center !important;
+    flex-shrink: 0 !important;
+}
+.toolbar {
+    align-items: center !important;
+}
+</style>
