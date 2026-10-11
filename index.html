@@ -17985,5 +17985,44 @@ html[data-theme="light"] #tabSwitcher .tab.active:hover{
 @media(prefers-reduced-motion:reduce){#tabSwitcher .tab{transition:none!important;}}
 </style>
 
+
+<style id="dashboard-customize-button-density">
+/* Keep Customize secondary and compact until hovered. */
+#dashboardToolbarAddReport.layout-control-btn{
+    min-height:31px!important;
+    height:31px!important;
+    gap:5px!important;
+    padding:0 9px!important;
+    border:1px solid var(--border)!important;
+    border-radius:8px!important;
+    background:transparent!important;
+    color:var(--text-muted)!important;
+    font-size:9px!important;
+    font-weight:600!important;
+    box-shadow:none!important;
+}
+#dashboardToolbarAddReport.layout-control-btn svg{
+    width:13px!important;
+    height:13px!important;
+    stroke-width:1.7!important;
+}
+#dashboardToolbarAddReport.layout-control-btn:hover,
+#dashboardToolbarAddReport.layout-control-btn[aria-expanded="true"]{
+    border-color:var(--border-strong)!important;
+    background:var(--surface-hover)!important;
+    color:var(--text-secondary)!important;
+}
+html[data-theme="light"] #dashboardToolbarAddReport.layout-control-btn{
+    color:var(--text-muted)!important;
+}
+@media(max-width:760px){
+    #dashboardToolbarAddReport.layout-control-btn{
+        min-height:31px!important;
+        height:31px!important;
+        padding:0 9px!important;
+    }
+}
+</style>
+
 </body>
 </html>
