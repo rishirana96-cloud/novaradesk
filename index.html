@@ -18133,3 +18133,36 @@ html[data-theme="light"] #tabSwitcher .tab.active:hover {
     background: color-mix(in srgb, #347a50 17%, var(--bg-card)) !important;
 }
 </style>
+
+
+<style id="novaradesk-workspace-tabs-minimal-typography">
+/* Option A: typography alone communicates the selected workspace tab. */
+#tabSwitcher .tab,
+html[data-theme="light"] #tabSwitcher .tab {
+    color: #656B67 !important;
+    font-weight: 500 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+#tabSwitcher .tab:hover:not(.active),
+html[data-theme="light"] #tabSwitcher .tab:hover:not(.active) {
+    color: #252B27 !important;
+    background: transparent !important;
+}
+#tabSwitcher .tab.active,
+#tabSwitcher .tab.active:hover,
+html[data-theme="light"] #tabSwitcher .tab.active,
+html[data-theme="light"] #tabSwitcher .tab.active:hover {
+    color: #252B27 !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+#tabSwitcher .tab::before,
+#tabSwitcher .tab::after {
+    content: none !important;
+    display: none !important;
+}
+</style>
