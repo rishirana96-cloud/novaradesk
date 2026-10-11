@@ -7359,6 +7359,26 @@ html[data-theme="light"] .custom-instruction-card textarea{
 
 
 
+
+<style id="novaradesk-tab-typography-only-v1">
+/* Selected workspace tab: typography alone communicates the active state. */
+#tabSwitcher .tab,
+html[data-theme="light"] #tabSwitcher .tab{
+  background:transparent!important;color:#656b67!important;border:0!important;
+  box-shadow:none!important;font-weight:500!important;
+}
+#tabSwitcher .tab:hover,
+html[data-theme="light"] #tabSwitcher .tab:hover{
+  background:transparent!important;color:#303632!important;
+}
+#tabSwitcher .tab.active,
+html[data-theme="light"] #tabSwitcher .tab.active{
+  background:transparent!important;color:#202522!important;font-weight:700!important;box-shadow:none!important;
+}
+#tabSwitcher .tab.active::before,
+#tabSwitcher .tab.active::after{display:none!important;content:none!important}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -12590,6 +12610,7 @@ const numeric = Number(value);
 return Number.isFinite(numeric) ? numeric : 0;
 }
 const REPORT_PALETTES = {
+standard:["#4e79a7","#f28e2b","#e15759","#76b7b2","#59a14f","#edc949"],
 novara:["#315f4a","#78a68e","#b7cdbf","#d6a85f","#cf766c","#668da3"],
 business:["#2563eb","#0891b2","#7c3aed","#ea580c","#16a34a","#dc2626"],
 ocean:["#0f4c5c","#167d9a","#39a6b8","#75c9c8","#9bd8d0","#d5eee8"],
@@ -12597,9 +12618,9 @@ warm:["#8c3b2a","#c75b39","#e88c4d","#efb45d","#d96c75","#8e5572"],
 pastel:["#91b8d4","#b6a3d8","#e4a7b7","#edc48d","#9bc9ae","#b8d5d0"],
 monochrome:["#244f3c","#426d59","#658c77","#8eae9d","#b7cbbf","#dce7e0"]
 };
-let selectedReportPalette = localStorage.getItem("novara_analytics_palette") || "novara";
-function currentReportColors(){return selectedReportPalette === "custom" ? [...document.querySelectorAll("#reportCustomColors input")].map(input=>input.value) : REPORT_PALETTES[selectedReportPalette] || REPORT_PALETTES.novara;}
-function applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-ai,#panel-human,#panel-dashboards"))return;const type=chart.config.type;chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>colors[point%colors.length]);else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
+let selectedReportPalette = (() => { const saved = localStorage.getItem("novara_analytics_palette"); return !saved || saved === "novara" ? "standard" : saved; })();
+function currentReportColors(){return selectedReportPalette === "custom" ? [...document.querySelectorAll("#reportCustomColors input")].map(input=>input.value) : REPORT_PALETTES[selectedReportPalette] || REPORT_PALETTES.standard;}
+function applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-tickets,#panel-ai,#panel-human,#panel-dashboards,#panel-reports"))return;const type=chart.config.type;chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>colors[point%colors.length]);else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
 function renderReportPalettePicker(){const picker=document.getElementById("reportPalettePicker");if(!picker)return;let customSaved=null;try{customSaved=JSON.parse(localStorage.getItem("novara_analytics_custom_colors")||"null");}catch{}if(Array.isArray(customSaved))document.querySelectorAll("#reportCustomColors input").forEach((input,index)=>{if(customSaved[index])input.value=customSaved[index];});picker.innerHTML=[...Object.entries(REPORT_PALETTES),["custom",["#315f4a","#d6a85f","#668da3"]]].map(([name,colors])=>`<button class="palette-option ${name===selectedReportPalette?"active":""}" data-report-palette="${name}" type="button"><span class="palette-swatches">${colors.slice(0,4).map(color=>`<i style="background:${color}"></i>`).join("")}</span>${reportLabel(name)}</button>`).join("");document.getElementById("reportCustomColors")?.classList.toggle("open",selectedReportPalette==="custom");picker.querySelectorAll("[data-report-palette]").forEach(button=>button.addEventListener("click",()=>{selectedReportPalette=button.dataset.reportPalette;localStorage.setItem("novara_analytics_palette",selectedReportPalette);renderReportPalettePicker();applyAnalyticsChartPalette();scheduleCustomReport();}));}
 function formatReportValue(value) {
 if (!Number.isFinite(value)) return "0";
@@ -12924,7 +12945,7 @@ if (config.visual === "table") {
 tableWrap.hidden = true;
 chartWrap.hidden = false;
 const isCircular = config.visual === "doughnut";
-const palette = config.colors?.length ? config.colors : REPORT_PALETTES.novara;
+const palette = config.colors?.length ? config.colors : REPORT_PALETTES.standard;
 if (!document.getElementById("customReportChart")) chartWrap.innerHTML = '<canvas id="customReportChart"></canvas>';
 const context = document.getElementById("customReportChart").getContext("2d");
 customReportChart = new Chart(context, {
@@ -13081,7 +13102,7 @@ if (!chartRows.length) {
 }
 chartWrap.hidden = false;
 const circular = visual === "doughnut";
-const palette = config.colors?.length ? config.colors : REPORT_PALETTES.novara;
+const palette = config.colors?.length ? config.colors : REPORT_PALETTES.standard;
 customReportChart = new Chart(document.getElementById("customReportChart").getContext("2d"), {
     type: visual,
     data: {
@@ -13777,7 +13798,7 @@ const chartRows = rows.filter(row => Number.isFinite(Number(row?.[yField]))).sli
 if (!yField || !chartRows.length) { body.innerHTML = `<div class="empty-state">Choose a numeric Values column for this chart.</div>`; return; }
 body.innerHTML = `<div class="dashboard-widget-chart"><canvas></canvas></div>`;
 const circular = visual === "doughnut";
-const palette = report.colors?.length ? report.colors : REPORT_PALETTES.novara;
+const palette = report.colors?.length ? report.colors : REPORT_PALETTES.standard;
 const chart = new Chart(body.querySelector("canvas").getContext("2d"), {
     type: visual,
     data: { labels: chartRows.map(row => String(row?.[xField] ?? "Not specified")), datasets: [{ label:reportLabel(yField), data:chartRows.map(row => Number(row[yField])), backgroundColor:circular||visual==="bar" ? chartRows.map((_,index)=>palette[index%palette.length]) : palette[0], borderColor:circular ? "#101512" : palette[0], borderWidth:circular?2:1.5, borderRadius:visual==="bar"?5:0, tension:.32, fill:visual==="line"?{target:"origin",above:`${palette[0]}20`}:false }] },
@@ -13801,7 +13822,7 @@ function renderDashboardChart(body, result, widgetId) {
 if (!result.points.length) { body.innerHTML = `<div class="empty-state">No matching data in this date range.</div>`; return; }
 body.innerHTML = `<div class="dashboard-widget-chart"><canvas></canvas></div>`;
 const circular = result.config.visual === "doughnut";
-const palette = result.config.colors?.length ? result.config.colors : REPORT_PALETTES.novara;
+const palette = result.config.colors?.length ? result.config.colors : REPORT_PALETTES.standard;
 const chart = new Chart(body.querySelector("canvas").getContext("2d"), {
     type: result.config.visual,
     data: { labels: result.points.map(point => point.label), datasets: [{ data: result.points.map(point => point.value), backgroundColor: circular||result.config.visual==="bar" ? result.points.map((_,i) => palette[i % palette.length]) : palette[0], borderColor: circular ? "#101512" : palette[0], borderWidth: circular ? 2 : 1.5, borderRadius: result.config.visual === "bar" ? 5 : 0, tension:.32, fill:result.config.visual === "line" ? {target:"origin",above:`${palette[0]}20`} : false, pointRadius:result.config.visual === "line" ? 2.5 : 0 }] },
