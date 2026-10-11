@@ -12618,7 +12618,7 @@ monochrome:["#244f3c","#426d59","#658c77","#8eae9d","#b7cbbf","#dce7e0"]
 };
 let selectedReportPalette = (() => { const saved = localStorage.getItem("novara_analytics_palette"); return !saved || saved === "novara" ? "standard" : saved; })();
 function currentReportColors(){return selectedReportPalette === "custom" ? [...document.querySelectorAll("#reportCustomColors input")].map(input=>input.value) : REPORT_PALETTES[selectedReportPalette] || REPORT_PALETTES.standard;}
-function applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-tickets,#panel-ai,#panel-human,#panel-dashboards,#panel-reports"))return;const type=chart.config.type;chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>colors[point%colors.length]);else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
+function semanticReportColor(label,fallback){const key=String(label??"").trim().toLowerCase();if(/(^|[^a-z])(resolved|positive|success|healthy|improved|retained|answered|satisfied|good)([^a-z]|$)/.test(key))return "#59a14f";if(/(^|[^a-z])(negative|failed|failure|error|escalated|breached|overdue|dissatisfied|bad)([^a-z]|$)/.test(key))return "#e15759";if(/(^|[^a-z])(pending|warning|waiting|reopened|partial|at risk)([^a-z]|$)/.test(key))return "#f28e2b";if(/(^|[^a-z])neutral([^a-z]|$)/.test(key))return "#9c9c9c";return fallback;}\nfunction applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-tickets,#panel-ai,#panel-human,#panel-dashboards,#panel-reports"))return;const type=chart.config.type;chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>semanticReportColor((chart.data.labels||[])[point],colors[point%colors.length]));else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
 function renderReportPalettePicker(){const picker=document.getElementById("reportPalettePicker");if(!picker)return;let customSaved=null;try{customSaved=JSON.parse(localStorage.getItem("novara_analytics_custom_colors")||"null");}catch{}if(Array.isArray(customSaved))document.querySelectorAll("#reportCustomColors input").forEach((input,index)=>{if(customSaved[index])input.value=customSaved[index];});picker.innerHTML=[...Object.entries(REPORT_PALETTES),["custom",["#315f4a","#d6a85f","#668da3"]]].map(([name,colors])=>`<button class="palette-option ${name===selectedReportPalette?"active":""}" data-report-palette="${name}" type="button"><span class="palette-swatches">${colors.slice(0,4).map(color=>`<i style="background:${color}"></i>`).join("")}</span>${reportLabel(name)}</button>`).join("");document.getElementById("reportCustomColors")?.classList.toggle("open",selectedReportPalette==="custom");picker.querySelectorAll("[data-report-palette]").forEach(button=>button.addEventListener("click",()=>{selectedReportPalette=button.dataset.reportPalette;localStorage.setItem("novara_analytics_palette",selectedReportPalette);renderReportPalettePicker();applyAnalyticsChartPalette();scheduleCustomReport();}));}
 function formatReportValue(value) {
 if (!Number.isFinite(value)) return "0";
@@ -12953,7 +12953,7 @@ customReportChart = new Chart(context, {
         datasets: [{
             label: metricLabel,
             data: points.map(point => point.value),
-            backgroundColor: isCircular || config.visual === "bar" ? points.map((_, index) => palette[index % palette.length]) : palette[0],
+            backgroundColor: isCircular || config.visual === "bar" ? points.map((point, index) => semanticReportColor(point.label, palette[index % palette.length])) : palette[0],
             borderColor: isCircular ? "#101512" : palette[0],
             borderWidth: isCircular ? 3 : 1.5,
             borderRadius: config.visual === "bar" ? 6 : 0,
@@ -13108,7 +13108,7 @@ customReportChart = new Chart(document.getElementById("customReportChart").getCo
         datasets: [{
             label: reportLabel(yField),
             data: chartRows.map(row => Number(row[yField])),
-            backgroundColor: circular || visual === "bar" ? chartRows.map((_, index) => palette[index % palette.length]) : palette[0],
+            backgroundColor: circular || visual === "bar" ? chartRows.map((row, index) => semanticReportColor(String(row?.[xField] ?? "Not specified"), palette[index % palette.length])) : palette[0],
             borderColor: circular ? "#101512" : palette[0],
             borderWidth: circular ? 2 : 1.5,
             borderRadius: visual === "bar" ? 6 : 0,
@@ -13799,7 +13799,7 @@ const circular = visual === "doughnut";
 const palette = report.colors?.length ? report.colors : REPORT_PALETTES.standard;
 const chart = new Chart(body.querySelector("canvas").getContext("2d"), {
     type: visual,
-    data: { labels: chartRows.map(row => String(row?.[xField] ?? "Not specified")), datasets: [{ label:reportLabel(yField), data:chartRows.map(row => Number(row[yField])), backgroundColor:circular||visual==="bar" ? chartRows.map((_,index)=>palette[index%palette.length]) : palette[0], borderColor:circular ? "#101512" : palette[0], borderWidth:circular?2:1.5, borderRadius:visual==="bar"?5:0, tension:.32, fill:visual==="line"?{target:"origin",above:`${palette[0]}20`}:false }] },
+    data: { labels: chartRows.map(row => String(row?.[xField] ?? "Not specified")), datasets: [{ label:reportLabel(yField), data:chartRows.map(row => Number(row[yField])), backgroundColor:circular||visual==="bar" ? chartRows.map((row,index)=>semanticReportColor(String(row?.[xField]??"Not specified"),palette[index%palette.length])) : palette[0], borderColor:circular ? "#101512" : palette[0], borderWidth:circular?2:1.5, borderRadius:visual==="bar"?5:0, tension:.32, fill:visual==="line"?{target:"origin",above:`${palette[0]}20`}:false }] },
     options: { responsive:true, maintainAspectRatio:false, cutout:circular?"67%":undefined, onHover:chartPointer, onClick:(event,elements)=>{if(elements.length){const label=String(chartRows[elements[0].index]?.[xField]??"Not specified");openRawSqlPointDrilldown(report,xField,label,rows);}}, plugins:{legend:{display:circular,position:"bottom"}}, scales:circular?{}:{x:{grid:{display:false}},y:{beginAtZero:true}} }
 });
 dashboardCharts.set(widgetId, chart);
@@ -13823,7 +13823,7 @@ const circular = result.config.visual === "doughnut";
 const palette = result.config.colors?.length ? result.config.colors : REPORT_PALETTES.standard;
 const chart = new Chart(body.querySelector("canvas").getContext("2d"), {
     type: result.config.visual,
-    data: { labels: result.points.map(point => point.label), datasets: [{ data: result.points.map(point => point.value), backgroundColor: circular||result.config.visual==="bar" ? result.points.map((_,i) => palette[i % palette.length]) : palette[0], borderColor: circular ? "#101512" : palette[0], borderWidth: circular ? 2 : 1.5, borderRadius: result.config.visual === "bar" ? 5 : 0, tension:.32, fill:result.config.visual === "line" ? {target:"origin",above:`${palette[0]}20`} : false, pointRadius:result.config.visual === "line" ? 2.5 : 0 }] },
+    data: { labels: result.points.map(point => point.label), datasets: [{ data: result.points.map(point => point.value), backgroundColor: circular||result.config.visual==="bar" ? result.points.map((point,i) => semanticReportColor(point.label,palette[i % palette.length])) : palette[0], borderColor: circular ? "#101512" : palette[0], borderWidth: circular ? 2 : 1.5, borderRadius: result.config.visual === "bar" ? 5 : 0, tension:.32, fill:result.config.visual === "line" ? {target:"origin",above:`${palette[0]}20`} : false, pointRadius:result.config.visual === "line" ? 2.5 : 0 }] },
     options: { responsive:true, maintainAspectRatio:false, cutout:circular ? "67%" : undefined, onHover:chartPointer, onClick:(event,elements)=>{if(elements.length){const point=result.points[elements[0].index];if(point)openReportPointDrilldown(result.config,point);}}, plugins:{ legend:{ display:circular, position:"bottom", labels:{color:"rgba(236,243,239,.58)",boxWidth:8,boxHeight:8,font:{size:8}} } }, scales:circular ? {} : { x:{grid:{display:false},ticks:{color:"rgba(226,237,231,.42)",font:{size:8}}}, y:{beginAtZero:true,grid:{color:"rgba(222,235,227,.05)"},ticks:{color:"rgba(226,237,231,.42)",font:{size:8}},border:{display:false}} } }
 });
 dashboardCharts.set(widgetId, chart);
@@ -14892,8 +14892,8 @@ document.getElementById("resetLayoutBtn")?.addEventListener("click", () => {
     setLayoutMode(false); location.reload();
 });
 document.getElementById("resetAnalyticsAppearance")?.addEventListener("click", () => {
-    selectedReportPalette = "novara";
-    localStorage.removeItem("novara_analytics_palette");
+    selectedReportPalette = "standard";
+    localStorage.setItem("novara_analytics_palette", "standard");
     localStorage.removeItem("novara_analytics_custom_colors");
     renderReportPalettePicker(); applyAnalyticsChartPalette();
 });
@@ -15090,7 +15090,7 @@ document.getElementById("reportLayoutReset")?.addEventListener("click", () => ap
 applyReportLayout(localStorage.getItem("novara_reports_layout") || "default", false);
 document.getElementById("closeAnalyticsLayoutSettings")?.addEventListener("click",()=>document.getElementById("analyticsLayoutSettings")?.classList.remove("open"));
 document.getElementById("arrangeAnalyticsCards")?.addEventListener("click",()=>{document.getElementById("analyticsLayoutSettings")?.classList.remove("open");if(window.innerWidth<=768)return;layoutEditSnapshot=capturePanelLayout(activeLayoutPanel());setLayoutEditing(true);});
-document.getElementById("resetAnalyticsAppearance")?.addEventListener("click",()=>{selectedReportPalette="novara";localStorage.removeItem("novara_analytics_palette");localStorage.removeItem("novara_analytics_custom_colors");renderReportPalettePicker();applyAnalyticsChartPalette();});
+document.getElementById("resetAnalyticsAppearance")?.addEventListener("click",()=>{selectedReportPalette="standard";localStorage.setItem("novara_analytics_palette","standard");localStorage.removeItem("novara_analytics_custom_colors");renderReportPalettePicker();applyAnalyticsChartPalette();});
 try {
     await updateDashboard(
         currentPeriod
