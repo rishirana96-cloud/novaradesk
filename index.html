@@ -18207,3 +18207,37 @@ html[data-theme="light"] #tabSwitcher .tab.active:hover {
     display: none !important;
 }
 </style>
+
+
+<style id="novaradesk-compact-workspace-page-headings-v1">
+/* Keep workspace names clear without letting them dominate the dashboard. */
+.topbar {
+    align-items: center !important;
+}
+.topbar .page-title {
+    min-width: 0;
+    max-width: 760px;
+}
+.topbar .page-title h1,
+.page-title h1 {
+    font-size: calc(25px * var(--ui-text-scale)) !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.55px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+}
+.topbar .page-title p,
+.page-title p {
+    margin-top: 4px !important;
+    font-size: calc(11.5px * var(--ui-text-scale)) !important;
+    line-height: 1.4 !important;
+}
+@media (max-width: 720px) {
+    .topbar { align-items: start !important; }
+    .topbar .page-title h1,
+    .page-title h1 {
+        font-size: calc(22px * var(--ui-text-scale)) !important;
+        letter-spacing: -0.35px !important;
+    }
+}
+</style>
