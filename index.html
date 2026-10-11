@@ -4137,10 +4137,10 @@ body.sidebar-pinned .sidebar-pin-toggle svg { fill:color-mix(in srgb,var(--accen
 #customerExportBtn svg,#customerNewBtn svg { width:14px!important;height:14px!important; }
 /* Desktop icon rail with hover expansion */
 @media (min-width:721px) {
-    :root { --sidebar-width:82px; }
+    :root { --sidebar-width:72px; }
     .sidebar {
-        width:82px!important;
-        padding:22px 12px 18px!important;
+        width:72px!important;
+        padding:22px 8px 18px!important;
         overflow-x:hidden;
         overflow-y:auto;
         transition:width .22s cubic-bezier(.2,.72,.2,1),box-shadow .22s ease!important;
@@ -4177,7 +4177,7 @@ body.sidebar-pinned .sidebar-pin-toggle svg { fill:color-mix(in srgb,var(--accen
     .sidebar .nav { gap:5px;overflow:visible; }
     .sidebar .nav-group { display:grid;gap:2px; }
     .sidebar .nav-parent-row { position:relative;display:grid;grid-template-columns:minmax(0,1fr) 34px;align-items:center; }
-    .sidebar .nav-item { width:58px;min-height:50px;justify-content:flex-start;gap:14px;padding:13px 17px!important;white-space:nowrap;overflow:hidden; }
+    .sidebar .nav-item { width:56px;min-height:50px;justify-content:flex-start;gap:14px;padding:13px 18px!important;white-space:nowrap;overflow:hidden; }
     .sidebar:hover .nav-item,.sidebar:has(:focus-visible) .nav-item { width:100%;padding-right:44px!important; }
     .sidebar .nav-item svg { width:20px!important;height:20px!important;flex:0 0 20px; }
     .sidebar .nav-item:hover { transform:none; }
@@ -5805,7 +5805,7 @@ samp,
    for a clean sidebar-open control. */
 @media (min-width:721px) {
     #appSidebar {
-        width:82px!important;
+        width:72px!important;
         box-shadow:none!important;
         overflow-x:hidden!important;
     }
@@ -5817,7 +5817,7 @@ samp,
     /* Never expand merely because the rail is hovered. */
     body:not(.sidebar-pinned) #appSidebar:hover,
     body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) {
-        width:82px!important;
+        width:72px!important;
         box-shadow:none!important;
     }
     body:not(.sidebar-pinned) #appSidebar:hover .brand-product,
