@@ -7386,6 +7386,57 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
 #sidebarCustomDashboards .nav-subicon { color:#647f70; }
 #sidebarAiAgent.active .nav-subicon, #sidebarHumanAgent.active .nav-subicon, #sidebarCustomDashboards.active .nav-subicon { color:var(--accent); }
 </style>
+
+<style id="novaradesk-report-type-roomy-v1">
+/* Give the Report Type control enough space to read and use comfortably. */
+@media (min-width: 901px) {
+  .toolbar .report-mode-toolbar,
+  .toolbar .report-mode-toolbar.open {
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    gap: 14px !important;
+    padding: 5px 10px 5px 12px !important;
+    border-radius: 12px !important;
+  }
+  .toolbar .report-mode-toolbar > span {
+    font-size: 9px !important;
+    letter-spacing: .08em !important;
+    flex: 0 0 auto !important;
+  }
+  .toolbar .report-mode-toolbar select,
+  .toolbar .report-mode-toolbar .unified-select-trigger {
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding-left: 13px !important;
+    padding-right: 38px !important;
+    border-radius: 9px !important;
+    font-size: 11px !important;
+  }
+  .toolbar .report-workspace-jump {
+    width: 38px !important;
+    height: 38px !important;
+    flex-basis: 38px !important;
+    margin-left: 2px !important;
+  }
+}
+@media (max-width: 900px) {
+  .report-mode-toolbar.open {
+    gap: 10px !important;
+    padding: 10px 12px !important;
+  }
+  .report-mode-toolbar .unified-select-trigger,
+  .report-mode-toolbar select {
+    min-height: 40px !important;
+    font-size: 11px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
