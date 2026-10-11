@@ -7362,19 +7362,17 @@ html[data-theme="light"] .custom-instruction-card textarea{
 
 <style id="novaradesk-tab-typography-only-v1">
 /* Selected workspace tab: typography alone communicates the active state. */
-#tabSwitcher .tab,
-html[data-theme="light"] #tabSwitcher .tab{
-  background:transparent!important;color:#656b67!important;border:0!important;
+#tabSwitcher .tab{
+  background:transparent!important;color:var(--text-secondary)!important;border:0!important;
   box-shadow:none!important;font-weight:500!important;
 }
-#tabSwitcher .tab:hover,
-html[data-theme="light"] #tabSwitcher .tab:hover{
-  background:transparent!important;color:#303632!important;
+#tabSwitcher .tab:hover{background:transparent!important;color:var(--text)!important}
+#tabSwitcher .tab.active{
+  background:transparent!important;color:var(--text)!important;font-weight:700!important;box-shadow:none!important;
 }
-#tabSwitcher .tab.active,
-html[data-theme="light"] #tabSwitcher .tab.active{
-  background:transparent!important;color:#202522!important;font-weight:700!important;box-shadow:none!important;
-}
+html[data-theme="light"] #tabSwitcher .tab{color:#656b67!important}
+html[data-theme="light"] #tabSwitcher .tab:hover{color:#303632!important}
+html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
 #tabSwitcher .tab.active::before,
 #tabSwitcher .tab.active::after{display:none!important;content:none!important}
 </style>
