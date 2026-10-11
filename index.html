@@ -18102,3 +18102,34 @@ html[data-theme="light"] #tabSwitcher .tab.active:hover {
     font-weight: 750 !important;
 }
 </style>
+
+
+<style id="novaradesk-workspace-tab-contrast-refinement">
+/* Keep inactive workspace tabs readable while giving the selected tab clear, darker-green emphasis. */
+#tabSwitcher .tab,
+html[data-theme="light"] #tabSwitcher .tab {
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+}
+#tabSwitcher .tab:hover:not(.active),
+html[data-theme="light"] #tabSwitcher .tab:hover:not(.active) {
+    color: var(--text) !important;
+    background: var(--surface-hover) !important;
+}
+#tabSwitcher .tab.active,
+#tabSwitcher .tab.active:hover,
+html[data-theme="light"] #tabSwitcher .tab.active,
+html[data-theme="light"] #tabSwitcher .tab.active:hover {
+    font-weight: 750 !important;
+}
+#tabSwitcher .tab.active,
+#tabSwitcher .tab.active:hover {
+    color: #347a50 !important;
+    background: color-mix(in srgb, #347a50 18%, var(--bg-card)) !important;
+}
+html[data-theme="light"] #tabSwitcher .tab.active,
+html[data-theme="light"] #tabSwitcher .tab.active:hover {
+    color: #286b43 !important;
+    background: color-mix(in srgb, #347a50 17%, var(--bg-card)) !important;
+}
+</style>
