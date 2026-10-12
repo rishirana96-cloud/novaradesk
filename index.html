@@ -7761,12 +7761,6 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
             <div id="dashboardTitleMenu" class="dashboard-title-menu" role="menu"></div>
         </div>
         <div class="toolbar-right">
-            <div class="layout-controls">
-                <button id="customizeLayoutBtn" class="layout-control-btn" type="button" aria-label="Re-arrange dashboard data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg><span>Re-arrange</span></button>
-                <button id="saveLayoutBtn" class="layout-control-btn primary" type="button" hidden>Save</button>
-                <button id="cancelLayoutBtn" class="layout-control-btn" type="button" hidden>Cancel</button>
-                <button id="resetLayoutBtn" class="layout-control-btn" type="button" hidden>Reset</button>
-            </div>
             <div class="dashboard-customize-wrap">
                 <button id="dashboardToolbarAddReport" class="layout-control-btn dashboard-toolbar-add" type="button" aria-haspopup="menu" aria-expanded="false">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg>
@@ -7782,6 +7776,13 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                         <span><strong>Rearrange reports</strong><small>Drag reports into a new order</small></span>
                     </button>
                 </div>
+            </div>
+            <div class="toolbar-period-controls">
+            <div class="layout-controls">
+                <button id="customizeLayoutBtn" class="layout-control-btn" type="button" aria-label="Re-arrange dashboard data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg><span>Re-arrange</span></button>
+                <button id="saveLayoutBtn" class="layout-control-btn primary" type="button" hidden>Save</button>
+                <button id="cancelLayoutBtn" class="layout-control-btn" type="button" hidden>Cancel</button>
+                <button id="resetLayoutBtn" class="layout-control-btn" type="button" hidden>Reset</button>
             </div>
             <div
                 class="period-selector"
@@ -7811,6 +7812,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 <button id="customDateBtn" type="button">
                     Custom
                 </button>
+            </div>
             </div>
             <div id="customDatePopover" class="custom-date-popover">
                 <label>From<input id="customDateStart" type="date"></label>
@@ -18312,5 +18314,56 @@ html[data-theme="light"] #tabSwitcher .tab {
     width: 15px !important;
     height: 15px !important;
     flex: 0 0 15px !important;
+}
+</style>
+
+
+<style id="novaradesk-separated-toolbar-groups-v1">
+/* Keep workspace navigation and dashboard date/layout controls in distinct, compact groups. */
+#tabSwitcher {
+    display: inline-flex !important;
+    width: max-content !important;
+    max-width: 100%;
+    flex: 0 0 auto !important;
+    padding: 4px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    background: var(--surface) !important;
+    box-sizing: border-box !important;
+}
+.toolbar-period-controls {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    max-width: 100%;
+    padding: 4px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    background: var(--surface) !important;
+    box-sizing: border-box !important;
+}
+.toolbar-period-controls .layout-controls,
+.toolbar-period-controls .period-selector {
+    align-self: center !important;
+    margin: 0 !important;
+}
+.toolbar-period-controls .period-selector {
+    min-height: 0 !important;
+    padding: 2px !important;
+    border: 0 !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+}
+.toolbar-period-controls .layout-control-btn {
+    min-height: 32px !important;
+}
+.toolbar-right {
+    gap: 10px !important;
+}
+@media (max-width: 900px) {
+    .toolbar-period-controls { gap: 4px !important; }
+    .toolbar-right { flex-wrap: wrap !important; }
 }
 </style>
