@@ -18367,3 +18367,18 @@ html[data-theme="light"] #tabSwitcher .tab {
     .toolbar-right { flex-wrap: wrap !important; }
 }
 </style>
+
+
+<style id="novaradesk-remove-outer-toolbar-bar-v1">
+/* Remove the enclosing toolbar container; only the two control groups should read as boxes. */
+.toolbar,
+html[data-theme="light"] .toolbar {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+</style>
