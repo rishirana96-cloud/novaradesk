@@ -18673,3 +18673,122 @@ html[data-theme="light"] #panel-chatbot .admin-tab.active:hover {
     }
 }
 </style>
+
+
+<style id="novaradesk-shared-toolbar-period-style-v1">
+/* Match the compact toolbar and date range controls across Analytics/Reports, Tickets, and AI Chatbot. */
+@media (min-width: 901px) {
+    .toolbar,
+    #panel-tickets .ticket-workspace-toolbar,
+    #panel-chatbot .admin-tabs {
+        box-sizing: border-box !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
+        padding: 4px 7px !important;
+        margin-bottom: 12px !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        background: var(--surface) !important;
+        box-shadow: none !important;
+    }
+
+    #tabSwitcher,
+    #panel-chatbot .admin-tabs,
+    #panel-tickets .ticket-toolbar-right,
+    .toolbar .toolbar-right,
+    .toolbar .report-mode-toolbar,
+    .toolbar .dashboard-toolbar-selector {
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        align-items: center !important;
+    }
+
+    #tabSwitcher .tab,
+    #panel-chatbot .admin-tab {
+        box-sizing: border-box !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        border-radius: 8px !important;
+    }
+
+    #panel-tickets .ticket-view-control,
+    #panel-tickets .ticket-period-selector,
+    #periodSelector {
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        box-sizing: border-box !important;
+    }
+
+    #panel-tickets .ticket-view-control select,
+    #panel-tickets .ticket-view-control .unified-select-trigger,
+    #panel-tickets .ticket-filter-toggle,
+    .toolbar .report-mode-toolbar select,
+    .toolbar .report-mode-toolbar .unified-select-trigger {
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        box-sizing: border-box !important;
+    }
+}
+
+/* Use the same quiet surface, border, spacing, and selected treatment for both date selectors. */
+#periodSelector,
+#ticketPeriodSelector {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    padding: 3px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 9px !important;
+    background: var(--surface-alt) !important;
+    box-shadow: none !important;
+}
+#periodSelector button,
+#ticketPeriodSelector button {
+    min-width: 40px !important;
+    min-height: 28px !important;
+    padding: 0 9px !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    font-size: calc(9px * var(--ui-text-scale)) !important;
+    font-weight: 650 !important;
+    box-shadow: none !important;
+}
+#periodSelector button:hover,
+#ticketPeriodSelector button:hover {
+    background: var(--surface-hover) !important;
+    color: var(--text-secondary) !important;
+}
+#periodSelector button.active,
+#ticketPeriodSelector button.active {
+    background: color-mix(in srgb,var(--accent) 12%,var(--surface)) !important;
+    color: var(--accent-dark) !important;
+    box-shadow: none !important;
+}
+html[data-theme="dark"] #periodSelector button.active,
+html[data-theme="dark"] #ticketPeriodSelector button.active {
+    color: var(--accent-light) !important;
+}
+
+@media (max-width: 900px) {
+    #periodSelector,
+    #ticketPeriodSelector {
+        border-radius: 9px !important;
+        background: var(--surface-alt) !important;
+        box-shadow: none !important;
+    }
+    #periodSelector button,
+    #ticketPeriodSelector button {
+        min-height: 30px !important;
+        border-radius: 6px !important;
+    }
+}
+</style>
