@@ -17071,7 +17071,7 @@ window.syncTicketFilterPanelUi();
 .ticket-queue-card{position:relative;display:grid!important;gap:7px!important;min-height:0!important;height:auto!important;padding:12px 13px!important;border:1px solid var(--border)!important;border-radius:10px!important;background:var(--bg-card)!important;box-shadow:none!important;transform:none!important;overflow:visible!important}
 .ticket-queue-card:hover{border-color:color-mix(in srgb,var(--accent) 34%,var(--border))!important;background:color-mix(in srgb,var(--accent) 3%,var(--bg-card))!important;box-shadow:0 7px 18px rgba(17,39,26,.055)!important}
 .ticket-queue-card.active{border-color:color-mix(in srgb,var(--accent) 62%,var(--border))!important;background:color-mix(in srgb,var(--accent) 6%,var(--bg-card))!important;box-shadow:0 7px 20px rgba(17,39,26,.07)!important}
-.ticket-queue-card-top,.ticket-queue-card-middle{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.ticket-queue-card-top,.ticket-queue-card-middle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0}
 .ticket-queue-ticket-meta{display:flex;align-items:center;gap:4px;min-width:0}
 .ticket-queue-ticket-meta strong{display:inline-flex;align-items:center;color:var(--text)!important;font-size:12px!important;font-weight:800!important;line-height:1.2;white-space:nowrap}
 .ticket-queue-channel{display:grid;place-items:center;flex:0 0 23px;width:23px;height:23px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text-muted)}
@@ -17082,7 +17082,7 @@ window.syncTicketFilterPanelUi();
 .ticket-queue-status.pending{border-color:color-mix(in srgb,var(--warning) 28%,var(--border));background:color-mix(in srgb,var(--warning) 15%,var(--bg-card));color:color-mix(in srgb,var(--warning) 78%,var(--text))}
 .ticket-queue-status.resolved{border-color:color-mix(in srgb,var(--success) 26%,var(--border));background:color-mix(in srgb,var(--success) 13%,var(--bg-card));color:var(--success)}
 .ticket-queue-card-middle{min-height:16px}
-.ticket-queue-card-name{min-width:0;color:var(--text-secondary)!important;font-size:10.5px!important;font-weight:680!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ticket-queue-card-name{min-width:0;color:var(--text-secondary)!important;font-size:10.5px!important;font-weight:680!important;overflow:visible!important;text-overflow:clip!important;white-space:normal!important;overflow-wrap:anywhere}
 .ticket-queue-card-middle time{flex:0 0 auto;margin-left:auto;color:var(--text-muted);font-size:8.5px;font-weight:500;white-space:nowrap}
 .ticket-queue-card-query{display:block!important;min-width:0;color:var(--text-muted)!important;font-size:9.5px!important;font-weight:450;line-height:1.4!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
 .ticket-queue-unread{position:absolute;right:8px;bottom:7px;display:grid;place-items:center;min-width:17px;height:17px;padding:0 5px;border:2px solid var(--bg-card);border-radius:999px;background:var(--accent-dark);color:#fff;font-size:7px;font-weight:850}
