@@ -1508,6 +1508,18 @@ button {
     }
 }
 </style>
+
+<style id="novaradesk-dashboard-picker-balance-v1">
+/* Keep the saved-dashboard picker compact beside its create button. */
+@media (min-width: 901px) {
+    #dashboardToolbarSelector .dashboard-title-trigger {
+        width: 240px !important;
+        min-width: 220px !important;
+        max-width: 250px !important;
+        column-gap: 10px !important;
+    }
+}
+</style>
 <style>
 .toolbar-right { margin-left:auto; position:relative; }
 .custom-date-popover { position:absolute; z-index:30; top:calc(100% + 9px); right:0; width:270px; display:none; padding:13px; border:1px solid var(--border); border-radius:11px; background:#111612; box-shadow:0 18px 45px rgba(0,0,0,.35); }
