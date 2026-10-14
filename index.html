@@ -18314,3 +18314,233 @@ html[data-theme="light"] #tabSwitcher .tab {
     flex: 0 0 15px !important;
 }
 </style>
+
+<style id="novaradesk-chatbot-settings-visual-refresh-v1">
+/* Give the chatbot configuration screen a clearer, calmer hierarchy. */
+#chatbotTab-model {
+    padding-top: 3px;
+}
+#chatbotTab-model .admin-grid-2 {
+    gap: 16px !important;
+    align-items: stretch;
+}
+#chatbotTab-model .admin-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb,var(--border-strong) 72%,transparent);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(12,30,20,.055);
+}
+#chatbotTab-model .model-config-card {
+    padding: clamp(20px,2.2vw,28px);
+    background: linear-gradient(145deg,
+        color-mix(in srgb,var(--surface) 97%,var(--accent) 3%),
+        var(--surface) 48%);
+}
+#chatbotTab-model .model-profile-card {
+    padding: clamp(20px,2.2vw,28px);
+    background: linear-gradient(155deg,
+        color-mix(in srgb,var(--surface) 91%,var(--accent) 9%),
+        var(--surface));
+}
+#chatbotTab-model .admin-card-head {
+    margin-bottom: 22px;
+    padding-bottom: 17px;
+    border-bottom: 1px solid color-mix(in srgb,var(--border) 78%,transparent);
+}
+#chatbotTab-model .admin-card-head h3 {
+    margin: 5px 0 6px;
+    font-size: 18px;
+    line-height: 1.2;
+    letter-spacing: -.35px;
+}
+#chatbotTab-model .admin-card-head p {
+    max-width: 48ch;
+    font-size: 11px;
+    line-height: 1.55;
+}
+#chatbotTab-model .model-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--accent-light);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+#chatbotTab-model .model-eyebrow::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent);
+}
+#chatbotTab-model .admin-form-grid { gap: 18px 14px; }
+#chatbotTab-model .admin-field { gap: 8px; }
+#chatbotTab-model .admin-field > span {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 9px;
+    font-weight: 780;
+    letter-spacing: .09em;
+}
+#chatbotTab-model .admin-field input,
+#chatbotTab-model .admin-field select {
+    min-height: 46px;
+    padding: 0 13px;
+    border-color: color-mix(in srgb,var(--border-strong) 76%,transparent);
+    border-radius: 11px;
+    background: color-mix(in srgb,var(--surface-light) 88%,transparent);
+    font-size: 12px;
+    transition: border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+#chatbotTab-model .admin-field input:hover,
+#chatbotTab-model .admin-field select:hover {
+    border-color: color-mix(in srgb,var(--accent) 38%,var(--border-strong));
+}
+#chatbotTab-model .admin-field input:focus,
+#chatbotTab-model .admin-field select:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent);
+}
+#chatbotTab-model .response-style-options {
+    gap: 5px;
+    padding: 5px;
+    border-color: color-mix(in srgb,var(--border-strong) 62%,transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb,var(--surface-alt) 76%,transparent);
+}
+#chatbotTab-model .response-style-btn {
+    min-height: 40px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    transition: color .18s ease,background .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+#chatbotTab-model .response-style-btn:hover:not(.active) {
+    color: var(--text);
+    background: color-mix(in srgb,var(--surface) 72%,transparent);
+}
+#chatbotTab-model .response-style-btn.active {
+    color: #fff;
+    background: var(--accent-dark);
+    box-shadow: 0 3px 9px color-mix(in srgb,var(--accent-dark) 22%,transparent);
+}
+#chatbotTab-model .advanced-settings {
+    margin-top: 18px;
+    border-color: color-mix(in srgb,var(--border-strong) 72%,transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb,var(--surface-alt) 55%,transparent);
+}
+#chatbotTab-model .advanced-settings summary {
+    min-height: 48px;
+    padding: 0 14px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    transition: color .18s ease,background .18s ease;
+}
+#chatbotTab-model .advanced-settings summary:hover {
+    color: var(--text);
+    background: color-mix(in srgb,var(--accent) 4%,transparent);
+}
+#chatbotTab-model .advanced-settings[open] summary {
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+#chatbotTab-model .advanced-settings-body { padding: 5px 14px 16px; }
+#chatbotTab-model .advanced-warning {
+    margin: 12px 0 16px !important;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb,#d7a34c 22%,transparent);
+    background: color-mix(in srgb,#d7a34c 8%,var(--surface));
+    font-size: 10px;
+    line-height: 1.5;
+}
+#chatbotTab-model .model-save-row {
+    margin-top: 20px;
+    padding: 16px 14px 0;
+    border-top: 1px solid color-mix(in srgb,var(--border) 78%,transparent);
+}
+#chatbotTab-model .model-save-row strong { font-size: 11px; }
+#chatbotTab-model .model-save-row span { font-size: 10px; line-height: 1.45; }
+#chatbotTab-model .model-save-row .admin-btn {
+    min-height: 42px;
+    padding-inline: 18px;
+    border-radius: 11px;
+    box-shadow: 0 5px 13px color-mix(in srgb,var(--accent) 18%,transparent);
+    transition: transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+#chatbotTab-model .model-save-row .admin-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px color-mix(in srgb,var(--accent) 24%,transparent);
+    filter: brightness(1.04);
+}
+#chatbotTab-model .model-preset-list { gap: 9px; }
+#chatbotTab-model .model-preset {
+    min-height: 74px;
+    padding: 12px 13px;
+    border-color: color-mix(in srgb,var(--border-strong) 66%,transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb,var(--surface) 74%,transparent);
+}
+#chatbotTab-model .model-preset-number {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-alt);
+    color: var(--text-secondary);
+    font-size: 9px;
+}
+#chatbotTab-model .model-preset strong { font-size: 11px; }
+#chatbotTab-model .model-preset div > span { font-size: 9px; line-height: 1.45; }
+#chatbotTab-model .model-preset.active {
+    border-color: color-mix(in srgb,var(--accent) 48%,var(--border));
+    background: color-mix(in srgb,var(--accent) 9%,var(--surface));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb,var(--accent) 9%,transparent);
+}
+#chatbotTab-model .model-preset.active .model-preset-number {
+    border-color: color-mix(in srgb,var(--accent) 24%,var(--border));
+    color: var(--accent-light);
+    background: color-mix(in srgb,var(--accent) 12%,var(--surface));
+}
+#chatbotTab-model .model-preset-action,
+#chatbotTab-model .model-recommended { font-size: 9px; }
+#chatbotTab-model .model-recommended {
+    padding: 6px 8px;
+    border: 1px solid color-mix(in srgb,var(--accent) 16%,transparent);
+    border-radius: 8px;
+}
+#chatbotTab-model :is(button,input,select,summary):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+html[data-theme="light"] #chatbotTab-model .admin-card {
+    border-color: #dfe7e1;
+    box-shadow: 0 10px 28px rgba(28,61,41,.055);
+}
+html[data-theme="light"] #chatbotTab-model .admin-field input,
+html[data-theme="light"] #chatbotTab-model .admin-field select {
+    background: #fbfdfb;
+}
+html[data-theme="light"] #chatbotTab-model .model-preset {
+    background: rgba(255,255,255,.72);
+}
+@media(max-width:620px) {
+    #chatbotTab-model .admin-card-head { margin-bottom: 18px; }
+    #chatbotTab-model .admin-form-grid { gap: 14px; }
+    #chatbotTab-model .model-save-row { padding-inline: 0; }
+    #chatbotTab-model .model-save-row .admin-btn { width: 100%; }
+}
+@media(prefers-reduced-motion:reduce) {
+    #chatbotTab-model *,#chatbotTab-model *::before,#chatbotTab-model *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+</style>
