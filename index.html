@@ -18559,3 +18559,38 @@ html[data-theme="light"] #chatbotTab-model .model-preset {
     }
 }
 </style>
+
+<style id="novaradesk-chatbot-tabs-match-analytics-v1">
+/* Keep the Chatbot tabs identical to Analytics, including the selected state. */
+#panel-chatbot .admin-tab,
+html[data-theme="light"] #panel-chatbot .admin-tab {
+    color: #656B67 !important;
+    font-weight: 500 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+#panel-chatbot .admin-tab:hover:not(.active),
+html[data-theme="light"] #panel-chatbot .admin-tab:hover:not(.active) {
+    color: #252B27 !important;
+    background: transparent !important;
+}
+#panel-chatbot .admin-tab.active,
+#panel-chatbot .admin-tab.active:hover,
+html[data-theme="light"] #panel-chatbot .admin-tab.active,
+html[data-theme="light"] #panel-chatbot .admin-tab.active:hover {
+    color: #252B27 !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+#panel-chatbot .admin-tab::before,
+#panel-chatbot .admin-tab::after {
+    content: none !important;
+    display: none !important;
+}
+#panel-chatbot .admin-tab.active svg {
+    color: currentColor !important;
+}
+</style>
