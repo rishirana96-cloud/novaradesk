@@ -14112,9 +14112,23 @@ list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
     const statusLabel=ticketStatusLabel(ticket.status).replace(/^Resolved by .+$/,"Resolved");
     const ageLabel=ticket.status==="resolved"?`${age} ago`:`Waiting ${age}`;
     const unread=ticket.unreadCustomerMessages?`<span class="ticket-queue-unread" aria-label="${ticket.unreadCustomerMessages} unread messages">${ticket.unreadCustomerMessages}</span>`:"";
-    return `<button class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" type="button" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong>${ticketQueueChannelIcon(ticket.channel)}</span><span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${unread}</button>`;
+    return `<div class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" role="button" tabindex="0" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${unread}</div>`;
 }).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
-list.querySelectorAll("[data-queue-ticket-id]").forEach(button => button.addEventListener("click", () => openTicket(Number(button.dataset.queueTicketId))));
+list.querySelectorAll("[data-queue-ticket-id]").forEach(card => {
+    const open = () => openTicket(Number(card.dataset.queueTicketId));
+    card.addEventListener("click", event => { if (event.target.closest("[data-copy-ticket-number]")) return; open(); });
+    card.addEventListener("keydown", event => { if (event.target.closest("[data-copy-ticket-number]")) return; if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } });
+});
+list.querySelectorAll("[data-copy-ticket-number]").forEach(button => button.addEventListener("click", async event => {
+    event.stopPropagation();
+    const value=button.dataset.copyTicketNumber||"";
+    try {
+        if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(value);
+        else { const input=document.createElement("textarea"); input.value=value; input.style.position="fixed"; input.style.opacity="0"; document.body.appendChild(input); input.select(); const copied=document.execCommand("copy"); input.remove(); if(!copied) return; }
+        button.classList.add("copied"); button.title="Copied"; button.setAttribute("aria-label","Ticket number copied");
+        setTimeout(()=>{button.classList.remove("copied");button.title="Copy ticket number";button.setAttribute("aria-label","Copy ticket number")},1200);
+    } catch (_) {}
+}));
 const pagination = document.getElementById("ticketQueuePagination");
 if (pagination) {
     pagination.innerHTML = rows.length ? `<button type="button" data-queue-page="${ticketQueuePage-1}" ${ticketQueuePage===1?"disabled":""}>‹</button>${Array.from({length:Math.min(5,totalPages)},(_,index)=>{const start=Math.max(1,Math.min(ticketQueuePage-2,totalPages-4));const page=start+index;return page<=totalPages?`<button type="button" class="${page===ticketQueuePage?"active":""}" data-queue-page="${page}">${page}</button>`:""}).join("")}<button type="button" data-queue-page="${ticketQueuePage+1}" ${ticketQueuePage===totalPages?"disabled":""}>›</button>` : "";
@@ -17071,22 +17085,27 @@ window.syncTicketFilterPanelUi();
 .ticket-queue-card{position:relative;display:grid!important;gap:3px!important;min-height:0!important;height:auto!important;padding:12px 13px!important;border:1px solid var(--border)!important;border-radius:10px!important;background:var(--bg-card)!important;box-shadow:none!important;transform:none!important;overflow:visible!important}
 .ticket-queue-card:hover{border-color:color-mix(in srgb,var(--accent) 34%,var(--border))!important;background:color-mix(in srgb,var(--accent) 3%,var(--bg-card))!important;box-shadow:0 7px 18px rgba(17,39,26,.055)!important}
 .ticket-queue-card.active{border-color:color-mix(in srgb,var(--accent) 62%,var(--border))!important;background:color-mix(in srgb,var(--accent) 6%,var(--bg-card))!important;box-shadow:0 7px 20px rgba(17,39,26,.07)!important}
-.ticket-queue-card-top,.ticket-queue-card-middle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0}
-.ticket-queue-ticket-meta{display:flex;align-items:center;gap:4px;min-width:0}
+.ticket-queue-card-top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:7px;min-width:0}
+.ticket-queue-card-middle{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;min-height:16px}
+.ticket-queue-ticket-meta{display:flex;align-items:center;gap:6px;min-width:0}
 .ticket-queue-ticket-meta strong{display:inline-flex;align-items:center;color:var(--text)!important;font-size:12px!important;font-weight:800!important;line-height:1.2;white-space:nowrap}
 .ticket-queue-channel{display:grid;place-items:center;flex:0 0 23px;width:23px;height:23px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text-muted)}
 .ticket-queue-channel svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ticket-queue-copy{display:grid;place-items:center;flex:0 0 20px;width:20px;height:23px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--text-muted);opacity:0;pointer-events:none;cursor:pointer;transition:opacity .14s,color .14s,background .14s}
+.ticket-queue-card:hover .ticket-queue-copy,.ticket-queue-card:focus-within .ticket-queue-copy{opacity:1;pointer-events:auto}
+.ticket-queue-copy:hover,.ticket-queue-copy.copied{background:var(--surface);color:var(--accent)}
+.ticket-queue-copy svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ticket-queue-status{flex:0 0 auto;margin-left:auto;max-width:96px;padding:5px 8px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text-muted);font-size:8.5px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ticket-queue-status.open,.ticket-queue-status.reopened{border-color:color-mix(in srgb,var(--danger) 24%,var(--border));background:color-mix(in srgb,var(--danger) 13%,var(--bg-card));color:var(--danger)}
 .ticket-queue-status.progress{border-color:color-mix(in srgb,var(--accent) 28%,var(--border));background:color-mix(in srgb,var(--accent) 14%,var(--bg-card));color:var(--accent-dark)}
 .ticket-queue-status.pending{border-color:color-mix(in srgb,var(--warning) 28%,var(--border));background:color-mix(in srgb,var(--warning) 15%,var(--bg-card));color:color-mix(in srgb,var(--warning) 78%,var(--text))}
 .ticket-queue-status.resolved{border-color:color-mix(in srgb,var(--success) 26%,var(--border));background:color-mix(in srgb,var(--success) 13%,var(--bg-card));color:var(--success)}
-.ticket-queue-card-middle{min-height:16px}
 .ticket-queue-card-name{min-width:0;color:var(--text-secondary)!important;font-size:10.5px!important;font-weight:680!important;overflow:visible!important;text-overflow:clip!important;white-space:normal!important;overflow-wrap:anywhere}
 .ticket-queue-card-middle time{flex:0 0 auto;margin-left:auto;color:var(--text-muted);font-size:8.5px;font-weight:500;white-space:nowrap}
 .ticket-queue-card-query{display:block!important;min-width:0;color:var(--text-muted)!important;font-size:9.5px!important;font-weight:450;line-height:1.4!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
 .ticket-queue-unread{position:absolute;right:8px;bottom:7px;display:grid;place-items:center;min-width:17px;height:17px;padding:0 5px;border:2px solid var(--bg-card);border-radius:999px;background:var(--accent-dark);color:#fff;font-size:7px;font-weight:850}
 .ticket-queue-card:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-2px}
+.ticket-queue-card{font:inherit;color:var(--text);text-align:left;cursor:pointer}
 </style>
 
 <style id="novaradesk-sidebar-profile-overlap-fix-v1">
