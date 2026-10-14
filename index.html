@@ -18821,3 +18821,57 @@ html[data-theme="dark"] #ticketPeriodSelector button.active {
     box-shadow: none !important;
 }
 </style>
+
+<style id="ticket-channel-switch-segmented-v1">
+/* Give Chat, Calls, and History a clear shared track and selected state. */
+.ticket-drawer-head .ticket-channel-switch {
+    right: 18px !important;
+    bottom: 6px !important;
+    height: 42px !important;
+    padding: 4px !important;
+    gap: 3px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    background: var(--surface-alt) !important;
+    box-shadow: inset 0 1px 2px rgba(20, 39, 28, .045) !important;
+}
+.ticket-drawer-head .ticket-channel-switch button {
+    min-width: 86px !important;
+    min-height: 32px !important;
+    padding: 0 14px !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    font-size: 11px !important;
+    font-weight: 720 !important;
+    box-shadow: none !important;
+    transition: background .16s ease, color .16s ease, box-shadow .16s ease !important;
+}
+.ticket-drawer-head .ticket-channel-switch button + button { margin-left: 0 !important; }
+.ticket-drawer-head .ticket-channel-switch button:hover {
+    background: color-mix(in srgb, var(--bg-card) 72%, transparent) !important;
+    color: var(--text) !important;
+}
+.ticket-drawer-head .ticket-channel-switch button.active {
+    border-color: color-mix(in srgb, var(--accent-dark) 18%, transparent) !important;
+    background: var(--accent-dark) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(44, 93, 68, .2) !important;
+}
+.ticket-drawer-head .ticket-channel-switch button.active::before,
+.ticket-drawer-head .ticket-channel-switch button.active::after { display: none !important; }
+.ticket-drawer-head .ticket-channel-switch .ticket-channel-dot { width: 6px !important; height: 6px !important; }
+.ticket-drawer-head .ticket-channel-switch button.active .ticket-channel-dot { background: currentColor !important; opacity: .82 !important; }
+.ticket-drawer-head .ticket-channel-switch button:focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 1px !important; }
+@media (max-width: 900px) {
+    .ticket-drawer-head .ticket-channel-switch {
+        right: auto !important;
+        bottom: auto !important;
+        width: 100% !important;
+        height: 42px !important;
+        margin-top: 6px !important;
+    }
+    .ticket-drawer-head .ticket-channel-switch button { flex: 1 1 0 !important; min-width: 0 !important; }
+}
+</style>
