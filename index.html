@@ -14232,6 +14232,8 @@ document.getElementById("ticketActionError").textContent = "";
 }
 async function openTicket(ticketId) {
 if (!ticketId) return;
+if (window.ticketReplySending) { window.NovaraChatDock?.tell("Please wait for your reply to finish sending."); return; }
+window.NovaraChatDock?.beforeSwitch(ticketId);
 window.setTicketChannel?.("chat");
 setTicketSwitchLoading(true);
 const workspaceWasOpen = document.getElementById("ticketDrawerBackdrop")?.classList.contains("open");
@@ -14263,6 +14265,8 @@ renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
 await loadOpenTicket();
 }
 function closeTicket() {
+if (window.ticketReplySending) { window.NovaraChatDock?.tell("Please wait for your reply to finish sending."); return; }
+window.NovaraChatDock?.afterClose();
 openTicketId = null;
 setTicketSwitchLoading(false);
 const backdrop = document.getElementById("ticketDrawerBackdrop");
@@ -14747,11 +14751,14 @@ if (event.target.id === "ticketDrawerBackdrop") closeTicket();
 });
 document.addEventListener("keydown",event=>{if(event.key==="Escape"&&document.getElementById("ticketDrawerBackdrop")?.classList.contains("open")&&!document.getElementById("ticketResolutionOverlay")?.classList.contains("open")){event.preventDefault();closeTicket()}});
 async function sendAgentReply() {
+if (window.ticketReplySending || !openTicketId) return;
+const replyTicketId = openTicketId;
 const errorBox = document.getElementById("ticketActionError");
 const input = document.getElementById("ticketReplyText");
 const reply = input.value.trim();
 errorBox.textContent = "";
 if (!reply) { errorBox.textContent = "Write a reply first."; return; }
+window.ticketReplySending = true;
 const thread=document.getElementById("ticketThread");
 const optimisticId=`pending-${Date.now()}`;
 thread.querySelector(".empty-state")?.remove();
@@ -14759,7 +14766,7 @@ thread.insertAdjacentHTML("beforeend",`<div id="${optimisticId}" class="ticket-t
 thread.scrollTop=thread.scrollHeight;
 input.value=""; autoResizeTextarea(input); ticketSendReply.disabled=true;
 try {
-    await postTicketAction({ route: "agent-message", body: { ticketId: openTicketId, message: reply } });
+    await postTicketAction({ route: "agent-message", body: { ticketId: replyTicketId, message: reply } });
     const pending=document.getElementById(optimisticId); if(pending) pending.querySelector(".ticket-message-state").outerHTML='<span class="ticket-message-state sent">✓ Sent</span>';
     await loadOpenTicket(true);
     await refreshTicketsOnly();
@@ -14767,6 +14774,9 @@ try {
     const pending=document.getElementById(optimisticId); if(pending) pending.querySelector(".ticket-message-state").outerHTML=`<span class="ticket-message-state failed">! Failed <button type="button" data-retry-message>Retry</button></span>`;
     pending?.querySelector("[data-retry-message]")?.addEventListener("click",()=>{input.value=reply;input.dispatchEvent(new Event("input"));pending.remove();sendAgentReply()});
     errorBox.textContent = error.message;
+} finally {
+window.ticketReplySending = false;
+window.NovaraChatDock?.rememberMain();
 }
 }
 const ticketReplyText = document.getElementById("ticketReplyText");
@@ -18960,3 +18970,270 @@ html[data-theme="light"] .ticket-drawer-head .ticket-channel-switch{--ticket-tab
 .ticket-queue-panel .ticket-current-view-picker{margin-top:-3px!important}
 .ticket-queue-panel .ticket-current-view-picker .unified-select-trigger,.ticket-queue-panel .ticket-current-view-picker select{min-height:26px!important;padding-top:0!important;padding-bottom:0!important;line-height:1.2!important}
 </style>
+
+<style id="novaradesk-multi-chat-dock">
+#ticketDrawerMinimize{display:grid;place-items:center;flex:0 0 36px;width:36px!important;height:36px!important;border-radius:9px!important}
+#ticketDrawerMinimize svg,#ticketChatDock svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ticketChatDock{position:fixed;right:14px;left:86px;bottom:0;z-index:999;display:flex;justify-content:flex-end;align-items:flex-end;gap:10px;pointer-events:none;max-height:calc(100dvh - 90px);overflow-x:auto;padding:12px 4px 0;scrollbar-width:thin;isolation:isolate}
+#ticketChatDock:empty{display:none}
+#ticketChatDock .dock-chat{pointer-events:auto;flex:1 1 290px;width:290px;min-width:255px;max-width:330px;height:min(450px,calc(100dvh - 105px));display:flex;flex-direction:column;overflow:hidden;background:var(--surface);color:var(--text);border:1px solid var(--border-strong);border-radius:13px 13px 0 0;box-shadow:0 -5px 24px rgba(17,34,25,.14);font-family:inherit}
+#ticketChatDock .dock-chat[hidden]{display:none!important}
+#ticketChatDock .dock-chat.collapsed{height:56px}
+#ticketChatDock .dock-chat.collapsed .dock-body{display:none}
+#ticketChatDock .dock-head{flex:0 0 55px;display:flex;align-items:center;gap:2px;padding:6px 7px 6px 11px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+#ticketChatDock button{font:inherit;color:inherit;cursor:pointer}
+#ticketChatDock .dock-head button{border:0;background:transparent;border-radius:6px}
+#ticketChatDock .dock-head button:not(.dock-title){display:grid;place-items:center;flex:0 0 25px;width:25px;height:30px;padding:0;color:var(--text-secondary)}
+#ticketChatDock .dock-head button:hover{background:var(--surface-hover)}
+#ticketChatDock .dock-title{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:0;text-align:left}
+#ticketChatDock .dock-title strong{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:750}
+#ticketChatDock .dock-title small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:var(--text-muted)}
+#ticketChatDock .dock-unread{border-radius:8px;background:var(--accent-dark);color:white;font-size:8px;padding:3px 4px}
+#ticketChatDock .dock-unread[hidden]{display:none}
+#ticketChatDock .dock-body{flex:1;min-height:0;display:flex;flex-direction:column}
+#ticketChatDock .dock-thread{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 10px;background:color-mix(in srgb,var(--surface) 94%,var(--accent));display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
+#ticketChatDock .dock-message{max-width:94%;flex:0 0 auto;align-self:flex-start;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+#ticketChatDock .dock-message.agent{align-self:flex-end;background:color-mix(in srgb,var(--accent) 13%,var(--surface))}
+#ticketChatDock .dock-message small{display:block;font-size:8px;line-height:1.5;color:var(--text-muted);margin-bottom:4px}
+#ticketChatDock .dock-message p{margin:0 0 5px}#ticketChatDock .dock-message p:last-child{margin-bottom:0}
+#ticketChatDock .dock-message ul,#ticketChatDock .dock-message ol{padding-left:17px}
+#ticketChatDock .dock-message pre{overflow-x:auto;max-width:100%;white-space:pre-wrap}
+#ticketChatDock .dock-message a{color:var(--accent-dark);text-decoration:underline}
+#ticketChatDock .dock-empty{font-size:11px;line-height:1.6;color:var(--text-muted)}
+#ticketChatDock .dock-compose{display:flex;align-items:flex-end;gap:7px;flex:0 0 auto;padding:9px 9px 2px;border-top:1px solid var(--border)}
+#ticketChatDock textarea{flex:1;min-width:0;resize:none;height:60px;max-height:100px;padding:9px;border:1px solid var(--text-secondary);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:11px;line-height:1.4;outline:none}
+#ticketChatDock textarea:focus{border-color:var(--text);box-shadow:none}
+#ticketChatDock .dock-compose button{display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;margin-bottom:4px;border:0;border-radius:50%;background:var(--accent-dark);color:#fff}
+#ticketChatDock .dock-compose button:disabled{opacity:.4;cursor:default}
+#ticketChatDock .dock-error{color:var(--danger);font-size:10px;line-height:1.4;padding:6px 10px;margin:0}#ticketChatDock .dock-error:empty{display:none}
+#ticketChatDock .dock-send-state{font-size:9px;color:var(--text-muted);min-height:17px;padding:0 10px 5px}
+#ticketChatDock button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+#ticketDockNotice{position:fixed;z-index:1101;bottom:70px;left:50%;transform:translateX(-50%);max-width:min(440px,90vw);padding:11px 16px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text);font-size:12px;box-shadow:0 5px 20px #0002;display:none}
+#ticketDockNotice.visible{display:block}
+body:has(#ticketChatDock:not(:empty)) #chatToggle{bottom:65px!important}
+@media(max-width:760px){#ticketChatDock{left:8px;right:8px;justify-content:flex-start}#ticketChatDock .dock-chat{flex:0 0 min(310px,calc(100vw - 28px));min-width:250px;max-height:calc(100dvh - 110px)}}
+@media(prefers-reduced-motion:reduce){#ticketChatDock *{scroll-behavior:auto!important}}
+
+</style>
+<script id="novaradesk-multi-chat-dock-runtime">
+/* Independent ticket chat windows. No ticket is resolved when its window closes. */
+(() => {
+  const chats = new Map();
+  const drafts = new Map();
+  const MAX_CHATS = 4;
+  let fullTicket = null;
+  let pollTimer;
+  const host = document.createElement('section');
+  host.id = 'ticketChatDock';
+  host.setAttribute('aria-label', 'Docked ticket chats');
+  document.body.append(host);
+  const notice = document.createElement('div');
+  notice.id = 'ticketDockNotice';
+  notice.setAttribute('role', 'status');
+  document.body.append(notice);
+  let noticeTimer;
+  const tell = text => {
+    notice.textContent = text;
+    notice.classList.add('visible');
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => notice.classList.remove('visible'), 5000);
+  };
+  const key = id => String(id);
+  const icon = (path) => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${path}</svg>`;
+  const minus = icon('<path d="M5 12h14"/>');
+  const expand = icon('<path d="M14 3h7v7M21 3l-9 9M10 21H3v-7M3 21l9-9"/>');
+  const close = icon('<path d="m6 6 12 12M18 6 6 18"/>');
+  const send = icon('<path d="m22 2-7 20-4-9-9-4 20-7ZM11 13 22 2"/>');
+  function rememberMain() {
+    if (!fullTicket) return;
+    drafts.set(fullTicket, {
+      reply: document.getElementById('ticketReplyText').value,
+      note: document.getElementById('ticketNoteText')?.value || ''
+    });
+  }
+  function beforeSwitch(id) {
+    rememberMain();
+    const previous = chats.get(fullTicket);
+    if (previous && fullTicket !== key(id)) {
+      previous.suspended = false;
+      previous.node.hidden = false;
+      previous.input.value = drafts.get(fullTicket)?.reply || '';
+      renderMessages(previous);
+    }
+    fullTicket = key(id);
+    const draft = drafts.get(fullTicket) || { reply: '', note: '' };
+    const input = document.getElementById('ticketReplyText');
+    input.value = draft.reply;
+    autoResizeTextarea(input);
+    const note = document.getElementById('ticketNoteText');
+    if (note) note.value = draft.note;
+    const chat = chats.get(fullTicket);
+    if (chat) { chat.suspended = true; chat.node.hidden = true; }
+  }
+  function afterClose() {
+    rememberMain();
+    const chat = chats.get(fullTicket);
+    if (chat) {
+      chat.suspended = false;
+      chat.node.hidden = false;
+      chat.input.value = drafts.get(fullTicket)?.reply || '';
+      renderMessages(chat);
+    }
+    fullTicket = null;
+  }
+  function customerSignature(data) {
+    return JSON.stringify((data.messages || []).filter(m => m.sender_type === 'customer').map(m => [m.id, m.created_at, m.message]));
+  }
+  function renderMessages(chat) {
+    const data = chat.data;
+    const messages = data.messages || [];
+    const signature = JSON.stringify([messages, data.ticket.status]);
+    const nearBottom = chat.thread.scrollHeight - chat.thread.scrollTop - chat.thread.clientHeight < 55;
+    if (signature !== chat.signature) {
+      const first = !chat.signature;
+      chat.signature = signature;
+      chat.thread.innerHTML = messages.length ? messages.map(m => {
+        const agent = m.sender_type === 'agent';
+        const name = agent ? (m.sender_name || 'Support agent') : (data.ticket.customer_name || 'Customer');
+        return `<div class="dock-message ${agent ? 'agent' : 'customer'}"><small>${escapeHtml(name)} · ${escapeHtml(ticketDateText(m.created_at))}</small><div>${renderSafeMarkdown(m.message || '')}</div></div>`;
+      }).join('') : '<p class="dock-empty">No human-support messages yet. Expand for the AI conversation and ticket details.</p>';
+      if (first || nearBottom) chat.thread.scrollTop = chat.thread.scrollHeight;
+    }
+    chat.title.textContent = data.ticket.customer_name || 'Customer';
+    chat.meta.textContent = (data.ticket.ticket_number || `NX-${String(data.ticket.id).padStart(4, '0')}`) + ' · ' + String(data.ticket.status || 'open').replaceAll('_', ' ');
+    const resolved = ['resolved', 'closed'].includes(String(data.ticket.status).toLowerCase());
+    chat.input.disabled = resolved;
+    chat.input.placeholder = resolved ? 'Expand to reopen this ticket' : 'Reply to customer…';
+    chat.submit.disabled = resolved || chat.sending || !chat.input.value.trim();
+    chat.badge.hidden = !chat.unread;
+    chat.badge.textContent = chat.unread ? 'New' : '';
+  }
+  function acknowledge(chat) {
+    chat.unread = false;
+    chat.badge.hidden = true;
+  }
+  function setCollapsed(chat, collapsed) {
+    chat.collapsed = collapsed;
+    chat.node.classList.toggle('collapsed', collapsed);
+    chat.toggle.setAttribute('aria-expanded', String(!collapsed));
+    chat.collapseButton.setAttribute('aria-label', collapsed ? 'Open chat window' : 'Collapse chat window');
+    if (!collapsed) { acknowledge(chat); chat.thread.scrollTop = chat.thread.scrollHeight; }
+  }
+  async function refresh(chat) {
+    if (chat.fetching || chat.sending || chat.suspended || !chats.has(chat.id)) return;
+    chat.fetching = true;
+    const controller = new AbortController();
+    chat.controller = controller;
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(`${API_URL}/ticket-detail?id=${encodeURIComponent(chat.id)}`, { signal: controller.signal });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Could not refresh chat');
+      if (!chats.has(chat.id)) return;
+      if (key(data.ticket?.id) !== chat.id) throw new Error('Ticket response did not match this chat');
+      const next = customerSignature(data);
+      if (chat.customerSignature !== next && (chat.collapsed || !chat.node.contains(document.activeElement))) chat.unread = true;
+      chat.customerSignature = next;
+      chat.data = data;
+      chat.error.textContent = '';
+      renderMessages(chat);
+    } catch (error) {
+      if (chats.has(chat.id)) chat.error.textContent = 'Chat could not refresh. Retrying automatically.';
+    } finally { clearTimeout(timeout); chat.fetching = false; }
+  }
+  async function sendReply(chat) {
+    const message = chat.input.value.trim();
+    if (!message || chat.sending || chat.input.disabled || !chats.has(chat.id)) return;
+    chat.sending = true;
+    chat.submit.disabled = true;
+    chat.error.textContent = '';
+    chat.state.textContent = 'Sending…';
+    let sent = false;
+    try {
+      await postTicketAction({ route: 'agent-message', body: { ticketId: chat.id, message } });
+      if (chat.input.value.trim() === message) chat.input.value = '';
+      const draft = drafts.get(chat.id) || {};
+      drafts.set(chat.id, { ...draft, reply: chat.input.value });
+      chat.state.textContent = 'Sent';
+      sent = true;
+    } catch (error) {
+      chat.error.textContent = error.message || 'Message could not be sent. Your draft is kept; try again.';
+      chat.state.textContent = '';
+    } finally {
+      chat.sending = false;
+      renderMessages(chat);
+      if (sent) await refresh(chat);
+    }
+  }
+  function makeChat(id, data) {
+    const node = document.createElement('article');
+    node.className = 'dock-chat';
+    node.setAttribute('aria-label', `Chat with ${data.ticket.customer_name || 'Customer'}`);
+    node.innerHTML = `<header class="dock-head"><button type="button" class="dock-title" aria-expanded="true"><strong></strong><small></small></button><span class="dock-unread" hidden>New</span><button type="button" class="dock-expand" aria-label="Expand ticket" title="Expand ticket">${expand}</button><button type="button" class="dock-collapse" aria-label="Collapse chat window" title="Minimize">${minus}</button><button type="button" class="dock-close" aria-label="Close chat window" title="Close window (keeps ticket open)">${close}</button></header><div class="dock-body"><div class="dock-thread" tabindex="0" aria-label="Conversation"></div><p class="dock-error" role="status"></p><form class="dock-compose"><textarea rows="2" aria-label="Reply to customer" placeholder="Reply to customer…"></textarea><button type="submit" aria-label="Send reply">${send}</button></form><span class="dock-send-state" role="status"></span></div>`;
+    const chat = { id, data, node, collapsed: false, suspended: false, sending: false, fetching: false, unread: false, customerSignature: customerSignature(data), signature: '' };
+    Object.assign(chat, { title: node.querySelector('.dock-title strong'), meta: node.querySelector('.dock-title small'), toggle: node.querySelector('.dock-title'), badge: node.querySelector('.dock-unread'), collapseButton: node.querySelector('.dock-collapse'), thread: node.querySelector('.dock-thread'), input: node.querySelector('textarea'), submit: node.querySelector('[type="submit"]'), error: node.querySelector('.dock-error'), state: node.querySelector('.dock-send-state') });
+    chat.input.value = drafts.get(id)?.reply || '';
+    chat.toggle.addEventListener('click', () => setCollapsed(chat, !chat.collapsed));
+    chat.collapseButton.addEventListener('click', () => setCollapsed(chat, !chat.collapsed));
+    node.querySelector('.dock-close').addEventListener('click', () => {
+      if (chat.sending) return tell('Please wait for this reply to finish sending.');
+      chat.controller?.abort();
+      node.remove(); chats.delete(id);
+    });
+    node.querySelector('.dock-expand').addEventListener('click', () => {
+      if (chat.sending) return tell('Please wait for this reply to finish sending.');
+      drafts.set(id, { ...(drafts.get(id) || {}), reply: chat.input.value });
+      openTicket(id);
+    });
+    node.addEventListener('focusin', () => acknowledge(chat));
+    chat.input.addEventListener('input', () => {
+      drafts.set(id, { ...(drafts.get(id) || {}), reply: chat.input.value });
+      chat.submit.disabled = chat.sending || !chat.input.value.trim();
+      chat.state.textContent = '';
+    });
+    node.querySelector('form').addEventListener('submit', e => { e.preventDefault(); sendReply(chat); });
+    chat.input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendReply(chat); } });
+    chats.set(id, chat); host.append(node); renderMessages(chat);
+    return chat;
+  }
+  function minimize() {
+    if (!openTicketId) return;
+    const id = key(openTicketId);
+    if (window.ticketReplySending) return tell('Please wait for your reply to finish sending.');
+    const data = lastOpenTicketData;
+    if (!data?.ticket || key(data.ticket.id) !== id || ticketDetailRequestInFlight) return tell('Please wait for this ticket to finish loading.');
+    if (!chats.has(id) && chats.size >= MAX_CHATS) return tell('Four chat windows are already open. Close one window to dock another ticket.');
+    rememberMain();
+    const chat = chats.get(id) || makeChat(id, data);
+    chat.data = data;
+    chat.input.value = drafts.get(id)?.reply || '';
+    chat.suspended = false; chat.node.hidden = false;
+    setCollapsed(chat, false); renderMessages(chat);
+    closeTicket();
+    refresh(chat);
+    chat.node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  window.NovaraChatDock = { beforeSwitch, afterClose, rememberMain, minimize, tell };
+  const closeButton = document.getElementById('ticketDrawerClose');
+  const minimizeButton = document.createElement('button');
+  minimizeButton.id = 'ticketDrawerMinimize';
+  minimizeButton.className = 'ticket-close ticket-minimize';
+  minimizeButton.type = 'button';
+  minimizeButton.setAttribute('aria-label', 'Minimize ticket to chat dock');
+  minimizeButton.title = 'Minimize to chat window';
+  minimizeButton.innerHTML = minus;
+  closeButton.before(minimizeButton);
+  minimizeButton.addEventListener('click', minimize);
+  function schedulePoll() {
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(async () => {
+      if (!document.hidden) await Promise.allSettled([...chats.values()].map(refresh));
+      schedulePoll();
+    }, 5000);
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { [...chats.values()].forEach(refresh); schedulePoll(); } });
+  window.addEventListener('pagehide', () => { clearTimeout(pollTimer); chats.forEach(c => c.controller?.abort()); });
+  schedulePoll();
+})();
+
+</script>
