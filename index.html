@@ -18880,3 +18880,14 @@ html[data-theme="dark"] #ticketPeriodSelector button.active {
 
 
 
+
+<style id="ticket-channel-chrome-tabs">
+.ticket-drawer-head .ticket-channel-switch{isolation:isolate;overflow:visible!important;padding:5px 7px 0!important;gap:10px!important;border-radius:12px 12px 0 0!important;border:0!important;border-bottom:1px solid var(--border)!important;background:color-mix(in srgb,var(--text-muted) 15%,var(--bg-card))!important;box-shadow:none!important}
+.ticket-drawer-head .ticket-channel-switch button{position:relative!important;align-self:stretch!important;border:0!important;border-radius:11px 11px 0 0!important;min-height:36px!important;background:transparent!important;color:var(--text-muted)!important;font-weight:600!important;box-shadow:none!important;z-index:1}
+.ticket-drawer-head .ticket-channel-switch button:hover:not(.active){background:color-mix(in srgb,var(--bg-card) 45%,transparent)!important;color:var(--text-secondary)!important}
+.ticket-drawer-head .ticket-channel-switch button.active{background:var(--bg-card)!important;color:var(--text)!important;font-weight:750!important;border:0!important;box-shadow:0 -1px 3px rgba(20,39,28,.06)!important;z-index:2}
+.ticket-drawer-head .ticket-channel-switch button.active::before,.ticket-drawer-head .ticket-channel-switch button.active::after{content:""!important;display:block!important;position:absolute!important;bottom:0!important;width:10px!important;height:10px!important;background:transparent!important;pointer-events:none!important}
+.ticket-drawer-head .ticket-channel-switch button.active::before{left:-10px!important;border-radius:0 0 10px 0!important;box-shadow:4px 4px 0 3px var(--bg-card)!important}
+.ticket-drawer-head .ticket-channel-switch button.active::after{right:-10px!important;border-radius:0 0 0 10px!important;box-shadow:-4px 4px 0 3px var(--bg-card)!important}
+.ticket-drawer-head .ticket-channel-switch button:focus-visible{outline:2px solid var(--accent)!important;outline-offset:-3px!important}
+</style>
