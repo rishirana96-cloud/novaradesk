@@ -18929,3 +18929,12 @@ html[data-theme="light"] .ticket-drawer-head .ticket-channel-switch{--ticket-tab
 .ticket-drawer-head .ticket-assignment #ticketSlaState{position:static!important;inset:auto!important;transform:none!important;display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;width:auto!important;max-width:100%!important;margin:0 0 0 7px!important;padding:2px 0 2px 12px!important;border-left:1px solid var(--border)!important;text-align:left!important;font-size:10px!important;line-height:1.4!important;font-weight:600!important;white-space:nowrap}
 @media(max-width:620px){.ticket-drawer-head .ticket-assignment #ticketSlaState{margin-left:0!important}}
 </style>
+
+<style id="report-type-control-outline">
+#reportModeToolbar{position:relative!important;isolation:isolate}
+#reportModeToolbar::before{content:"";position:absolute;left:0;right:0;top:0;bottom:0;border:1px solid var(--border-strong);border-radius:8px;pointer-events:none;z-index:-1}
+#reportModeToolbar:has(#reportWorkspaceJump.open)::before{right:45px}
+#reportModeToolbar #reportWorkspaceJump{width:30px!important;height:30px!important;flex:0 0 30px!important}
+#reportModeToolbar:focus-within::before{border-color:var(--accent)}
+@media(max-width:900px){#reportModeToolbar:has(#reportWorkspaceJump.open)::before{right:45px}}
+</style>
