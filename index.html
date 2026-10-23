@@ -9341,7 +9341,7 @@ ORDER BY ticket_count DESC</textarea>
             <span class="ticket-title-copy"><span id="ticketDrawerTitle" class="ticket-drawer-title">Ticket</span><button id="ticketCopyId" class="ticket-copy-id" type="button" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>
             <div id="ticketTags" class="ticket-tags"></div>
         </div>
-        <div class="ticket-assignment"><span class="ticket-assignment-avatar" aria-hidden="true">NC</span><span class="ticket-assignment-copy"><small>Assigned agent</small><select id="ticketAgentSelect" class="ticket-agent-select" aria-label="Assigned agent"><option>Novara CX Support</option></select></span></div>
+        <div class="ticket-assignment"><small class="ticket-assignment-label">Assigned to</small><span class="ticket-assignment-avatar" aria-hidden="true">NC</span><span class="ticket-assignment-copy"><select id="ticketAgentSelect" class="ticket-agent-select" aria-label="Assigned agent"><option>Novara CX Support</option></select></span></div>
     </div>
     <div class="ticket-head-side">
     <div class="ticket-head-controls">
@@ -18912,4 +18912,14 @@ html[data-theme="light"] .ticket-drawer-head .ticket-channel-switch{--ticket-tab
 
 <style id="ai-assist-label-size">
 #agentAssistDockToggle strong{font-size:11px!important}
+</style>
+
+<style id="ticket-assignment-inline">
+.ticket-drawer-head .ticket-assignment{display:flex!important;align-items:center!important;gap:7px!important;width:max-content!important;max-width:100%!important;min-width:0!important;padding:0!important;border:0!important;border-radius:7px!important;background:transparent!important;box-shadow:none!important;margin-top:6px!important;margin-bottom:4px!important}
+.ticket-drawer-head .ticket-assignment-label{flex:0 0 auto;font-size:10px!important;line-height:1.4;color:var(--text-muted);font-weight:500;letter-spacing:0;text-transform:none}
+.ticket-drawer-head .ticket-assignment-avatar{grid-row:auto!important;flex:0 0 24px!important;width:24px!important;height:24px!important;border-radius:50%!important;background:color-mix(in srgb,var(--accent) 15%,var(--surface))!important;color:var(--accent-dark)!important;font-size:9px!important;font-weight:750!important}
+.ticket-drawer-head .ticket-assignment-copy{display:block!important;min-width:0!important}
+.ticket-drawer-head .ticket-assignment-copy .unified-select-trigger,.ticket-drawer-head .ticket-assignment-copy .ticket-agent-select{top:0!important;min-width:0!important;width:auto!important;max-width:100%!important;min-height:29px!important;height:29px!important;padding:3px 7px!important;border:0!important;border-radius:6px!important;background:transparent!important;box-shadow:none!important;font-size:11px!important;font-weight:650!important}
+.ticket-drawer-head .ticket-assignment-copy .unified-select-trigger:hover,.ticket-drawer-head .ticket-assignment-copy .ticket-agent-select:hover{background:var(--surface-hover)!important}
+@media(max-width:620px){.ticket-drawer-head .ticket-assignment{flex-wrap:wrap}.ticket-drawer-head .ticket-assignment-copy{max-width:calc(100% - 90px)}}
 </style>
