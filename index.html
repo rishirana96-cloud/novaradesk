@@ -9341,7 +9341,7 @@ ORDER BY ticket_count DESC</textarea>
             <span class="ticket-title-copy"><span id="ticketDrawerTitle" class="ticket-drawer-title">Ticket</span><button id="ticketCopyId" class="ticket-copy-id" type="button" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>
             <div id="ticketTags" class="ticket-tags"></div>
         </div>
-        <div class="ticket-assignment"><small class="ticket-assignment-label">Assigned to</small><span class="ticket-assignment-avatar" aria-hidden="true">NC</span><span class="ticket-assignment-copy"><select id="ticketAgentSelect" class="ticket-agent-select" aria-label="Assigned agent"><option>Novara CX Support</option></select></span></div>
+        <div class="ticket-assignment"><small class="ticket-assignment-label">Assigned to</small><span class="ticket-assignment-avatar" aria-hidden="true">NC</span><span class="ticket-assignment-copy"><select id="ticketAgentSelect" class="ticket-agent-select" aria-label="Assigned agent"><option>Novara CX Support</option></select></span><div id="ticketSlaState" class="ticket-sla-state due" aria-live="polite">Due in 18 minutes</div></div>
     </div>
     <div class="ticket-head-side">
     <div class="ticket-head-controls">
@@ -9358,7 +9358,7 @@ ORDER BY ticket_count DESC</textarea>
         </div>
         <button id="ticketDrawerClose" class="ticket-close" type="button" aria-label="Close ticket">✕</button>
     </div>
-    <div id="ticketSlaState" class="ticket-sla-state due" aria-live="polite">Due in 18 minutes</div>
+    
     <div id="ticketChannelSwitch" class="ticket-channel-switch" role="tablist" aria-label="Ticket channel">
         <button id="ticketChannelChat" class="active" type="button" role="tab" aria-selected="true" data-ticket-channel="chat"><svg class="ticket-tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9H13a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat</span></button>
         <button id="ticketChannelCall" type="button" role="tab" aria-selected="false" data-ticket-channel="call"><svg class="ticket-tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg><span>Calls</span></button>
@@ -18922,4 +18922,10 @@ html[data-theme="light"] .ticket-drawer-head .ticket-channel-switch{--ticket-tab
 .ticket-drawer-head .ticket-assignment-copy .unified-select-trigger,.ticket-drawer-head .ticket-assignment-copy .ticket-agent-select{top:0!important;min-width:0!important;width:auto!important;max-width:100%!important;min-height:29px!important;height:29px!important;padding:3px 7px!important;border:0!important;border-radius:6px!important;background:transparent!important;box-shadow:none!important;font-size:11px!important;font-weight:650!important}
 .ticket-drawer-head .ticket-assignment-copy .unified-select-trigger:hover,.ticket-drawer-head .ticket-assignment-copy .ticket-agent-select:hover{background:var(--surface-hover)!important}
 @media(max-width:620px){.ticket-drawer-head .ticket-assignment{flex-wrap:wrap}.ticket-drawer-head .ticket-assignment-copy{max-width:calc(100% - 90px)}}
+</style>
+
+<style id="ticket-sla-inline-context">
+.ticket-drawer-head .ticket-assignment{flex-wrap:wrap!important}
+.ticket-drawer-head .ticket-assignment #ticketSlaState{position:static!important;inset:auto!important;transform:none!important;display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;width:auto!important;max-width:100%!important;margin:0 0 0 7px!important;padding:2px 0 2px 12px!important;border-left:1px solid var(--border)!important;text-align:left!important;font-size:10px!important;line-height:1.4!important;font-weight:600!important;white-space:nowrap}
+@media(max-width:620px){.ticket-drawer-head .ticket-assignment #ticketSlaState{margin-left:0!important}}
 </style>
