@@ -9270,13 +9270,13 @@ ORDER BY ticket_count DESC</textarea>
 <div id="ticketDrawerBackdrop" class="ticket-drawer-backdrop" aria-hidden="true">
 <aside id="ticketQueuePanel" class="ticket-queue-panel" aria-label="Tickets in current view">
 <div class="ticket-queue-head">
-    <div><span>Current view</span><strong id="ticketQueueTitle">All Tickets</strong></div>
+    <div><span>Current view</span><strong id="ticketQueueTitle" hidden>All Tickets</strong><div class="ticket-current-view-picker"><select id="ticketQueueViewSelect" aria-label="Change ticket view"></select></div></div>
     <button id="agentAssistDockToggle" class="agent-assist-dock-toggle" type="button" aria-label="Open AI Agent Assist" aria-expanded="false">
         <span aria-hidden="true">✦</span><strong>AI Assist</strong>
     </button>
 </div>
 <button id="ticketQueueResizeHandle" class="ticket-queue-resize-handle" type="button" aria-label="Resize Current View panel" title="Drag to resize Current View"></button>
-<label class="ticket-queue-view"><span>Switch queue</span><select id="ticketQueueViewSelect" aria-label="Change ticket view"></select></label>
+
 <label class="ticket-queue-search"><span aria-hidden="true">⌕</span><input id="ticketQueueSearch" type="search" placeholder="Search this queue…" autocomplete="off"></label>
 <div id="ticketQueueList" class="ticket-queue-list"></div>
 <nav id="ticketQueuePagination" class="ticket-queue-pagination" aria-label="Ticket queue pages"></nav>
@@ -18942,4 +18942,14 @@ html[data-theme="light"] .ticket-drawer-head .ticket-channel-switch{--ticket-tab
 <style id="ticket-reply-black-border">
 .ticket-composer #ticketReplyText,.ticket-composer #ticketReplyText:hover,.ticket-composer #ticketReplyText:focus,.ticket-composer #ticketReplyText:focus-visible{border:1px solid #171717!important;outline:none!important;box-shadow:none!important}
 .ticket-composer .ticket-reply-shell,.ticket-composer .ticket-reply-shell:focus-within{outline:none!important;box-shadow:none!important}
+</style>
+
+<style id="ticket-current-view-dropdown">
+.ticket-queue-head>div{min-width:0!important}
+#ticketQueueTitle[hidden]{display:none!important}
+.ticket-current-view-picker{display:block!important;min-width:0;max-width:100%}
+.ticket-current-view-picker .unified-select{width:100%!important;min-width:0!important}
+.ticket-current-view-picker .unified-select-trigger,.ticket-current-view-picker select{width:100%!important;min-width:0!important;min-height:30px!important;height:auto!important;padding:2px 20px 2px 0!important;border:0!important;border-radius:5px!important;background:transparent!important;box-shadow:none!important;color:var(--text)!important;font-size:16px!important;font-weight:750!important;letter-spacing:-.02em!important;text-transform:none!important}
+.ticket-current-view-picker .unified-select-trigger:hover{background:var(--surface-hover)!important}
+.ticket-current-view-picker .unified-select-trigger>span{color:var(--text)!important;font-size:16px!important;font-weight:750!important;letter-spacing:-.02em!important;text-transform:none!important}
 </style>
