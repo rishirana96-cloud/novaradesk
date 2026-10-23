@@ -19201,7 +19201,7 @@ body:has(#ticketChatDock:not(:empty)) #chatToggle{bottom:65px!important}
     const id = key(openTicketId);
     if (window.ticketReplySending) return tell('Please wait for your reply to finish sending.');
     const data = lastOpenTicketData;
-    if (!data?.ticket || key(data.ticket.id) !== id || ticketDetailRequestInFlight) return tell('Please wait for this ticket to finish loading.');
+    if (!data?.ticket || key(data.ticket.id) !== id) return tell('Please wait for this ticket to finish loading.');
     if (!chats.has(id) && chats.size >= MAX_CHATS) return tell('Four chat windows are already open. Close one window to dock another ticket.');
     rememberMain();
     const chat = chats.get(id) || makeChat(id, data);
