@@ -18882,8 +18882,8 @@ html[data-theme="dark"] #ticketPeriodSelector button.active {
 
 
 <style id="ticket-channel-chrome-tabs">
-.ticket-drawer-head{position:relative!important;padding-bottom:12px!important;overflow:visible!important}
-.ticket-drawer-head .ticket-channel-switch{--ticket-tab-fill:var(--surface);--tab-edge:color-mix(in srgb,var(--text) 38%,var(--ticket-tab-fill));position:absolute!important;bottom:-1px!important;right:18px!important;isolation:isolate;overflow:visible!important;height:39px!important;margin:0!important;padding:0 10px!important;gap:6px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+
+.ticket-drawer-head .ticket-channel-switch{--ticket-tab-fill:var(--surface);--tab-edge:var(--border);position:absolute!important;bottom:-1px!important;right:18px!important;isolation:isolate;overflow:visible!important;height:39px!important;margin:0!important;padding:0 10px!important;gap:6px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 .ticket-drawer-head .ticket-channel-switch button{position:relative!important;align-self:stretch!important;min-height:39px!important;margin:0!important;padding:0 18px!important;border:1px solid transparent!important;border-bottom:0!important;border-radius:12px 12px 0 0!important;background:color-mix(in srgb,var(--text-muted) 10%,var(--surface))!important;color:var(--text-muted)!important;font-weight:600!important;box-shadow:none!important;z-index:1}
 .ticket-drawer-head .ticket-channel-switch button:hover:not(.active){color:var(--text-secondary)!important;background:color-mix(in srgb,var(--text-muted) 17%,var(--surface))!important}
 .ticket-drawer-head .ticket-channel-switch button.active{border-color:var(--tab-edge)!important;border-bottom:0!important;background:var(--ticket-tab-fill)!important;color:var(--text)!important;font-weight:750!important;box-shadow:none!important;z-index:3}
@@ -18891,12 +18891,12 @@ html[data-theme="dark"] #ticketPeriodSelector button.active {
 .ticket-drawer-head .ticket-channel-switch button.active::before{left:-12px!important;border:0!important;border-right:1px solid var(--tab-edge)!important;border-bottom:1px solid var(--tab-edge)!important;border-radius:0 0 12px 0!important;box-shadow:5px 5px 0 4px var(--ticket-tab-fill)!important}
 .ticket-drawer-head .ticket-channel-switch button.active::after{right:-12px!important;border:0!important;border-left:1px solid var(--tab-edge)!important;border-bottom:1px solid var(--tab-edge)!important;border-radius:0 0 0 12px!important;box-shadow:-5px 5px 0 4px var(--ticket-tab-fill)!important}
 .ticket-drawer-head .ticket-channel-switch button:focus-visible{outline:2px solid var(--accent)!important;outline-offset:-4px!important}
-@media(max-width:900px){.ticket-drawer-head{padding-bottom:0!important}.ticket-drawer-head .ticket-channel-switch{position:relative!important;right:auto!important;bottom:-1px!important;width:100%!important;margin-top:10px!important}.ticket-drawer-head .ticket-channel-switch button{flex:1;min-width:0!important;padding-inline:9px!important}}
+@media(max-width:900px){.ticket-drawer-head .ticket-channel-switch{position:relative!important;right:auto!important;bottom:-1px!important;width:100%!important;margin-top:10px!important}.ticket-drawer-head .ticket-channel-switch button{flex:1;min-width:0!important;padding-inline:9px!important}}
 
 html[data-theme="light"] .ticket-drawer-head .ticket-channel-switch{--ticket-tab-fill:#f5f8f6}
 .ticket-drawer-head .ticket-channel-switch button:not(.active){border-radius:9px 9px 0 0!important;background:transparent!important}
 .ticket-drawer-head .ticket-channel-switch button.active{isolation:isolate}
 .ticket-drawer-head .ticket-channel-switch button.active::before,.ticket-drawer-head .ticket-channel-switch button.active::after{z-index:-1!important}
-.ticket-drawer-head .ticket-sla-state{top:58px!important;bottom:auto!important;transform:none!important}
-@media(max-width:900px){.ticket-drawer-head .ticket-sla-state{position:static!important}}
+
+
 </style>
