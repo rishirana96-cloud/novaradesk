@@ -19011,6 +19011,8 @@ html[data-theme="light"] .ticket-drawer-head .ticket-channel-switch{--ticket-tab
 #ticketDockNotice{position:fixed;z-index:1101;bottom:70px;left:50%;transform:translateX(-50%);max-width:min(440px,90vw);padding:11px 16px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);color:var(--text);font-size:12px;box-shadow:0 5px 20px #0002;display:none}
 #ticketDockNotice.visible{display:block}
 body:has(#ticketChatDock:not(:empty)) #chatToggle{bottom:65px!important}
+body:has(#ticketChatDock .dock-chat:not([hidden])) #ticketWorkspaceFloater{bottom:70px!important}
+body:has(#ticketChatDock .dock-chat:not(.collapsed):not([hidden])) #ticketWorkspaceFloater{bottom:min(466px,calc(100dvh - 89px))!important}
 @media(max-width:760px){#ticketChatDock{left:8px;right:8px;justify-content:flex-start}#ticketChatDock .dock-chat{flex:0 0 min(310px,calc(100vw - 28px));min-width:250px;max-height:calc(100dvh - 110px)}}
 @media(prefers-reduced-motion:reduce){#ticketChatDock *{scroll-behavior:auto!important}}
 
@@ -19120,7 +19122,7 @@ body:has(#ticketChatDock:not(:empty)) #chatToggle{bottom:65px!important}
     if (!collapsed) { acknowledge(chat); chat.thread.scrollTop = chat.thread.scrollHeight; }
   }
   async function refresh(chat) {
-    if (chat.fetching || chat.sending || chat.suspended || !chats.has(chat.id)) return;
+    if (chat.fetching || chat.sending || chat.suspended || !chats.has(chat.id) || Date.now() < (chat.retryAt || 0)) return;
     chat.fetching = true;
     const controller = new AbortController();
     chat.controller = controller;
@@ -19134,10 +19136,14 @@ body:has(#ticketChatDock:not(:empty)) #chatToggle{bottom:65px!important}
       const next = customerSignature(data);
       if (chat.customerSignature !== next && (chat.collapsed || !chat.node.contains(document.activeElement))) chat.unread = true;
       chat.customerSignature = next;
+      chat.failures = 0;
+      chat.retryAt = 0;
       chat.data = data;
       chat.error.textContent = '';
       renderMessages(chat);
     } catch (error) {
+      chat.failures = (chat.failures || 0) + 1;
+      chat.retryAt = Date.now() + Math.min(30000, 5000 * Math.pow(2, chat.failures));
       if (chats.has(chat.id)) chat.error.textContent = 'Chat could not refresh. Retrying automatically.';
     } finally { clearTimeout(timeout); chat.fetching = false; }
   }
