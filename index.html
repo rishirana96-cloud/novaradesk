@@ -18189,6 +18189,29 @@ html[data-theme] #panel-tickets .ticket-workspace-toolbar .ticket-view-control s
     outline: none !important;
 }
 </style>
+
+<style id="dashboard-selector-match-report-type">
+/* Match the borderless Report Type and Ticket View toolbar controls. */
+#dashboardToolbarSelector #dashboardTitleTrigger {
+    padding: 4px 7px 4px 10px !important;
+    column-gap: 12px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+#dashboardToolbarSelector #dashboardTitleTrigger:focus,
+#dashboardToolbarSelector #dashboardTitleTrigger:focus-within,
+#dashboardToolbarSelector #dashboardTitleTrigger[aria-expanded="true"] {
+    border: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+#dashboardToolbarSelector #dashboardTitleTrigger > svg {
+    stroke: var(--text) !important;
+}
+</style>
 </body>
 </html>
 
