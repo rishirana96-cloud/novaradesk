@@ -10225,6 +10225,7 @@ try {
         "—";
     document.getElementById("humanFirstResponseTime").textContent = "—";
     document.getElementById("humanSlaAttainment").textContent = "—";
+    renderAnalyticsExplorers(analyticsData, resolutionData, ratingsData);
     const currentKpiSummary = summarizeKpiPeriod(analyticsData, resolutionData, ratingsData, sentimentData);
     const previousKpiSummary = summarizeKpiPeriod(previousAnalyticsData, previousResolutionData, previousRatingsData, previousSentimentData);
     updateKpiComparisons(currentKpiSummary, previousKpiSummary, comparisonPeriod.label);
@@ -10967,6 +10968,89 @@ const chartGrid =
 /* =====================================================
    AI TREND
 ====================================================== */
+
+function renderAnalyticsExplorers(days, resolution, ratings) {
+    const number = value => Math.max(0, Number(value) || 0);
+    const fmt = value => number(value).toLocaleString("en-IN", {maximumFractionDigits:1});
+    const mount = (panelId, id, title, subtitle) => {
+        let section = document.getElementById(id);
+        if (!section) {
+            section = document.createElement("section");
+            section.id = id;
+            section.className = "analytics-explorer";
+            const heading = document.createElement("h2");
+            heading.textContent = title;
+            const description = document.createElement("p");
+            description.textContent = subtitle;
+            const grid = document.createElement("div");
+            grid.className = "analytics-explorer-grid";
+            section.append(heading, description, grid);
+            const panel = document.getElementById(panelId);
+            panel.querySelector(".kpi-grid").after(section);
+        }
+        const grid = section.querySelector(".analytics-explorer-grid");
+        grid.replaceChildren();
+        return grid;
+    };
+    const card = (grid, title, note, entries, suffix = "", fixedMax = null) => {
+        const article = document.createElement("article");
+        article.className = "analytics-explorer-card";
+        const heading = document.createElement("h3");
+        heading.textContent = title;
+        const description = document.createElement("p");
+        description.textContent = note;
+        article.append(heading, description);
+        if (!entries.length) {
+            const empty = document.createElement("p");
+            empty.className = "analytics-explorer-empty";
+            empty.textContent = "No data in the selected period.";
+            article.append(empty);
+        } else {
+            const max = fixedMax || Math.max(...entries.map(row => row.value), 1);
+            entries.forEach(row => {
+                const item = document.createElement("div");
+                item.className = "analytics-explorer-row";
+                const label = document.createElement("span");
+                label.textContent = row.label;
+                const value = document.createElement("strong");
+                value.textContent = fmt(row.value) + suffix;
+                const track = document.createElement("div");
+                track.className = "analytics-explorer-track";
+                const fill = document.createElement("div");
+                fill.style.width = Math.min(100, row.value / max * 100) + "%";
+                track.append(fill);
+                item.append(label, value, track);
+                article.append(item);
+            });
+        }
+        grid.append(article);
+    };
+    const ai = mount("panel-ai","aiAnalyticsExplorer","Demand & resolution","A closer look at activity in your selected date range.");
+    const human = mount("panel-human","humanAnalyticsExplorer","Handoffs & feedback","See when human support is needed and how customers rated their experience.");
+    const weekdays = Array.from({length:7},()=>({total:0,days:0}));
+    days.forEach(day => {
+        const date = new Date(String(day.date).slice(0,10) + "T12:00:00Z");
+        if (Number.isNaN(date.getTime())) return;
+        const group = weekdays[(date.getUTCDay()+6)%7];
+        group.total += number(day.total_conversations);
+        group.days++;
+    });
+    card(ai,"Demand by weekday","Average conversations per reported day; missing days are excluded.",
+        ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].flatMap((label,i) => weekdays[i].days ? [{label:label+" · "+weekdays[i].days+" days",value:weekdays[i].total/weekdays[i].days}] : []));
+    const resolutionTotal = resolution.reduce((sum,day)=>sum+number(day.total),0);
+    const confirmed = resolution.reduce((sum,day)=>sum+number(day.resolved_count),0);
+    card(ai,"Confirmed resolution","User-confirmed resolutions out of resolution records. Other records do not necessarily mean unresolved.",
+        resolutionTotal ? [{label:"Confirmed resolved · "+fmt(confirmed)+" / "+fmt(resolutionTotal),value:confirmed/resolutionTotal*100},{label:"Other resolution records",value:Math.max(0,resolutionTotal-confirmed)/resolutionTotal*100}] : [],"%",100);
+    const ordered = [...days].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+    const recent = ordered.filter(day=>number(day.total_conversations)>0).slice(-7);
+    card(human,"Daily handoff rate","Escalations ÷ conversations. Latest 7 reported days with conversations in the selected period.",
+        recent.map(day=>({label:String(day.date).slice(0,10)+" · "+fmt(day.escalated)+" / "+fmt(day.total_conversations),value:number(day.escalated)/number(day.total_conversations)*100})),"%",100);
+    const feedback = ["yes","partial","no"].map((key,i)=>({label:["Positive","Partially satisfied","Negative"][i],value:ratings.filter(row=>row.rating===key).reduce((sum,row)=>sum+number(row.count),0)}));
+    const feedbackTotal = feedback.reduce((sum,row)=>sum+row.value,0);
+    card(human,"Customer feedback",fmt(feedbackTotal)+" ratings recorded. Percentages include rated responses only.",
+        feedbackTotal ? feedback.map(row=>({label:row.label+" · "+fmt(row.value),value:row.value/feedbackTotal*100})) : [],"%",100);
+}
+
 function updateAITrendChart(
 labels,
 resolved,
@@ -18211,6 +18295,24 @@ html[data-theme] #panel-tickets .ticket-workspace-toolbar .ticket-view-control s
 #dashboardToolbarSelector #dashboardTitleTrigger > svg {
     stroke: var(--text) !important;
 }
+</style>
+
+
+<style id="analytics-explorer-style">
+.analytics-explorer{margin:24px 0 28px}
+.analytics-explorer>h2{font-size:17px;font-weight:750;letter-spacing:-.4px;color:var(--text)}
+.analytics-explorer>p{font-size:11px;color:var(--text-muted);margin:5px 0 16px;line-height:1.6}
+.analytics-explorer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.analytics-explorer-card{min-width:0;padding:24px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 5%,var(--surface)),var(--surface));box-shadow:0 5px 20px rgba(20,40,30,.035)}
+.analytics-explorer-card h3{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.2px}
+.analytics-explorer-card>p{font-size:10px;color:var(--text-muted);line-height:1.65;margin:6px 0 20px;max-width:60ch}
+.analytics-explorer-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 14px;margin-top:14px;font-size:10px;color:var(--text-secondary)}
+.analytics-explorer-row strong{font-size:11px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.analytics-explorer-track{grid-column:1/-1;height:7px;border-radius:99px;overflow:hidden;background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.analytics-explorer-track>div{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent-dark),var(--accent))}
+.analytics-explorer-card:nth-child(2) .analytics-explorer-track>div{background:var(--accent)}
+.analytics-explorer-empty{padding:32px 0}
+@media(max-width:850px){.analytics-explorer-grid{grid-template-columns:minmax(0,1fr)}.analytics-explorer-card{padding:20px}}
 </style>
 
 </body>
