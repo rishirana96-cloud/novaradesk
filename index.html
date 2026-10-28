@@ -4866,7 +4866,7 @@ window.NOVARA_DEMO_API = (() => {
         const isSignIn = isApi && url.indexOf("/auth/google") !== -1;
         if (window.NOVARA_DEMO_MODE && isApi) return window.NOVARA_DEMO_API(url, init);
         if (!isApi || isSignIn) return nativeFetch(input, init);
-        const token = sessionStorage.getItem(window.NOVARA_AUTH_TOKEN_KEY);
+        const token = localStorage.getItem(window.NOVARA_AUTH_TOKEN_KEY) || sessionStorage.getItem(window.NOVARA_AUTH_TOKEN_KEY);
         if (!token) return Promise.reject(new Error("Authentication required"));
         const options = Object.assign({}, init || {});
         options.headers = new Headers(options.headers || (input instanceof Request ? input.headers : undefined));
@@ -16601,7 +16601,7 @@ document.getElementById("sidebarUserRole").textContent=role;
 document.body.classList.add("novara-authenticated");
 }
 async function verifySession(){
-const token=sessionStorage.getItem(tokenKey);
+const token=localStorage.getItem(tokenKey)||sessionStorage.getItem(tokenKey);
 if(!token){setStatus("");return false;}
 try{
     const response=await fetch(API+"/auth/me");
@@ -16610,6 +16610,7 @@ try{
     showWorkspace(data.user);
     return true;
 }catch(error){
+    localStorage.removeItem(tokenKey);
     sessionStorage.removeItem(tokenKey);
     setStatus(error.message==="Your workspace access is awaiting approval."?error.message:"Your session has expired. Please sign in again.");
     return false;
@@ -16626,7 +16627,9 @@ try{
         return;
     }
     if(!authResponse.ok||!data.success)throw new Error(data.error||"Access could not be verified.");
-    sessionStorage.setItem(tokenKey,response.credential);
+    if(data.token)localStorage.setItem(tokenKey,data.token);
+    else sessionStorage.setItem(tokenKey,response.credential);
+    if(data.token)sessionStorage.removeItem(tokenKey);
     window.location.reload();
 }catch(error){setStatus(error.message||"Google sign-in could not be verified.")}
 }
@@ -16646,8 +16649,10 @@ document.getElementById("sidebarLogout")?.addEventListener("click",()=>{
     window.location.reload();
 });
 }else{
-document.getElementById("sidebarLogout")?.addEventListener("click",()=>{
+document.getElementById("sidebarLogout")?.addEventListener("click",async ()=>{
+    try{await fetch(API+"/auth/logout",{method:"POST"})}catch(error){}
     try{window.google?.accounts?.id?.disableAutoSelect()}catch(error){}
+    localStorage.removeItem(tokenKey);
     sessionStorage.removeItem(tokenKey);
     window.location.replace(window.location.pathname);
 });
