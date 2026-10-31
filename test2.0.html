@@ -10656,7 +10656,7 @@ return true;
 function refreshTicketWorkspace() {
 const filters = ticketFilterValues();
 const viewSource = ticketWorkspaceState.activeView === "needs_reply" ? ticketWorkspaceState.source.filter(ticket => ticket.needsReply) : ticketWorkspaceState.source;
-const filtered = viewSource.filter(ticket => ticketMatchesFilters(ticket, filters));
+const filtered = viewSource.filter(ticket => ticketMatchesFilters(ticket, filters) && (!window.testInboxSidebarPredicate || window.testInboxSidebarPredicate(ticket)));
 ticketWorkspaceState.filtered = filtered;
 const activeFilterCount = Object.values(filters).filter(Boolean).length;
 const count = document.getElementById("ticketFilterCount");
@@ -10710,6 +10710,7 @@ if (tableTitle) tableTitle.textContent = document.getElementById("ticketViewSele
 updateTicketsTable(filtered);
 updateTicketWorkspaceFloater();
 if (document.getElementById("ticketDrawerBackdrop")?.classList.contains("open")) renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
+window.refreshTestSidebar?.();
 }
 function updateTicketsDashboard(tickets, analyticsData, period) {
 ticketWorkspaceState.source = (tickets || []).map(normalizeTicket);
@@ -19786,5 +19787,133 @@ body.test2-inbox .footer{display:none!important}
   grip.addEventListener("pointermove",move);grip.addEventListener("pointerup",stop);grip.addEventListener("pointercancel",stop);
  });
  document.addEventListener("DOMContentLoaded",()=>{setSidebarPinned(true,false);sync();});
+})();
+</script>
+
+<style id="test2-inbox-sidebar">
+body.test2-compact #appSidebar>.nav,
+body.test2-compact #appSidebar>.sidebar-heading,
+body.test2-compact #sidebarPinToggle{display:none!important}
+body.test2-compact #appSidebar{padding:20px 12px 12px!important;gap:0!important}
+body.test2-compact #appSidebar .brand{padding:0 8px!important;margin-bottom:24px!important;flex-shrink:0}
+body.test2-compact #appSidebar .brand img{width:30px!important;height:30px!important}
+body.test2-compact #appSidebar .brand-name{font-size:17px!important}
+.test-inbox-navigation{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-bottom:12px}
+.test-inbox-nav-group{margin-bottom:19px}
+.test-inbox-nav-group h3{margin:0 12px 7px;color:var(--text-muted);font-size:11px;font-weight:600;letter-spacing:.01em}
+.test-inbox-nav-link{display:flex;align-items:center;gap:10px;width:100%;min-height:35px;padding:7px 11px;border:0;border-radius:7px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer;text-decoration:none}
+.test-inbox-nav-link:hover{background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--text)}
+.test-inbox-nav-link.active{background:color-mix(in srgb,var(--accent) 15%,var(--bg-card));color:var(--text);font-weight:650}
+.test-inbox-nav-link svg{width:17px;height:17px;flex:0 0 17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.test-inbox-nav-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.test-inbox-nav-count{color:var(--text-muted);font-size:11px;min-width:18px;text-align:right;font-variant-numeric:tabular-nums}
+.test-inbox-nav-link[data-inbox-filter="needs"] svg{color:#bc8b28}
+.test-inbox-nav-link[data-inbox-filter="resolved"] svg{color:#498d72}
+.test-inbox-nav-link[data-inbox-filter="channel:whatsapp"] svg{color:#22a66a}
+.test-inbox-nav-link[data-inbox-filter="channel:instagram"] svg{color:#bd5987}
+body.test2-compact #appSidebar .agent-profile{margin-top:8px!important;padding:10px 8px!important;min-height:58px!important;flex-shrink:0;gap:8px!important}
+body.test2-compact #appSidebar .agent-profile-info{min-width:0!important;flex:1}
+body.test2-compact #appSidebar .agent-profile-info>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px}
+body.test2-compact #appSidebar .authenticated-profile::after{display:none!important}
+body.test2-compact #appSidebar #sidebarLogout{font-size:10px!important;max-width:44px;white-space:normal}
+@media(min-width:901px){
+ body.test2-compact #appSidebar,
+ body.test2-compact.sidebar-pinned #appSidebar,
+ body.test2-compact.test2-inbox.sidebar-pinned #appSidebar{width:226px!important;max-width:226px!important;transform:none!important}
+ body.test2-compact .main,
+ body.test2-compact.sidebar-pinned .main,
+ body.test2-compact.test2-inbox.sidebar-pinned .main{margin-left:226px!important;width:calc(100% - 226px)!important}
+ body.test2-compact #appSidebar .brand-product,
+ body.test2-compact #appSidebar .agent-profile-info{display:block!important;opacity:1!important;visibility:visible!important;transform:none!important}
+ body.test2-compact #appSidebar .system-status{display:none!important}
+}
+@media(max-width:900px){
+ body.test2-compact #appSidebar .brand-product,
+ body.test2-compact #appSidebar .agent-profile-info{display:block!important;opacity:1!important;visibility:visible!important;transform:none!important}
+}
+</style>
+
+<script id="test2-inbox-sidebar-behaviour">
+(()=>{
+ const sidebar=document.getElementById("appSidebar");
+ const nav=document.createElement("nav");
+ nav.className="test-inbox-navigation";nav.setAttribute("aria-label","Inbox navigation");
+ const paths={
+ inbox:'<path d="M4 4h16v16H4zM4 14h5l2 3h2l2-3h5"/>',
+ needs:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 3v.1"/>',
+ unresolved:'<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>',
+ resolved:'<path d="m4 12 5 5L20 6"/>',
+ person:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
+ web:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+ whatsapp:'<path d="M4 19 3 22l5-2a9 9 0 1 0-4-4"/><path d="M8 7c0 5 4 8 8 9l1-3-3-1-1 1-3-3 1-1-1-3Z"/>',
+ instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
+ email:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',
+ chart:'<path d="M4 3v18h17M8 16v-5m5 5V6m5 10V9"/>'
+ };
+ const icon=name=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[name]||paths.web)+'</svg>';
+ const button=(id,label,glyph)=>'<button type="button" class="test-inbox-nav-link" data-inbox-filter="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span><span class="test-inbox-nav-count"></span></button>';
+ const group=(name,html)=>'<section class="test-inbox-nav-group"><h3>'+name+'</h3>'+html+'</section>';
+ const appLinks=[["sidebarAnalytics","Analytics","chart"],["sidebarCustomers","Customers","person"],["sidebarReports","Reports","chart"],["sidebarChatbot","AI Agent","web"],["sidebarKnowledge","Knowledge Base","inbox"],["sidebarWorkflows","Workflows","web"],["sidebarSettings","Settings","web"]];
+ nav.innerHTML=group("Triage",button("all","All","inbox")+button("needs","Needs you","needs")+button("unresolved","Unresolved","unresolved")+button("resolved","Resolved","resolved"))+
+ group("Conversations",button("conversations","All conversations","inbox")+button("unassigned","Unassigned","person"))+
+ group("Team",'<div id="testInboxTeam"></div>')+
+ group("Channels",button("channels","All channels","inbox")+button("channel:website","Web widget","web")+button("channel:whatsapp","WhatsApp","whatsapp")+button("channel:instagram","Instagram","instagram")+button("channel:email","Email","email"))+
+ group("Workspace",appLinks.map(([id,label,glyph])=>'<button type="button" class="test-inbox-nav-link" data-inbox-page="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span></button>').join(""));
+ sidebar.querySelector(".nav").after(nav);
+ let active="all";
+ const matches=(ticket,key)=>{
+  if(key==="needs")return ticket.needsReply;
+  if(key==="unresolved")return ticket.status!=="resolved";
+  if(key==="resolved")return ticket.status==="resolved";
+  if(key==="unassigned")return !ticket.agent||ticket.agent==="Unassigned";
+  if(key.startsWith("channel:"))return ticket.channel===key.slice(8);
+  if(key.startsWith("agent:"))return ticket.agent===key.slice(6);
+  return true;
+ };
+ function render(){
+  const source=ticketWorkspaceState.source||[];
+  const host=document.getElementById("testInboxTeam");
+  const agents=[...new Set(source.map(t=>t.agent).filter(a=>a&&a!=="Unassigned"))];
+  const agentSignature=JSON.stringify(agents);
+  if(host.dataset.signature!==agentSignature){
+   host.replaceChildren();
+   agents.forEach(agent=>{
+    const item=document.createElement("button");item.type="button";item.className="test-inbox-nav-link";item.dataset.inboxFilter="agent:"+agent;
+    item.innerHTML=icon("person")+'<span class="test-inbox-nav-label"></span><span class="test-inbox-nav-count"></span>';
+    item.querySelector(".test-inbox-nav-label").textContent=agent;host.append(item);
+   });
+   if(!agents.length){const item=document.createElement("p");item.textContent="No assigned agents";item.style.cssText="font-size:11px;color:var(--text-muted);padding:6px 12px";host.append(item);}
+   host.dataset.signature=agentSignature;
+  }
+  nav.querySelectorAll("[data-inbox-filter]").forEach(item=>{
+   item.querySelector(".test-inbox-nav-count").textContent=source.filter(t=>matches(t,item.dataset.inboxFilter)).length;
+   const selected=currentTab==="tickets"&&item.dataset.inboxFilter===active;
+   item.classList.toggle("active",selected);item.setAttribute("aria-current",selected?"page":"false");
+  });
+  nav.querySelectorAll("[data-inbox-page]").forEach(item=>item.classList.toggle("active",document.getElementById(item.dataset.inboxPage)?.classList.contains("active")));
+ }
+ nav.addEventListener("click",event=>{
+  const page=event.target.closest("[data-inbox-page]");
+  if(page){document.getElementById(page.dataset.inboxPage)?.click();render();return;}
+  const item=event.target.closest("[data-inbox-filter]");if(!item)return;
+  active=item.dataset.inboxFilter;
+  window.testInboxSidebarPredicate=t=>matches(t,active);
+  applyTicketFilterValues({});ticketWorkspaceState.activeView="all";ticketWorkspaceState.page=1;
+  document.getElementById("ticketViewSelect").value="all";
+  if(currentTab!=="tickets")showWorkspace("tickets",false);
+  refreshTicketWorkspace();renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
+  const rows=ticketWorkspaceState.filtered;
+  if(rows.length&&!rows.some(t=>String(t.dbId)===String(openTicketId)))openTicket(rows[0].dbId);
+  else if(!rows.length)closeTicket();
+  render();
+  document.getElementById("ticketQueueTitle").hidden=false;
+  document.getElementById("ticketQueueTitle").textContent=item.querySelector(".test-inbox-nav-label").textContent;
+  sidebar.classList.remove("mobile-open");document.body.classList.remove("mobile-sidebar-open");
+ });
+ const priorShow=showWorkspace;
+ showWorkspace=function(...args){const result=priorShow(...args);render();return result;};
+ window.refreshTestSidebar=render;
+ document.addEventListener("DOMContentLoaded",render);
+ render();
 })();
 </script>
