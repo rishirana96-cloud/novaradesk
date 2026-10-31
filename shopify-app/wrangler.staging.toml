@@ -1,0 +1,12 @@
+name = "novaradesk-shopify-staging"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+[vars]
+SHOPIFY_API_KEY = "817075945a261da7fc413a19b6582220"
+SHOPIFY_API_VERSION = "2026-10"
+[[d1_databases]]
+binding = "DB"
+database_name = "novaradesk-shopify-staging"
+database_id = "457e7df7-46a0-446f-92bd-6f2ca580a26e"
+migrations_dir = "migrations"
