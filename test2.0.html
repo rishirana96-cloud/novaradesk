@@ -19685,6 +19685,18 @@ body.test2-inbox #ticketDrawerBackdrop .agent-assist-btn{font-size:11px!importan
 }
 </style>
 
+<style id="test2-inbox-layout-corrections">
+@media(min-width:901px){
+ body.test2-compact.sidebar-pinned #appSidebar{width:232px!important;max-width:232px!important}
+ body.test2-compact.test2-inbox.sidebar-pinned #appSidebar{width:208px!important;max-width:208px!important}
+}
+body.test2-inbox #ticketDrawerBackdrop #ticketContext .ticket-context-section{background:transparent!important;border:0!important;border-radius:0!important}
+body.test2-inbox #ticketDrawerBackdrop [aria-label="Minimize ticket to chat dock"]{display:none!important}
+body.test2-inbox .test-customer-heading{font-size:16px;font-weight:700;line-height:1.3;margin-bottom:5px;color:var(--text)}
+body.test2-inbox #ticketDrawerBackdrop .ticket-drawer-title{font-size:11px!important;color:var(--text-muted)!important}
+body.test2-inbox .footer{display:none!important}
+</style>
+
 <script id="test2-inbox-behaviour">
 (() => {
  const shell=document.getElementById("ticketDrawerBackdrop");
@@ -19709,6 +19721,9 @@ body.test2-inbox #ticketDrawerBackdrop .agent-assist-btn{font-size:11px!importan
  back.type="button";back.className="test-inbox-back";back.textContent="‹ Inbox";
  drawer.querySelector(".ticket-drawer-head").prepend(back);
  back.addEventListener("click",()=>{shell.classList.remove("test-has-selection");shell.querySelector(".ticket-queue-search input")?.focus();});
+ const customerHeading=document.createElement("div");
+ customerHeading.className="test-customer-heading";
+ drawer.querySelector(".ticket-heading-row").before(customerHeading);
  const contextToggle=document.createElement("button");
  contextToggle.type="button";contextToggle.className="test-context-toggle";contextToggle.textContent="Customer";
  contextToggle.setAttribute("aria-expanded","false");
@@ -19750,6 +19765,7 @@ body.test2-inbox #ticketDrawerBackdrop .agent-assist-btn{font-size:11px!importan
   if(currentTab!=="tickets")return;
   document.body.style.overflow="";
   shell.classList.toggle("test-has-selection",Boolean(openTicketId));
+  customerHeading.textContent=lastOpenTicketData?.ticket?.customer_name||"Customer conversation";
   drawer.setAttribute("aria-hidden",String(!openTicketId));
   empty.hidden=Boolean(openTicketId);
  }
