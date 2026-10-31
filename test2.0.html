@@ -19791,6 +19791,8 @@ body.test2-inbox .footer{display:none!important}
 </script>
 
 <style id="test2-inbox-sidebar">
+body.test2-inbox #ticketQueueTitle{display:block!important;font-size:16px!important}
+body.test2-inbox #ticketQueuePanel .ticket-current-view-picker{display:none!important}
 body.test2-compact #appSidebar>.nav,
 body.test2-compact #appSidebar>.sidebar-heading,
 body.test2-compact #sidebarPinToggle{display:none!important}
@@ -19891,6 +19893,7 @@ body.test2-compact #appSidebar #sidebarLogout{font-size:10px!important;max-width
    item.classList.toggle("active",selected);item.setAttribute("aria-current",selected?"page":"false");
   });
   nav.querySelectorAll("[data-inbox-page]").forEach(item=>item.classList.toggle("active",document.getElementById(item.dataset.inboxPage)?.classList.contains("active")));
+  if(currentTab==="tickets"){const selected=[...nav.querySelectorAll("[data-inbox-filter]")].find(item=>item.dataset.inboxFilter===active);if(selected)document.getElementById("ticketQueueTitle").textContent=selected.querySelector(".test-inbox-nav-label").textContent;}
  }
  nav.addEventListener("click",event=>{
   const page=event.target.closest("[data-inbox-page]");
@@ -19908,7 +19911,7 @@ body.test2-compact #appSidebar #sidebarLogout{font-size:10px!important;max-width
   render();
   document.getElementById("ticketQueueTitle").hidden=false;
   document.getElementById("ticketQueueTitle").textContent=item.querySelector(".test-inbox-nav-label").textContent;
-  sidebar.classList.remove("mobile-open");document.body.classList.remove("mobile-sidebar-open");
+  setMobileSidebar(false);
  });
  const priorShow=showWorkspace;
  showWorkspace=function(...args){const result=priorShow(...args);render();return result;};
