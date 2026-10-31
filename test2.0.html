@@ -7692,7 +7692,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
         <div class="topbar-actions">
             <div class="global-search-wrap" id="globalSearchWrap">
                 <div class="global-search-shell">
-                    <input id="globalSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search tickets, session IDs, dashboards…" aria-label="Search tickets, session IDs and custom dashboards">
+                    <input id="globalSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search workspace…" aria-label="Search tickets, session IDs and custom dashboards">
                     <button id="globalSearchBtn" class="global-search-button" type="button" aria-label="Search" title="Search">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
                     </button>
@@ -20536,4 +20536,29 @@ html[data-theme="light"] body.enterprise-test .customer-profile-drawer{position:
 @media(max-width:900px){
  html[data-theme="light"] body.enterprise-test .customer-profile-drawer{top:8px!important;bottom:8px!important;right:8px!important;left:8px!important;width:auto!important;height:calc(100dvh - 16px)!important;max-height:calc(100dvh - 16px)!important}
 }
+</style>
+
+<style id="test2-header-controls-fix">
+/* One surface per control; reset legacy wrappers and expansion sizing. */
+body.enterprise-test .topbar .topbar-actions{position:relative!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:nowrap!important;gap:8px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;min-height:36px!important;overflow:visible!important}
+body.enterprise-test .topbar .topbar-actions #globalSearchWrap{display:flex!important;align-items:center!important;flex:0 1 280px!important;width:280px!important;max-width:280px!important;min-width:0!important;height:36px!important;min-height:36px!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+body.enterprise-test .topbar .topbar-actions #globalSearchWrap .global-search-shell{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:4px!important;width:100%!important;min-width:0!important;max-width:100%!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0 8px!important;border:1px solid var(--border-strong)!important;border-radius:7px!important;background:var(--bg-card)!important;box-shadow:none!important;transition:border-color .15s ease!important;box-sizing:border-box!important}
+body.enterprise-test .topbar .topbar-actions #globalSearchWrap:focus-within .global-search-shell{border-color:var(--accent-dark)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent)!important}
+body.enterprise-test .topbar .topbar-actions #globalSearchInput{order:2!important;flex:1 1 0!important;width:0!important;min-width:0!important;height:32px!important;min-height:0!important;line-height:normal!important;opacity:1!important;padding:0 3px!important;margin:0!important;border:0!important;border-radius:0!important;outline:none!important;outline-offset:0!important;box-shadow:none!important;background:transparent!important;color:var(--text)!important;font-size:12px!important;transition:none!important}
+body.enterprise-test .topbar .topbar-actions #globalSearchBtn{order:1!important;display:grid!important;place-items:center!important;flex:0 0 24px!important;width:24px!important;min-width:24px!important;height:30px!important;min-height:30px!important;padding:0!important;margin:0!important;border:0!important;border-radius:4px!important;background:transparent!important;box-shadow:none!important;line-height:1!important}
+body.enterprise-test .topbar .topbar-actions #globalSearchBtn svg{width:16px!important;height:16px!important}
+body.enterprise-test .topbar .topbar-actions #refreshBtn{display:inline-flex;align-items:center!important;justify-content:center!important;gap:7px!important;flex:0 0 auto!important;min-width:36px!important;width:auto!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0 11px!important;border:1px solid var(--border-strong)!important;border-radius:7px!important;background:var(--bg-card)!important;box-shadow:none!important;font-size:12px!important;line-height:1!important;white-space:nowrap!important}
+body.enterprise-test .topbar .topbar-actions .quick-settings-wrap{position:relative!important;display:flex!important;align-items:center!important;flex:0 0 36px!important;width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+body.enterprise-test .topbar .topbar-actions #quickSettingsBtn{display:grid!important;place-items:center!important;width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0!important;border:1px solid var(--border-strong)!important;border-radius:7px!important;background:var(--bg-card)!important;box-shadow:none!important;line-height:1!important}
+body.enterprise-test .topbar .topbar-actions :is(#refreshBtn,#quickSettingsBtn):hover{background:var(--surface-light)!important}
+body.enterprise-test .topbar .topbar-actions :is(#refreshBtn,#quickSettingsBtn) svg{width:16px!important;height:16px!important;flex-shrink:0!important}
+body.enterprise-test .topbar .topbar-actions #quickSettingsPanel{top:calc(100% + 8px)!important;right:0!important;max-width:calc(100vw - 32px)!important;box-sizing:border-box!important}
+body.enterprise-test .topbar .topbar-actions #globalSearchResults{top:calc(100% + 8px)!important;right:0!important;max-width:calc(100vw - 32px)!important}
+@media(max-width:900px){
+ body.enterprise-test .topbar .topbar-actions{width:100%!important;min-width:0!important}
+ body.enterprise-test .topbar .topbar-actions #globalSearchWrap{flex:1 1 0!important;width:auto!important;max-width:none!important;min-width:0!important}
+ body.enterprise-test .topbar .topbar-actions #refreshBtn{width:36px!important;flex:0 0 36px!important;padding:0!important}
+ body.enterprise-test .topbar .topbar-actions #refreshBtnLabel{display:none!important}
+}
+
 </style>
