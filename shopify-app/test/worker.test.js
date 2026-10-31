@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHmac} from 'node:crypto';
-import {authenticate,handle} from '../src/worker.js';
+import worker,{authenticate,handle} from '../src/worker.js';
 const calls=[];
 const DB={prepare(sql){return{bind(...values){return{sql,values,run:async()=>{calls.push({sql,values})}}}}},batch:async s=>{calls.push(...s)}};
 const env={SHOPIFY_API_KEY:'testkey',SHOPIFY_API_SECRET:'testsecret',SHOPIFY_API_VERSION:'2026-10',DB};
@@ -31,3 +31,5 @@ for(const topic of ['app/uninstalled','customers/redact','customers/data_request
 test('database failure asks Shopify to retry',async()=>{assert.equal((await handle(webhook('customers/redact'),{...env,DB:{batch:async()=>{throw Error('down')}}})).status,503)});
 test('HTML CSP is tenant specific and prevents injection',async()=>{const r=await handle(req('/?shop=demo.myshopify.com'),env);assert.ok(r.headers.get('content-security-policy').includes('frame-ancestors https://admin.shopify.com https://demo.myshopify.com'));assert.ok((await r.text()).includes('cdn.shopify.com/shopifycloud/app-bridge.js'))});
 test('missing config fails closed',async()=>assert.equal((await handle(req('/'),{})).status,503));
+
+test('Worker runtime context is not used as an HTTP client',async()=>{const prior=globalThis.fetch; let reached=false; globalThis.fetch=async()=>{reached=true;return new Response('',{status:400})};try {const r=await worker.fetch(req('/api/orders'),env,{waitUntil(){}});assert.equal(reached,true);assert.equal(r.status,401)}finally{globalThis.fetch=prior}});

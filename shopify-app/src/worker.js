@@ -74,4 +74,5 @@ const client = `const form=document.querySelector('form'), status=document.query
 async function load(event){event?.preventDefault();const button=document.querySelector('button');button.disabled=true;status.textContent='Loading orders…';body.replaceChildren();
 try {if(!window.shopify)throw Error('Open NovaraDesk from your Shopify admin.');const token=await shopify.idToken();const response=await fetch('/api/orders?order='+encodeURIComponent(form.elements.order.value),{headers:{Authorization:'Bearer '+token}});const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to load orders');for(const o of data.orders){const row=document.createElement('tr');for(const value of [o.name,new Date(o.createdAt).toLocaleDateString(),o.displayFinancialStatus,o.displayFulfillmentStatus,o.currentTotalPriceSet.shopMoney.amount+' '+o.currentTotalPriceSet.shopMoney.currencyCode]){const td=document.createElement('td');td.textContent=value;row.append(td)}body.append(row)}status.textContent=data.orders.length+' orders · '+data.shop;}catch(e){status.textContent=e.message}finally{button.disabled=false}}
 form.addEventListener('submit',load);load();`;
-export default {fetch:handle};
+// Cloudflare supplies ExecutionContext as the third argument; keep it out of the injected HTTP client.
+export default {fetch(request, env) { return handle(request, env); }};
