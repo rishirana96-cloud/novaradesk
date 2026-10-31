@@ -4723,7 +4723,21 @@ body.customizer-dragging { cursor:grabbing!important;user-select:none!important;
 <script>
 window.NOVARA_GOOGLE_CLIENT_ID = "336502224847-jafsk347pho7kr929jlgf4uh10n7aveu.apps.googleusercontent.com";
 window.NOVARA_AUTH_TOKEN_KEY = "novara_google_id_token";
-window.NOVARA_DEMO_MODE = new URLSearchParams(window.location.search).get("demo") === "1";
+// Preview is URL-scoped: it never creates an authenticated session or expires.
+window.NOVARA_DEMO_MODE = ["preview", "demo"].some(key => new URLSearchParams(window.location.search).get(key) === "1");
+// Preview settings are held only in memory; existing workspace storage stays intact.
+(function () {
+    function memoryStorage() {
+        const values = new Map();
+        return { getItem: key => values.get(String(key)) ?? null,
+            setItem: (key, value) => values.set(String(key), String(value)),
+            removeItem: key => values.delete(String(key)), clear: () => values.clear(),
+            key: index => Array.from(values.keys())[index] ?? null,
+            get length() { return values.size; } };
+    }
+    window.NOVARA_LOCAL_STORAGE = window.NOVARA_DEMO_MODE ? memoryStorage() : window.localStorage;
+    window.NOVARA_SESSION_STORAGE = window.NOVARA_DEMO_MODE ? memoryStorage() : window.sessionStorage;
+})();
 window.NOVARA_DEMO_USER = {
     name: "Novara CX Demo",
     email: "demo@novaracx.com",
@@ -4744,11 +4758,12 @@ window.NOVARA_DEMO_API = (() => {
         ["Damaged item received", "product_issue", "negative"]
     ];
     const statuses = ["open", "in_progress", "pending_revert", "resolved", "reopened", "resolved"];
-    const tickets = Array.from({ length: 18 }, (_, index) => {
+    const tickets = Array.from({ length: 96 }, (_, index) => {
         const person = names[index % names.length];
         const subject = subjects[index % subjects.length];
         const status = statuses[index % statuses.length];
-        const created = iso(2 + index * 7);
+        const ageHours = 2 + index * 21;
+        const created = iso(ageHours);
         return {
             id: index + 1,
             ticket_number: `NX-${String(index + 101).padStart(4, "0")}`,
@@ -4761,19 +4776,21 @@ window.NOVARA_DEMO_API = (() => {
             sentiment: subject[2],
             escalation_reason: index % 2 ? "human_judgement" : "policy_exception",
             customer_name: person,
-            customer_phone: `+91 98${String(41000000 + index * 731).slice(-8)}`,
+            customer_phone: "",
+            customer_email: `customer${index + 1}@example.com`,
+            channel: ["website", "whatsapp", "email"][index % 3],
             agent_name: index % 4 === 0 ? "Support Agent A" : index % 4 === 1 ? "Support Agent B" : "Novara CX Support",
             created_at: created,
             updated_at: iso(Math.max(0.2, index * 2)),
-            first_response_at: iso(Math.max(0.5, 1 + index * 3)),
+            first_response_at: status === "open" ? null : iso(ageHours - .25 - (index % 4) * .1),
             resolved_at: status === "resolved" ? iso(Math.max(0.2, index * 2)) : null,
-            resolution_time_hours: status === "resolved" ? 1.2 + (index % 4) * .7 : 0,
+            resolution_time_hours: status === "resolved" ? ageHours - Math.max(0.2, index * 2) : 0,
             latest_sender_type: status === "open" || status === "reopened" ? "customer" : "agent",
             needs_reply: status === "open" || status === "reopened",
             unread_customer_messages: status === "open" ? 1 : 0
         };
     });
-    const conversations = Array.from({ length: 54 }, (_, index) => {
+    const conversations = Array.from({ length: 540 }, (_, index) => {
         const resolved = index % 5 !== 0;
         return {
             id: index + 1,
@@ -4782,8 +4799,8 @@ window.NOVARA_DEMO_API = (() => {
             intent: subjects[index % subjects.length][1],
             sentiment: ["positive", "neutral", "positive", "negative"][index % 4],
             resolution_status: resolved ? "resolved" : "escalated",
-            started_at: iso(index * 11 + 1),
-            created_at: iso(index * 11 + 1),
+            started_at: iso(index * 8 + 1),
+            created_at: iso(index * 8 + 1),
             response_time_seconds: 7 + (index % 18),
             message_count: 3 + (index % 8),
             channel: ["website", "whatsapp", "instagram"][index % 3]
@@ -4813,13 +4830,13 @@ window.NOVARA_DEMO_API = (() => {
             ticket,
             conversation: [
                 { id: 1, user_message: ticket.customer_query, bot_reply: "I have checked the available information. This needs a support specialist, so I am transferring the conversation with the full context attached.", created_at: ticket.created_at },
-                { id: 2, user_message: "Yes, please connect me.", bot_reply: "Done. A Novara CX agent will continue from here.", created_at: ticket.first_response_at }
+                { id: 2, user_message: "Yes, please connect me.", bot_reply: "Done. A Novara CX agent will continue from here.", created_at: ticket.first_response_at || ticket.updated_at }
             ],
             messages: [
                 { id: 1, sender_type: "customer", sender_name: ticket.customer_name, message: ticket.customer_query, created_at: ticket.created_at },
-                { id: 2, sender_type: "agent", sender_name: ticket.agent_name, message: "Thanks for sharing this. I’m reviewing the account and will update you shortly.", created_at: ticket.first_response_at }
+                { id: 2, sender_type: "agent", sender_name: ticket.agent_name, message: "Thanks for sharing this. I’m reviewing the account and will update you shortly.", created_at: ticket.first_response_at || ticket.updated_at }
             ],
-            notes: [{ id: 1, author_name: "Novara CX Support", note: "Demo account: customer context and prior AI handoff are available here.", created_at: ticket.first_response_at }]
+            notes: [{ id: 1, author_name: "Novara CX Support", note: "Demo account: customer context and prior AI handoff are available here.", created_at: ticket.first_response_at || ticket.updated_at }]
         };
     };
     const chatbot = {
@@ -4866,7 +4883,7 @@ window.NOVARA_DEMO_API = (() => {
         const isSignIn = isApi && url.indexOf("/auth/google") !== -1;
         if (window.NOVARA_DEMO_MODE && isApi) return window.NOVARA_DEMO_API(url, init);
         if (!isApi || isSignIn) return nativeFetch(input, init);
-        const token = localStorage.getItem(window.NOVARA_AUTH_TOKEN_KEY) || sessionStorage.getItem(window.NOVARA_AUTH_TOKEN_KEY);
+        const token = window.NOVARA_LOCAL_STORAGE.getItem(window.NOVARA_AUTH_TOKEN_KEY) || window.NOVARA_SESSION_STORAGE.getItem(window.NOVARA_AUTH_TOKEN_KEY);
         if (!token) return Promise.reject(new Error("Authentication required"));
         const options = Object.assign({}, init || {});
         options.headers = new Headers(options.headers || (input instanceof Request ? input.headers : undefined));
@@ -4881,7 +4898,7 @@ body:not(.novara-authenticated){overflow:hidden!important}
 body:not(.novara-authenticated) .app{visibility:hidden}
 .novara-auth-screen{position:fixed;inset:0;z-index:100000;display:grid;grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr);min-height:100dvh;color:var(--auth-ink);background:var(--auth-paper)}
 body.novara-authenticated .novara-auth-screen{display:none}
-body.novara-demo-mode .authenticated-profile::after{content:"DEMO";position:absolute;right:9px;top:50%;transform:translateY(-50%);padding:3px 6px;border:1px solid rgba(167,216,189,.35);border-radius:999px;background:rgba(167,216,189,.12);color:#9fd3b4;font-size:8px;font-weight:800;letter-spacing:.08em}
+body.novara-demo-mode .authenticated-profile::after{content:"PREVIEW";position:absolute;right:9px;top:50%;transform:translateY(-50%);padding:3px 6px;border:1px solid rgba(167,216,189,.35);border-radius:999px;background:rgba(167,216,189,.12);color:#9fd3b4;font-size:8px;font-weight:800;letter-spacing:.08em}
 .novara-auth-brand{position:relative;overflow:hidden;padding:clamp(36px,6vw,84px);display:flex;flex-direction:column;justify-content:space-between;color:#f7fbf8;background:var(--auth-green)}
 .novara-auth-brand::before{content:"";position:absolute;width:520px;height:520px;right:-230px;bottom:-230px;border:1px solid rgba(167,216,189,.22);border-radius:50%;box-shadow:0 0 0 80px rgba(167,216,189,.035),0 0 0 160px rgba(167,216,189,.025)}
 .novara-auth-logo,.novara-auth-promise{position:relative;z-index:1}
@@ -7398,6 +7415,14 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
 #tabSwitcher .tab .tab-icon{display:block!important;flex:0 0 18px!important;width:18px!important;height:18px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important;opacity:.92!important}
 @media(max-width:520px){#tabSwitcher .tab{gap:6px!important}#tabSwitcher .tab .tab-icon{width:16px!important;height:16px!important;flex-basis:16px!important}}
 </style>
+<style id="novara-preview-styles">
+.novara-preview-entry{margin-top:24px;padding-top:22px;border-top:1px solid var(--auth-line)}
+.novara-preview-button{display:flex;align-items:center;justify-content:center;gap:12px;min-height:46px;padding:0 18px;border:1px solid var(--auth-green);border-radius:999px;color:var(--auth-green);font-size:14px;font-weight:700;text-decoration:none;transition:background .15s}
+.novara-preview-button:hover{background:#e5f0e9}.novara-preview-button:focus-visible{outline:3px solid #6caa85;outline-offset:3px}
+.novara-preview-entry p{margin:10px 0 0;color:#68776f;font-size:12px;line-height:1.6;text-align:center}
+.novara-preview-notice{display:none}body.novara-demo-mode .novara-preview-notice{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:10001;padding:9px 16px;background:#082d20;color:#e8f6ed;font-size:12px;line-height:1.5;text-align:center}
+.novara-preview-notice a{color:#c1efd3;font-weight:700;text-underline-offset:3px}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
@@ -7415,11 +7440,16 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
     <h2>Welcome to NovaraDesk</h2>
     <p>Continue with the approved Google account connected to your workspace.</p>
     <div id="novaraGoogleButton"></div>
+    <div class="novara-preview-entry">
+        <a class="novara-preview-button" href="?preview=1#tickets">Explore preview <span aria-hidden="true">↗</span></a>
+        <p>Sample tickets and analytics. No sign-in or session timeout.</p>
+    </div>
     <div class="novara-auth-status" id="novaraAuthStatus" role="status" aria-live="polite">Checking your session…</div>
     <p class="novara-auth-legal">By continuing, you agree to the <a href="https://novaracx.com/terms.html">Terms of Service</a>.</p>
 </div>
 </section>
 </div>
+<div class="novara-preview-notice" role="status"><strong>Explore preview</strong><span>Sample data · No session timeout · Changes reset on reload</span><a href="?">Exit preview</a></div>
 <div class="app">
 <!-- =====================================================
  SIDEBAR
@@ -9475,10 +9505,10 @@ ORDER BY ticket_count DESC</textarea>
 ====================================================== */
 let currentPeriod = window.NOVARA_DEMO_MODE
     ? 14
-    : Number(localStorage.getItem("novara_analytics_period") || 28);
+    : Number(window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_period") || 28);
 let currentDateRange = (() => {
 if (window.NOVARA_DEMO_MODE) return null;
-try { return JSON.parse(localStorage.getItem("novara_analytics_date_range") || "null"); }
+try { return JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_date_range") || "null"); }
 catch { return null; }
 })();
 let currentTab = "ai";
@@ -9601,9 +9631,9 @@ if (sidebarPinToggle) {
         ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9 4v16"></path><path d="m16.5 9-3 3 3 3"></path></svg>'
         : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"></rect><path d="M9 4v16"></path><path d="m13.5 9 3 3-3 3"></path></svg>';
 }
-if (persist) localStorage.setItem(SIDEBAR_PIN_KEY, expanded ? "true" : "false");
+if (persist) window.NOVARA_LOCAL_STORAGE.setItem(SIDEBAR_PIN_KEY, expanded ? "true" : "false");
 }
-setSidebarPinned(localStorage.getItem(SIDEBAR_PIN_KEY) === "true", false);
+setSidebarPinned(window.NOVARA_LOCAL_STORAGE.getItem(SIDEBAR_PIN_KEY) === "true", false);
 sidebarPinToggle?.addEventListener("click", event => {
 event.preventDefault();
 event.stopPropagation();
@@ -9677,7 +9707,7 @@ if (refreshLabel) refreshLabel.textContent = analyticsWorkspace ? "Sync Now" : "
 document.getElementById("chatbotStatusControl")?.classList.toggle("open", workspace === "chatbot");
 if (!analyticsWorkspace) document.getElementById("analyticsLayoutSettings")?.classList.remove("open");
 const preserveKnowledgeArticle = workspace === "knowledge" && /^#knowledge\/article\/\d+$/.test(location.hash);
-if (!preserveKnowledgeArticle) history.replaceState(null, "", workspace === "ai" ? location.pathname : `#${workspace}`);
+if (!preserveKnowledgeArticle) history.replaceState(null, "", `${location.pathname}${location.search}${workspace === "ai" ? "" : `#${workspace}`}`);
 if (workspace === "dashboards") renderCustomDashboard();
 if (workspace === "chatbot") loadChatbotControlCentre();
 if (workspace === "knowledge") loadKnowledgeBase();
@@ -9886,7 +9916,7 @@ if (dashboardUpdateRunning) {
 dashboardUpdateRunning = true;
 currentPeriod =
     period;
-if (!currentDateRange) localStorage.setItem("novara_analytics_period", String(period));
+if (!currentDateRange) window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_period", String(period));
 document
     .querySelectorAll(
         "#periodSelector button"
@@ -10519,7 +10549,7 @@ query: "ticketFilterQuery"
 let ticketWorkspaceState = { source: [], filtered: [], activeView: "all", page: 1, pageSize: 10 };
 function readSavedTicketViews() {
 try {
-    const parsed = JSON.parse(localStorage.getItem(TICKET_SAVED_VIEWS_KEY) || "[]");
+    const parsed = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(TICKET_SAVED_VIEWS_KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
 } catch (_) { return []; }
 }
@@ -10771,7 +10801,7 @@ const savedView = {
     updatedAt: new Date().toISOString()
 };
 const next = existing ? views.map(view => view.id === existing.id ? savedView : view) : [...views,savedView];
-localStorage.setItem(TICKET_SAVED_VIEWS_KEY, JSON.stringify(next));
+window.NOVARA_LOCAL_STORAGE.setItem(TICKET_SAVED_VIEWS_KEY, JSON.stringify(next));
 ticketWorkspaceState.activeView = `saved:${savedView.id}`;
 renderTicketViewOptions(ticketWorkspaceState.activeView);
 message.textContent = existing ? "Custom view updated." : "Custom view saved.";
@@ -10780,7 +10810,7 @@ nameInput.value = "";
 });
 document.querySelectorAll("[data-ticket-period]").forEach(button => button.addEventListener("click", () => {
 currentDateRange = null;
-localStorage.removeItem("novara_analytics_date_range");
+window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_date_range");
 document.getElementById("ticketCustomDatePopover").hidden = true;
 updateDashboard(Number(button.dataset.ticketPeriod));
 }));
@@ -10806,13 +10836,13 @@ if (!start || !end || start > end) {
 }
 error.textContent = "";
 currentDateRange = { start, end };
-localStorage.setItem("novara_analytics_date_range", JSON.stringify(currentDateRange));
+window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_date_range", JSON.stringify(currentDateRange));
 document.getElementById("ticketCustomDatePopover").hidden = true;
 updateDashboard(currentPeriod);
 });
 document.getElementById("ticketClearCustomDate")?.addEventListener("click", () => {
 currentDateRange = null;
-localStorage.removeItem("novara_analytics_date_range");
+window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_date_range");
 document.getElementById("ticketCustomDatePopover").hidden = true;
 updateDashboard(currentPeriod);
 });
@@ -12106,7 +12136,7 @@ renderDataExplorer();
 const backdrop = document.getElementById("dataExplorerBackdrop");
 backdrop.classList.add("open");
 backdrop.setAttribute("aria-hidden", "false");
-setAgentAssistCollapsed(localStorage.getItem("novara_agent_assist_collapsed")==="1",false);
+setAgentAssistCollapsed(window.NOVARA_LOCAL_STORAGE.getItem("novara_agent_assist_collapsed")==="1",false);
 document.body.style.overflow = "hidden";
 }
 function inferExplorerColumns(rows) {
@@ -12377,7 +12407,7 @@ document
         "click",
         () => {
             currentDateRange = null;
-            localStorage.removeItem("novara_analytics_date_range");
+            window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_date_range");
             document.getElementById("customDatePopover").classList.remove("open");
             const period =
                 parseInt(
@@ -12641,11 +12671,11 @@ warm:["#8c3b2a","#c75b39","#e88c4d","#efb45d","#d96c75","#8e5572"],
 pastel:["#91b8d4","#b6a3d8","#e4a7b7","#edc48d","#9bc9ae","#b8d5d0"],
 monochrome:["#244f3c","#426d59","#658c77","#8eae9d","#b7cbbf","#dce7e0"]
 };
-let selectedReportPalette = (() => { const saved = localStorage.getItem("novara_analytics_palette"); return !saved || saved === "novara" ? "standard" : saved; })();
+let selectedReportPalette = (() => { const saved = window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_palette"); return !saved || saved === "novara" ? "standard" : saved; })();
 function currentReportColors(){return selectedReportPalette === "custom" ? [...document.querySelectorAll("#reportCustomColors input")].map(input=>input.value) : REPORT_PALETTES[selectedReportPalette] || REPORT_PALETTES.standard;}
 function semanticReportColor(label,fallback){const key=String(label??"").trim().toLowerCase();if(/(^|[^a-z])(resolved|positive|success|healthy|improved|retained|answered|satisfied|good)([^a-z]|$)/.test(key))return "#59a14f";if(/(^|[^a-z])(negative|failed|failure|error|escalated|breached|overdue|dissatisfied|bad)([^a-z]|$)/.test(key))return "#e15759";if(/(^|[^a-z])(pending|warning|waiting|reopened|partial|at risk)([^a-z]|$)/.test(key))return "#f28e2b";if(/(^|[^a-z])neutral([^a-z]|$)/.test(key))return "#f28e2b";return fallback;}
 function applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-tickets,#panel-ai,#panel-human,#panel-dashboards,#panel-reports"))return;const type=chart.config.type;chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>semanticReportColor((chart.data.labels||[])[point],colors[point%colors.length]));else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
-function renderReportPalettePicker(){const picker=document.getElementById("reportPalettePicker");if(!picker)return;let customSaved=null;try{customSaved=JSON.parse(localStorage.getItem("novara_analytics_custom_colors")||"null");}catch{}if(Array.isArray(customSaved))document.querySelectorAll("#reportCustomColors input").forEach((input,index)=>{if(customSaved[index])input.value=customSaved[index];});picker.innerHTML=[...Object.entries(REPORT_PALETTES),["custom",["#315f4a","#d6a85f","#668da3"]]].map(([name,colors])=>`<button class="palette-option ${name===selectedReportPalette?"active":""}" data-report-palette="${name}" type="button"><span class="palette-swatches">${colors.slice(0,4).map(color=>`<i style="background:${color}"></i>`).join("")}</span>${reportLabel(name)}</button>`).join("");document.getElementById("reportCustomColors")?.classList.toggle("open",selectedReportPalette==="custom");picker.querySelectorAll("[data-report-palette]").forEach(button=>button.addEventListener("click",()=>{selectedReportPalette=button.dataset.reportPalette;localStorage.setItem("novara_analytics_palette",selectedReportPalette);renderReportPalettePicker();applyAnalyticsChartPalette();scheduleCustomReport();}));}
+function renderReportPalettePicker(){const picker=document.getElementById("reportPalettePicker");if(!picker)return;let customSaved=null;try{customSaved=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_custom_colors")||"null");}catch{}if(Array.isArray(customSaved))document.querySelectorAll("#reportCustomColors input").forEach((input,index)=>{if(customSaved[index])input.value=customSaved[index];});picker.innerHTML=[...Object.entries(REPORT_PALETTES),["custom",["#315f4a","#d6a85f","#668da3"]]].map(([name,colors])=>`<button class="palette-option ${name===selectedReportPalette?"active":""}" data-report-palette="${name}" type="button"><span class="palette-swatches">${colors.slice(0,4).map(color=>`<i style="background:${color}"></i>`).join("")}</span>${reportLabel(name)}</button>`).join("");document.getElementById("reportCustomColors")?.classList.toggle("open",selectedReportPalette==="custom");picker.querySelectorAll("[data-report-palette]").forEach(button=>button.addEventListener("click",()=>{selectedReportPalette=button.dataset.reportPalette;window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_palette",selectedReportPalette);renderReportPalettePicker();applyAnalyticsChartPalette();scheduleCustomReport();}));}
 function formatReportValue(value) {
 if (!Number.isFinite(value)) return "0";
 if (Math.abs(value) >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -13283,12 +13313,12 @@ customReportUpdateTimer = window.setTimeout(runCustomReport, 300);
 }
 function loadSavedReports() {
 try {
-    const reports = JSON.parse(localStorage.getItem(REPORT_STORAGE_KEY) || "[]");
+    const reports = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(REPORT_STORAGE_KEY) || "[]");
     return Array.isArray(reports) ? reports : [];
 } catch { return []; }
 }
 function storeSavedReports(reports) {
-localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(reports));
+window.NOVARA_LOCAL_STORAGE.setItem(REPORT_STORAGE_KEY, JSON.stringify(reports));
 }
 function renderSavedReports() {
 const reports = loadSavedReports();
@@ -13538,7 +13568,7 @@ const query = event.target.value.trim().toLowerCase();
 document.querySelectorAll("#rawSqlResultTable tbody tr").forEach(row => row.hidden = Boolean(query && !row.textContent.toLowerCase().includes(query)));
 });
 renderReportPalettePicker();
-document.getElementById("reportCustomColors")?.addEventListener("input",()=>{localStorage.setItem("novara_analytics_custom_colors",JSON.stringify(currentReportColors()));applyAnalyticsChartPalette();scheduleCustomReport();});
+document.getElementById("reportCustomColors")?.addEventListener("input",()=>{window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_custom_colors",JSON.stringify(currentReportColors()));applyAnalyticsChartPalette();scheduleCustomReport();});
 document.getElementById("reportDataset")?.addEventListener("change", () => { document.getElementById("reportFilters").innerHTML = ""; refreshReportFields(true); currentReportResult = null; scheduleCustomReport(); });
 document.getElementById("reportMetric")?.addEventListener("change", () => { syncReportAggregation(); scheduleCustomReport(); });
 document.getElementById("pivotValue")?.addEventListener("change", () => { syncPivotAggregation(); scheduleCustomReport(); });
@@ -13625,19 +13655,19 @@ let dashboardArrangeMode = false;
 let dashboardFocusedWidgetId = null;
 function loadCustomDashboards() {
 try {
-    const stored = JSON.parse(localStorage.getItem(DASHBOARD_STORAGE_KEY) || "[]");
+    const stored = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_STORAGE_KEY) || "[]");
     if (Array.isArray(stored) && stored.length) return stored;
 } catch {}
 const starter = [{ id: `dashboard_${Date.now()}`, name: "My Dashboard", widgets: [], updatedAt:new Date().toISOString() }];
-localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(starter));
-localStorage.setItem(DASHBOARD_ACTIVE_KEY, starter[0].id);
+window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(starter));
+window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY, starter[0].id);
 return starter;
 }
 function saveCustomDashboards(dashboards) {
-localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(dashboards));
+window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(dashboards));
 }
 function activeCustomDashboard(dashboards = loadCustomDashboards()) {
-const activeId = localStorage.getItem(DASHBOARD_ACTIVE_KEY);
+const activeId = window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_ACTIVE_KEY);
 return dashboards.find(dashboard => dashboard.id === activeId) || dashboards[0];
 }
 function setDashboardStatus(message) {
@@ -13708,7 +13738,7 @@ menu.innerHTML = `<div class="dashboard-title-menu-label">Saved dashboards</div>
         </div>
     </div>`).join("")}<div class="dashboard-title-menu-rule"></div><button id="dashboardTitleCreate" class="dashboard-title-create" type="button">＋ Create new dashboard</button>`;
 menu.querySelectorAll("[data-dashboard-open]").forEach(button => button.addEventListener("click", () => {
-    localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardOpen);
+    window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardOpen);
     closeDashboardTitleMenu();
     renderCustomDashboard();
 }));
@@ -13718,13 +13748,13 @@ menu.querySelectorAll("[data-dashboard-rename]").forEach(button => button.addEve
 }));
 menu.querySelectorAll("[data-dashboard-duplicate]").forEach(button => button.addEventListener("click", event => {
     event.stopPropagation();
-    localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardDuplicate);
+    window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardDuplicate);
     duplicateActiveDashboard();
     closeDashboardTitleMenu();
 }));
 menu.querySelectorAll("[data-dashboard-delete]").forEach(button => button.addEventListener("click", async event => {
     event.stopPropagation();
-    localStorage.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardDelete);
+    window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY, button.dataset.dashboardDelete);
     await deleteActiveDashboard();
     document.getElementById("dashboardTitleMenu")?.classList.add("open");
     document.getElementById("dashboardTitleTrigger")?.setAttribute("aria-expanded", "true");
@@ -13759,7 +13789,7 @@ const empty = document.getElementById("dashboardEmptyState");
 if (!grid || !empty) return;
 const dashboards = loadCustomDashboards();
 const active = activeCustomDashboard(dashboards);
-localStorage.setItem(DASHBOARD_ACTIVE_KEY, active.id);
+window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY, active.id);
 updateDashboardSelect(dashboards, active);
 const activeTitle = document.getElementById("dashboardActiveTitle");
 if (activeTitle) activeTitle.textContent = active.name;
@@ -14027,7 +14057,7 @@ return new Promise(resolve => {
 async function createNamedDashboard() {
 const name = await openNativeDialog({ title:"New dashboard", message:"Give this dashboard a clear, memorable name.", value:"New Dashboard", input:true, confirmLabel:"Create dashboard" }); if (!name) return;
 const dashboards = loadCustomDashboards(); const dashboard = {id:`dashboard_${Date.now()}`,name,widgets:[],updatedAt:new Date().toISOString()};
-dashboards.push(dashboard); saveCustomDashboards(dashboards); localStorage.setItem(DASHBOARD_ACTIVE_KEY,dashboard.id); renderCustomDashboard();
+dashboards.push(dashboard); saveCustomDashboards(dashboards); window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,dashboard.id); renderCustomDashboard();
 }
 async function renameActiveDashboard() {
 const active=activeCustomDashboard();
@@ -14036,13 +14066,13 @@ requestAnimationFrame(()=>beginInlineDashboardRename(active.id));
 }
 function duplicateActiveDashboard() {
 const dashboards=loadCustomDashboards(); const active=activeCustomDashboard(dashboards); const clone={id:`dashboard_${Date.now()}`,name:`${active.name} Copy`,widgets:active.widgets.map(widget=>({...widget,id:`widget_${Date.now()}_${Math.random().toString(36).slice(2,7)}`})),updatedAt:new Date().toISOString()};
-dashboards.push(clone); saveCustomDashboards(dashboards); localStorage.setItem(DASHBOARD_ACTIVE_KEY,clone.id); renderCustomDashboard();
+dashboards.push(clone); saveCustomDashboards(dashboards); window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,clone.id); renderCustomDashboard();
 }
 async function deleteActiveDashboard() {
 let dashboards=loadCustomDashboards(); const active=activeCustomDashboard(dashboards);
 if(dashboards.length===1){ active.widgets=[]; active.name="My Dashboard"; persistDashboardWidgets(dashboards,active); renderCustomDashboard(); setDashboardStatus("The default dashboard was cleared."); return; }
 if(!await openNativeDialog({ title:`Delete ${active.name}?`, message:"Saved reports will not be deleted.", confirmLabel:"Delete dashboard" }))return;
-dashboards=dashboards.filter(item=>item.id!==active.id); saveCustomDashboards(dashboards); localStorage.setItem(DASHBOARD_ACTIVE_KEY,dashboards[0].id); renderCustomDashboard();
+dashboards=dashboards.filter(item=>item.id!==active.id); saveCustomDashboards(dashboards); window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,dashboards[0].id); renderCustomDashboard();
 }
 function closeDashboardTitleMenu() {
 document.getElementById("dashboardTitleMenu")?.classList.remove("open");
@@ -14056,7 +14086,7 @@ menu?.classList.toggle("open", open);
 event.currentTarget.setAttribute("aria-expanded", String(open));
 });
 document.addEventListener("click", event => { if (!event.target.closest(".dashboard-enterprise-title")) closeDashboardTitleMenu(); });
-document.getElementById("customDashboardSelect")?.addEventListener("change", event => { localStorage.setItem(DASHBOARD_ACTIVE_KEY,event.target.value); renderCustomDashboard(); });
+document.getElementById("customDashboardSelect")?.addEventListener("change", event => { window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,event.target.value); renderCustomDashboard(); });
 document.getElementById("dashboardNewBtn")?.addEventListener("click",createNamedDashboard);
 document.getElementById("dashboardRenameBtn")?.addEventListener("click",renameActiveDashboard);
 document.getElementById("dashboardDuplicateBtn")?.addEventListener("click",duplicateActiveDashboard);
@@ -14216,8 +14246,8 @@ else showWorkspace("tickets");
 function restoreTicketWorkspaceForSession() {
 if (ticketWorkspaceSessionRestored || !ticketWorkspaceState.source.length) return;
 ticketWorkspaceSessionRestored = true;
-if (sessionStorage.getItem("novaradesk_ticket_workspace_open") !== "true") return;
-const savedId = sessionStorage.getItem("novaradesk_last_ticket_id");
+if (window.NOVARA_SESSION_STORAGE.getItem("novaradesk_ticket_workspace_open") !== "true") return;
+const savedId = window.NOVARA_SESSION_STORAGE.getItem("novaradesk_last_ticket_id");
 const target = ticketWorkspaceState.source.find(ticket => String(ticket.dbId) === savedId) || ticketWorkspaceState.source[0];
 if (target?.dbId) openTicket(Number(target.dbId));
 }
@@ -14239,8 +14269,8 @@ window.setTicketChannel?.("chat");
 setTicketSwitchLoading(true);
 const workspaceWasOpen = document.getElementById("ticketDrawerBackdrop")?.classList.contains("open");
 openTicketId = ticketId;
-sessionStorage.setItem("novaradesk_last_ticket_id", String(ticketId));
-sessionStorage.setItem("novaradesk_ticket_workspace_open", "true");
+window.NOVARA_SESSION_STORAGE.setItem("novaradesk_last_ticket_id", String(ticketId));
+window.NOVARA_SESSION_STORAGE.setItem("novaradesk_ticket_workspace_open", "true");
 lastTicketDetailSignature = "";
 const backdrop = document.getElementById("ticketDrawerBackdrop");
 backdrop.classList.add("open");
@@ -14273,7 +14303,7 @@ setTicketSwitchLoading(false);
 const backdrop = document.getElementById("ticketDrawerBackdrop");
 backdrop.classList.remove("open");
 backdrop.setAttribute("aria-hidden", "true");
-sessionStorage.setItem("novaradesk_ticket_workspace_open", "false");
+window.NOVARA_SESSION_STORAGE.setItem("novaradesk_ticket_workspace_open", "false");
 syncTicketWorkspaceFloater(false);
 document.body.style.overflow = "";
 document.getElementById("ticketActionError").textContent = "";
@@ -14282,10 +14312,10 @@ document.getElementById("ticketResolutionOverlay").classList.remove("open");
 function ticketTagsKey(ticketId){ return `novara_ticket_tags_${ticketId}`; }
 function renderTicketTags(ticketId){
 const host=document.getElementById("ticketTags"); if(!host)return;
-let tags=[]; try{tags=JSON.parse(localStorage.getItem(ticketTagsKey(ticketId))||"[]")}catch(_){tags=[]}
+let tags=[]; try{tags=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(ticketTagsKey(ticketId))||"[]")}catch(_){tags=[]}
 tags=tags.map(tag=>typeof tag==="string"?{text:tag,color:"#477b62"}:tag).filter(tag=>tag?.text);
 host.innerHTML=tags.map((tag,index)=>`<span class="ticket-tag" style="--tag-colour:${escapeHtml(tag.color||"#477b62")}">${escapeHtml(tag.text)}<button type="button" data-remove-ticket-tag="${index}" aria-label="Remove ${escapeHtml(tag.text)}">×</button></span>`).join("")+`<span class="ticket-add-tag-wrap" style="position:relative"><button class="ticket-add-tag" type="button" id="ticketAddTag">+ Tag</button><span id="ticketTagPopover" class="ticket-tag-popover"><input id="ticketTagInput" type="text" maxlength="30" placeholder="Tag name"><span class="ticket-tag-colours">${["#477b62","#4f83cc","#d39a3d","#c95f59","#8b68bd","#718078"].map((color,index)=>`<button class="ticket-tag-colour ${index===0?"active":""}" style="--tag-colour:${color}" data-tag-colour="${color}" type="button" aria-label="Use ${color}"></button>`).join("")}</span><button id="ticketTagSubmit" class="ticket-tag-submit" type="button">Add tag</button></span></span>`;
-host.querySelectorAll("[data-remove-ticket-tag]").forEach(button=>button.addEventListener("click",()=>{tags.splice(Number(button.dataset.removeTicketTag),1);localStorage.setItem(ticketTagsKey(ticketId),JSON.stringify(tags));renderTicketTags(ticketId)}));
+host.querySelectorAll("[data-remove-ticket-tag]").forEach(button=>button.addEventListener("click",()=>{tags.splice(Number(button.dataset.removeTicketTag),1);window.NOVARA_LOCAL_STORAGE.setItem(ticketTagsKey(ticketId),JSON.stringify(tags));renderTicketTags(ticketId)}));
 const popover=host.querySelector("#ticketTagPopover"),input=host.querySelector("#ticketTagInput"); let selectedColour="#477b62";
 host.querySelector("#ticketAddTag")?.addEventListener("click",event=>{event.stopPropagation();popover.classList.toggle("open");if(popover.classList.contains("open"))requestAnimationFrame(()=>input.focus())});
 popover?.addEventListener("click",event=>event.stopPropagation());
@@ -14297,7 +14327,7 @@ const closeTagPopover=event=>{
 document.addEventListener("pointerdown",closeTagPopover,{once:true});
 if(popover?.classList.contains("open"))document.addEventListener("pointerdown",closeTagPopover,{once:true});
 host.querySelectorAll("[data-tag-colour]").forEach(button=>button.addEventListener("click",()=>{selectedColour=button.dataset.tagColour;host.querySelectorAll("[data-tag-colour]").forEach(item=>item.classList.toggle("active",item===button))}));
-const saveTag=()=>{const value=input.value.trim();if(!value)return input.focus();if(!tags.some(tag=>tag.text.toLowerCase()===value.toLowerCase()))tags.push({text:value.slice(0,30),color:selectedColour});localStorage.setItem(ticketTagsKey(ticketId),JSON.stringify(tags));renderTicketTags(ticketId)};
+const saveTag=()=>{const value=input.value.trim();if(!value)return input.focus();if(!tags.some(tag=>tag.text.toLowerCase()===value.toLowerCase()))tags.push({text:value.slice(0,30),color:selectedColour});window.NOVARA_LOCAL_STORAGE.setItem(ticketTagsKey(ticketId),JSON.stringify(tags));renderTicketTags(ticketId)};
 host.querySelector("#ticketTagSubmit")?.addEventListener("click",saveTag); input?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();saveTag()}});
 requestAnimationFrame(()=>fitTicketTags(host));
 }
@@ -14610,7 +14640,7 @@ const toggle=document.getElementById("agentAssistDockToggle");
 panel?.classList.toggle("collapsed",collapsed);
 backdrop?.classList.toggle("assist-collapsed",collapsed);
 toggle?.setAttribute("aria-expanded",String(!collapsed));
-if(remember)localStorage.setItem("novara_agent_assist_collapsed",collapsed?"1":"0");
+if(remember)window.NOVARA_LOCAL_STORAGE.setItem("novara_agent_assist_collapsed",collapsed?"1":"0");
 requestAnimationFrame(()=>{
     restoreTicketQueueWidth();
     fitTicketTags();
@@ -14633,11 +14663,11 @@ if (!backdrop || window.innerWidth <= 1120) return;
 const bounds = ticketQueueWidthBounds();
 const next = Math.round(Math.max(bounds.min, Math.min(bounds.max, Number(width) || 272)));
 backdrop.style.setProperty("--queue-width", `${next}px`);
-if (remember) localStorage.setItem(TICKET_QUEUE_WIDTH_KEY, String(next));
+if (remember) window.NOVARA_LOCAL_STORAGE.setItem(TICKET_QUEUE_WIDTH_KEY, String(next));
 requestAnimationFrame(() => fitTicketTags());
 }
 function restoreTicketQueueWidth() {
-setTicketQueueWidth(Number(localStorage.getItem(TICKET_QUEUE_WIDTH_KEY)) || 272, false);
+setTicketQueueWidth(Number(window.NOVARA_LOCAL_STORAGE.getItem(TICKET_QUEUE_WIDTH_KEY)) || 272, false);
 }
 const ticketQueueResizeHandle = document.getElementById("ticketQueueResizeHandle");
 ticketQueueResizeHandle?.addEventListener("pointerdown", event => {
@@ -14714,7 +14744,7 @@ document.getElementById("ticketWorkspaceFloater")?.addEventListener("click", eve
 const open = document.getElementById("ticketDrawerBackdrop")?.classList.contains("open");
 if (open) { closeTicket(); return; }
 if (event.target.closest("#ticketWorkspaceBadge") && ticketsNeedingReply().length) { openNeedsReplyQueue(); return; }
-const savedId = sessionStorage.getItem("novaradesk_last_ticket_id");
+const savedId = window.NOVARA_SESSION_STORAGE.getItem("novaradesk_last_ticket_id");
 const target = ticketWorkspaceState.source.find(ticket => String(ticket.dbId) === savedId) || ticketsNeedingReply()[0] || ticketWorkspaceState.filtered[0] || ticketWorkspaceState.source[0];
 if (target?.dbId) openTicket(Number(target.dbId));
 else showWorkspace("tickets");
@@ -14891,13 +14921,13 @@ document.getElementById("applyCustomDate")?.addEventListener("click", () => {
     if (start > end) { error.textContent = "From date must be before To date."; return; }
     if (end > today) { error.textContent = "Future dates are not allowed."; return; }
     currentDateRange = { start,end };
-    localStorage.setItem("novara_analytics_date_range", JSON.stringify(currentDateRange));
+    window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_date_range", JSON.stringify(currentDateRange));
     popover.classList.remove("open");
     updateDashboard(currentPeriod);
 });
 document.getElementById("clearCustomDate")?.addEventListener("click", () => {
     currentDateRange = null;
-    localStorage.removeItem("novara_analytics_date_range");
+    window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_date_range");
     startInput.value = endInput.value = "";
     document.getElementById("customDateError").textContent = "";
     popover?.classList.remove("open");
@@ -14932,19 +14962,19 @@ document.addEventListener("dragover", event => {
 document.addEventListener("dragend", () => { dragged = null; });
 document.getElementById("saveLayoutBtn")?.addEventListener("click", () => {
     const panel = document.querySelector(".view-panel.active");
-    if (panel) localStorage.setItem(`novara_simple_layout_${panel.id}`, JSON.stringify(activeCards().map(card => card.id || card.dataset.layoutId || "")));
+    if (panel) window.NOVARA_LOCAL_STORAGE.setItem(`novara_simple_layout_${panel.id}`, JSON.stringify(activeCards().map(card => card.id || card.dataset.layoutId || "")));
     setLayoutMode(false);
 });
 document.getElementById("cancelLayoutBtn")?.addEventListener("click", () => { setLayoutMode(false); updateDashboard(currentPeriod); });
 document.getElementById("resetLayoutBtn")?.addEventListener("click", () => {
     const panel = document.querySelector(".view-panel.active");
-    if (panel) localStorage.removeItem(`novara_simple_layout_${panel.id}`);
+    if (panel) window.NOVARA_LOCAL_STORAGE.removeItem(`novara_simple_layout_${panel.id}`);
     setLayoutMode(false); location.reload();
 });
 document.getElementById("resetAnalyticsAppearance")?.addEventListener("click", () => {
     selectedReportPalette = "standard";
-    localStorage.setItem("novara_analytics_palette", "standard");
-    localStorage.removeItem("novara_analytics_custom_colors");
+    window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_palette", "standard");
+    window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_custom_colors");
     renderReportPalettePicker(); applyAnalyticsChartPalette();
 });
 }
@@ -14992,13 +15022,13 @@ if (!start || !end) { error.textContent = "Select both dates."; return; }
 if (start > end) { error.textContent = "From date must be before To date."; return; }
 if (end > todayInIst) { error.textContent = "Future dates are not allowed."; return; }
 currentDateRange = { start, end };
-localStorage.setItem("novara_analytics_date_range", JSON.stringify(currentDateRange));
+window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_date_range", JSON.stringify(currentDateRange));
 customDatePopover.classList.remove("open");
 updateDashboard(currentPeriod);
 });
 document.getElementById("clearCustomDate").addEventListener("click", () => {
 currentDateRange = null;
-localStorage.removeItem("novara_analytics_date_range");
+window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_date_range");
 customDateStart.value = "";
 customDateEnd.value = "";
 document.getElementById("customDateError").textContent = "";
@@ -15059,7 +15089,7 @@ Object.entries(byGroup).forEach(([groupId, items]) => {
 }
 function applyStoredPanelLayout(panel) {
 try {
-    const saved = JSON.parse(localStorage.getItem(`novara_layout_${panel.id}`) || "null");
+    const saved = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(`novara_layout_${panel.id}`) || "null");
     if (saved) applyPanelLayout(panel, saved);
 } catch (error) { console.error("Saved layout error:", error); }
 }
@@ -15109,7 +15139,7 @@ setLayoutEditing(true);
 });
 document.getElementById("saveLayoutBtn").addEventListener("click", () => {
 const panel = activeLayoutPanel();
-localStorage.setItem(`novara_layout_${panel.id}`, JSON.stringify(capturePanelLayout(panel)));
+window.NOVARA_LOCAL_STORAGE.setItem(`novara_layout_${panel.id}`, JSON.stringify(capturePanelLayout(panel)));
 setLayoutEditing(false);
 window.dispatchEvent(new Event("resize"));
 });
@@ -15120,7 +15150,7 @@ window.dispatchEvent(new Event("resize"));
 });
 document.getElementById("resetLayoutBtn").addEventListener("click", () => {
 const panel = activeLayoutPanel();
-localStorage.removeItem(`novara_layout_${panel.id}`);
+window.NOVARA_LOCAL_STORAGE.removeItem(`novara_layout_${panel.id}`);
 applyPanelLayout(panel, defaultLayouts[panel.id]);
 setLayoutEditing(false);
 window.dispatchEvent(new Event("resize"));
@@ -15131,16 +15161,16 @@ if (!reportShell) return;
 if (layout === "free") { document.getElementById("reportLayoutMenu")?.classList.remove("open"); layoutEditSnapshot = capturePanelLayout(activeLayoutPanel()); setLayoutEditing(true); return; }
 ["preview-focus","builder-focus","stacked","preview-only"].forEach(name => reportShell.classList.remove(name));
 if (layout && layout !== "default") reportShell.classList.add(layout);
-if (persist) localStorage.setItem("novara_reports_layout", layout || "default");
+if (persist) window.NOVARA_LOCAL_STORAGE.setItem("novara_reports_layout", layout || "default");
 document.getElementById("reportLayoutMenu")?.classList.remove("open");
 window.dispatchEvent(new Event("resize"));
 }
 document.querySelectorAll("[data-report-layout]").forEach(button => button.addEventListener("click", () => applyReportLayout(button.dataset.reportLayout)));
 document.getElementById("reportLayoutReset")?.addEventListener("click", () => applyReportLayout("default"));
-applyReportLayout(localStorage.getItem("novara_reports_layout") || "default", false);
+applyReportLayout(window.NOVARA_LOCAL_STORAGE.getItem("novara_reports_layout") || "default", false);
 document.getElementById("closeAnalyticsLayoutSettings")?.addEventListener("click",()=>document.getElementById("analyticsLayoutSettings")?.classList.remove("open"));
 document.getElementById("arrangeAnalyticsCards")?.addEventListener("click",()=>{document.getElementById("analyticsLayoutSettings")?.classList.remove("open");if(window.innerWidth<=768)return;layoutEditSnapshot=capturePanelLayout(activeLayoutPanel());setLayoutEditing(true);});
-document.getElementById("resetAnalyticsAppearance")?.addEventListener("click",()=>{selectedReportPalette="standard";localStorage.setItem("novara_analytics_palette","standard");localStorage.removeItem("novara_analytics_custom_colors");renderReportPalettePicker();applyAnalyticsChartPalette();});
+document.getElementById("resetAnalyticsAppearance")?.addEventListener("click",()=>{selectedReportPalette="standard";window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_palette","standard");window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_custom_colors");renderReportPalettePicker();applyAnalyticsChartPalette();});
 try {
     await updateDashboard(
         currentPeriod
@@ -15226,7 +15256,7 @@ Object.values(Chart.instances || {}).forEach(chart => {
 });
 applyAnalyticsChartPalette();
 }
-let themeMode = localStorage.getItem(APPEARANCE_THEME_MODE_KEY) === "auto" ? "auto" : "manual";
+let themeMode = window.NOVARA_LOCAL_STORAGE.getItem(APPEARANCE_THEME_MODE_KEY) === "auto" ? "auto" : "manual";
 function automaticThemeForIndia() {
 const hour = Number(new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Kolkata",
@@ -15241,12 +15271,12 @@ document.documentElement.dataset.theme = selected;
 themeToggleLabel.textContent = selected === "light" ? "Light" : "Dark";
 themeToggle.setAttribute("aria-label", `Switch to ${selected === "light" ? "dark" : "light"} theme`);
 themeToggle.title = `Switch to ${selected === "light" ? "dark" : "light"} theme`;
-if (persistManual) localStorage.setItem(APPEARANCE_THEME_KEY, selected);
+if (persistManual) window.NOVARA_LOCAL_STORAGE.setItem(APPEARANCE_THEME_KEY, selected);
 requestAnimationFrame(refreshChartAppearance);
 }
 function setThemeMode(mode) {
 themeMode = mode === "auto" ? "auto" : "manual";
-localStorage.setItem(APPEARANCE_THEME_MODE_KEY, themeMode);
+window.NOVARA_LOCAL_STORAGE.setItem(APPEARANCE_THEME_MODE_KEY, themeMode);
 const automatic = themeMode === "auto";
 themeAutoBtn.classList.toggle("active", automatic);
 themeAutoBtn.setAttribute("aria-pressed", String(automatic));
@@ -15260,12 +15290,12 @@ const allowed = ["small", "default", "large", "xlarge"];
 const selected = allowed.includes(size) ? size : "default";
 document.documentElement.dataset.textSize = selected;
 textSizeSelect.value = selected;
-localStorage.setItem(APPEARANCE_TEXT_KEY, selected);
+window.NOVARA_LOCAL_STORAGE.setItem(APPEARANCE_TEXT_KEY, selected);
 requestAnimationFrame(refreshChartAppearance);
 }
 if (themeMode === "auto") setThemeMode("auto");
-else applyTheme(localStorage.getItem(APPEARANCE_THEME_KEY) || "dark");
-applyTextSize(localStorage.getItem(APPEARANCE_TEXT_KEY) || "default");
+else applyTheme(window.NOVARA_LOCAL_STORAGE.getItem(APPEARANCE_THEME_KEY) || "dark");
+applyTextSize(window.NOVARA_LOCAL_STORAGE.getItem(APPEARANCE_TEXT_KEY) || "default");
 themeToggle.addEventListener("click", () => {
 setThemeMode("manual");
 applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
@@ -15284,7 +15314,7 @@ document.getElementById("allSettingsBtn").blur();
 let autoRefreshTimer = null;
 function configureAutoRefresh(value) {
 const interval = Number(value);
-localStorage.setItem("novara_auto_refresh_interval", String(interval));
+window.NOVARA_LOCAL_STORAGE.setItem("novara_auto_refresh_interval", String(interval));
 if (autoRefreshTimer) clearInterval(autoRefreshTimer);
 autoRefreshTimer = interval > 0 ? setInterval(() => {
     if (!document.hidden && !openTicketId && !dashboardUpdateRunning) updateDashboard(currentPeriod);
@@ -15292,7 +15322,7 @@ autoRefreshTimer = interval > 0 ? setInterval(() => {
 if (typeof scheduleTicketDetailPoll === "function") scheduleTicketDetailPoll();
 }
 const autoRefreshSelect = document.getElementById("autoRefreshSelect");
-const storedRefreshInterval = localStorage.getItem("novara_auto_refresh_interval") || "1800000";
+const storedRefreshInterval = window.NOVARA_LOCAL_STORAGE.getItem("novara_auto_refresh_interval") || "1800000";
 if ([...autoRefreshSelect.options].some(option => option.value === storedRefreshInterval)) autoRefreshSelect.value = storedRefreshInterval;
 configureAutoRefresh(autoRefreshSelect.value);
 autoRefreshSelect.addEventListener("change", event => configureAutoRefresh(event.target.value));
@@ -15314,12 +15344,12 @@ return data;
 }
 const CUSTOM_INSTRUCTION_KEY = "novaradesk_custom_prompt_sections_v1";
 let customPromptSections = [];
-try { customPromptSections = JSON.parse(localStorage.getItem(CUSTOM_INSTRUCTION_KEY) || "[]"); } catch { customPromptSections = []; }
+try { customPromptSections = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(CUSTOM_INSTRUCTION_KEY) || "[]"); } catch { customPromptSections = []; }
 if (!Array.isArray(customPromptSections)) customPromptSections = [];
 function syncCustomPromptSections() {
 const legacy = document.querySelector('[data-prompt-field="custom_instructions"]');
 if (legacy) legacy.value = customPromptSections.filter(item => item.title || item.instruction).map(item => `## ${item.title || "Custom instruction"}\n${item.instruction || ""}`).join("\n\n");
-localStorage.setItem(CUSTOM_INSTRUCTION_KEY, JSON.stringify(customPromptSections));
+window.NOVARA_LOCAL_STORAGE.setItem(CUSTOM_INSTRUCTION_KEY, JSON.stringify(customPromptSections));
 }
 function renderCustomPromptSections(importedValue = "") {
 const host = document.getElementById("customInstructionCards");
@@ -15703,9 +15733,9 @@ let workflowEditingId = null;
 let workflowLogic = "and";
 let workflowView = "workflows";
 function workflowId() { return `workflow_${Date.now()}_${Math.random().toString(36).slice(2,7)}`; }
-function loadWorkflows() { try { const value=JSON.parse(localStorage.getItem(WORKFLOW_STORAGE_KEY)||"[]"); return Array.isArray(value)?value:[]; } catch { return []; } }
-function saveWorkflows(items) { localStorage.setItem(WORKFLOW_STORAGE_KEY,JSON.stringify(items)); }
-function loadWorkflowHistory() { try { const value=JSON.parse(localStorage.getItem(WORKFLOW_HISTORY_KEY)||"[]"); return Array.isArray(value)?value:[]; } catch { return []; } }
+function loadWorkflows() { try { const value=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(WORKFLOW_STORAGE_KEY)||"[]"); return Array.isArray(value)?value:[]; } catch { return []; } }
+function saveWorkflows(items) { window.NOVARA_LOCAL_STORAGE.setItem(WORKFLOW_STORAGE_KEY,JSON.stringify(items)); }
+function loadWorkflowHistory() { try { const value=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(WORKFLOW_HISTORY_KEY)||"[]"); return Array.isArray(value)?value:[]; } catch { return []; } }
 function workflowTime(value) { if(!value)return "Never"; const elapsed=Date.now()-new Date(value).getTime(); const minutes=Math.max(0,Math.floor(elapsed/60000)); if(minutes<1)return "Just now"; if(minutes<60)return `${minutes} min ago`; const hours=Math.floor(minutes/60); if(hours<24)return `${hours} hr${hours===1?"":"s"} ago`; return new Date(value).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}); }
 function workflowTriggerLabel(value) { return ({ticket_created:"Ticket created",customer_replied:"Customer replied",status_changed:"Status changed",ticket_assigned:"Ticket assigned",sla_approaching:"SLA approaching",rating_received:"Rating received",ai_low_confidence:"Low AI confidence"})[value]||value; }
 function workflowActionLabel(value) { return Object.fromEntries(WORKFLOW_ACTIONS)[value]||value; }
@@ -16041,13 +16071,13 @@ const historyButton = document.getElementById("ticketChannelHistory");
 const HISTORY_KEY = "novaradesk_ticket_activity_v1";
 const CALL_NOTES_KEY = "novaradesk_ticket_call_notes_v1";
 const CALL_LOGS_KEY = "novaradesk_ticket_call_logs_v1";
-const historyStore = () => { try { const value=JSON.parse(localStorage.getItem(HISTORY_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
+const historyStore = () => { try { const value=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(HISTORY_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
 const ticketId = () => String((window.lastOpenTicketData?.ticket || lastOpenTicketData?.ticket || {}).id || openTicketId || "");
-const callNotesStore = () => { try { const value=JSON.parse(localStorage.getItem(CALL_NOTES_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
-const saveCallNotes = value => { const id=ticketId();if(!id)return;const store=callNotesStore();store[id]=String(value||"").slice(0,4000);localStorage.setItem(CALL_NOTES_KEY,JSON.stringify(store)); };
-const callLogsStore = () => { try { const value=JSON.parse(localStorage.getItem(CALL_LOGS_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
-const saveCallLog = log => { const id=ticketId();if(!id)return;const store=callLogsStore();(store[id]||=[]).unshift(log);store[id]=store[id].slice(0,100);localStorage.setItem(CALL_LOGS_KEY,JSON.stringify(store)); };
-const recordAction = (type,title,detail,actor="Novara CX Support") => { const id=ticketId();if(!id)return;const store=historyStore();(store[id]||=[]).push({id:`event-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,type,title,detail,actor,created_at:new Date().toISOString()});store[id]=store[id].slice(-120);localStorage.setItem(HISTORY_KEY,JSON.stringify(store));if(drawer?.classList.contains("ticket-history-view"))renderHistoryView(); };
+const callNotesStore = () => { try { const value=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(CALL_NOTES_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
+const saveCallNotes = value => { const id=ticketId();if(!id)return;const store=callNotesStore();store[id]=String(value||"").slice(0,4000);window.NOVARA_LOCAL_STORAGE.setItem(CALL_NOTES_KEY,JSON.stringify(store)); };
+const callLogsStore = () => { try { const value=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(CALL_LOGS_KEY)||"{}");return value&&typeof value==="object"?value:{}; } catch { return {}; } };
+const saveCallLog = log => { const id=ticketId();if(!id)return;const store=callLogsStore();(store[id]||=[]).unshift(log);store[id]=store[id].slice(0,100);window.NOVARA_LOCAL_STORAGE.setItem(CALL_LOGS_KEY,JSON.stringify(store)); };
+const recordAction = (type,title,detail,actor="Novara CX Support") => { const id=ticketId();if(!id)return;const store=historyStore();(store[id]||=[]).push({id:`event-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,type,title,detail,actor,created_at:new Date().toISOString()});store[id]=store[id].slice(-120);window.NOVARA_LOCAL_STORAGE.setItem(HISTORY_KEY,JSON.stringify(store));if(drawer?.classList.contains("ticket-history-view"))renderHistoryView(); };
 const historyTime = value => { const date=new Date(value||Date.now());return Number.isNaN(date.getTime())?"—":date.toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
 const renderHistoryView = () => {
 const data=window.lastOpenTicketData || lastOpenTicketData || {},ticket=data.ticket||{},events=[];
@@ -16175,10 +16205,10 @@ const SEED_CUSTOMERS = [
 {id:"C-1006",name:"Sara Fernandes",email:"sara@meridianhome.co",phone:"+91 99200 44018",organisation:"Meridian Home",segment:"Loyal",health:"watch",healthScore:61,value:91750,tickets:9,openTickets:1,csat:3.9,lastInteraction:"2026-08-23T14:12:00+05:30",since:"Sep 2024",city:"Goa, India",timezone:"Asia/Kolkata",language:"English",owner:"Novara CX Support",preferredChannel:"WhatsApp",marketingConsent:"Opted in",dataConsent:"Verified",tags:["Wholesale","Delivery watch"],brief:"Wholesale buyer with strong lifetime value. Recent logistics delays reduced health; proactively share fulfilment milestones and avoid generic delivery estimates.",signals:{orders:"18",refundRate:"5.5%",avgResponse:"51 min",lastSentiment:"Neutral"},integrations:[{name:"Shopify",id:"#SH-11047",status:"Connected"},{name:"WhatsApp",id:"+91 99200 44018",status:"Verified"}],timeline:[{date:"23 Aug, 02:12 pm",title:"Delivery delay reported",text:"Wholesale order missed the expected dispatch date."}],ticketList:[{id:"NX-0006",subject:"Delayed wholesale order",channel:"WhatsApp",status:"Pending",created:"23 Aug 2026"}],orders:[{id:"#10401",date:"19 Aug 2026",value:"₹22,400",status:"Delayed"}],notes:[]}
 ];
 let customers;
-try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); customers = Array.isArray(saved) && saved.length ? saved : SEED_CUSTOMERS; } catch { customers = SEED_CUSTOMERS; }
+try { const saved = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(STORAGE_KEY) || "null"); customers = Array.isArray(saved) && saved.length ? saved : SEED_CUSTOMERS; } catch { customers = SEED_CUSTOMERS; }
 let activeCustomer = null;
 let editorMode = "edit";
-const saveCustomers = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
+const saveCustomers = () => window.NOVARA_LOCAL_STORAGE.setItem(STORAGE_KEY, JSON.stringify(customers));
 const initials = name => String(name || "Customer").split(/\s+/).slice(0,2).map(part => part[0]).join("").toUpperCase();
 const money = value => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 const healthLabel = value => value === "healthy" ? "Healthy" : value === "watch" ? "Watch" : "At risk";
@@ -16273,7 +16303,7 @@ channels:[{id:"website",name:"Website chat",detail:"NovaraDesk web messenger",co
 integrations:[{id:"shopify",name:"Shopify",detail:"Orders and customer profiles",connected:false},{id:"unicommerce",name:"Unicommerce",detail:"Fulfilment and order status",connected:false},{id:"clickpost",name:"ClickPost",detail:"Shipment tracking",connected:false},{id:"crm",name:"CRM connector",detail:"Zoho, Salesforce or LeadSquared",connected:false}]
 };
 let saved = {};
-try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch { saved = {}; }
+try { saved = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(SETTINGS_KEY) || "{}"); } catch { saved = {}; }
 let agents = Array.isArray(saved.agents) ? saved.agents : structuredClone(defaultAgents);
 let fields = Array.isArray(saved.fields) ? saved.fields : structuredClone(defaultFields);
 let connections = saved.connections || structuredClone(defaultConnections);
@@ -16292,7 +16322,7 @@ function saveSettings(){
 const invalid=[...document.querySelectorAll("#panel-settings [data-setting-key][required],#panel-settings input[type='email'][data-setting-key]")].filter(input=>!input.checkValidity());
 document.querySelectorAll("#panel-settings .invalid-setting").forEach(input=>input.classList.remove("invalid-setting"));
 if(invalid.length){invalid.forEach(input=>input.classList.add("invalid-setting"));invalid[0].focus();const state=document.getElementById("settingsSaveState");if(state){state.textContent="Check highlighted fields";state.classList.add("unsaved");}const footer=document.getElementById("settingsFooterState");if(footer)footer.textContent="Correct the highlighted information before saving.";return;}
-saved={values:collectValues(),agents,fields,connections};localStorage.setItem(SETTINGS_KEY,JSON.stringify(saved));setDirty(false);
+saved={values:collectValues(),agents,fields,connections};window.NOVARA_LOCAL_STORAGE.setItem(SETTINGS_KEY,JSON.stringify(saved));setDirty(false);
 }
 applyValues(saved.values||{});renderAgents();renderFields();renderConnectionRows("channels");renderConnectionRows("integrations");showSection("general");
 document.getElementById("settingsNav")?.addEventListener("click",event=>{const button=event.target.closest("[data-settings-section]");if(button)showSection(button.dataset.settingsSection);});
@@ -16356,7 +16386,7 @@ customer:[
 const clone=value=>JSON.parse(JSON.stringify(value));
 const esc=value=>typeof escapeHtml==="function"?escapeHtml(String(value??"")):String(value??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;","'":"&#39;"}[c]));
 let layouts=clone(defaults),windowType="ticket",editingId=null,editingDraft=null,draggedElementType=null,draggedChoiceIndex=null;
-try{const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");if(stored?.ticket&&stored?.customer)layouts=stored;}catch{}
+try{const stored=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(STORAGE_KEY)||"null");if(stored?.ticket&&stored?.customer)layouts=stored;}catch{}
 const current=()=>layouts[windowType];
 const fieldById=id=>current().find(field=>field.id===id);
 function markChanged(message="Layout changed. Save when ready."){const state=document.getElementById("settingsSaveState");if(state){state.textContent="Unsaved changes";state.classList.add("unsaved");}const footer=document.getElementById("settingsFooterState");if(footer)footer.textContent=message;}
@@ -16384,7 +16414,7 @@ document.getElementById("customizerPreview")?.addEventListener("keydown",event=>
 document.getElementById("customizerPreview")?.addEventListener("dragstart",event=>{const row=event.target.closest("[data-inline-choice]");if(!row)return;syncInlineDraft();draggedChoiceIndex=Number(row.dataset.inlineChoice);event.dataTransfer.effectAllowed="move";});
 document.getElementById("customizerPreview")?.addEventListener("drop",event=>{const row=event.target.closest("[data-inline-choice]");if(!row||draggedChoiceIndex===null)return;event.preventDefault();syncInlineDraft();const target=Number(row.dataset.inlineChoice),[choice]=editingDraft.options.splice(draggedChoiceIndex,1);editingDraft.options.splice(target,0,choice);draggedChoiceIndex=null;renderPreview();});
 document.getElementById("customizerReset")?.addEventListener("click",event=>{const button=event.currentTarget;if(button.dataset.confirming!=="true"){button.dataset.confirming="true";button.textContent="Confirm restore";setTimeout(()=>{if(button.dataset.confirming==="true"){delete button.dataset.confirming;button.textContent="Restore default layout";}},3000);return;}delete button.dataset.confirming;button.textContent="Restore default layout";layouts[windowType]=clone(defaults[windowType]);markChanged("Default layout restored. Save the layout to keep it.");renderPreview();});
-document.getElementById("customizerPublish")?.addEventListener("click",()=>{localStorage.setItem(STORAGE_KEY,JSON.stringify(layouts));const state=document.getElementById("settingsSaveState");if(state){state.textContent="Layout saved";state.classList.remove("unsaved");}const footer=document.getElementById("settingsFooterState");if(footer)footer.textContent=`${windowType==="ticket"?"Ticket":"Customer profile"} layout saved to this browser.`;});
+document.getElementById("customizerPublish")?.addEventListener("click",()=>{window.NOVARA_LOCAL_STORAGE.setItem(STORAGE_KEY,JSON.stringify(layouts));const state=document.getElementById("settingsSaveState");if(state){state.textContent="Layout saved";state.classList.remove("unsaved");}const footer=document.getElementById("settingsFooterState");if(footer)footer.textContent=`${windowType==="ticket"?"Ticket":"Customer profile"} layout saved to this browser.`;});
 render();
 })();
 </script>
@@ -16602,7 +16632,7 @@ document.getElementById("sidebarUserRole").textContent=role;
 document.body.classList.add("novara-authenticated");
 }
 async function verifySession(){
-const token=localStorage.getItem(tokenKey)||sessionStorage.getItem(tokenKey);
+const token=window.NOVARA_LOCAL_STORAGE.getItem(tokenKey)||window.NOVARA_SESSION_STORAGE.getItem(tokenKey);
 if(!token){setStatus("");return false;}
 try{
     const response=await fetch(API+"/auth/me");
@@ -16611,8 +16641,8 @@ try{
     showWorkspace(data.user);
     return true;
 }catch(error){
-    localStorage.removeItem(tokenKey);
-    sessionStorage.removeItem(tokenKey);
+    window.NOVARA_LOCAL_STORAGE.removeItem(tokenKey);
+    window.NOVARA_SESSION_STORAGE.removeItem(tokenKey);
     setStatus(error.message==="Your workspace access is awaiting approval."?error.message:"Your session has expired. Please sign in again.");
     return false;
 }
@@ -16628,9 +16658,9 @@ try{
         return;
     }
     if(!authResponse.ok||!data.success)throw new Error(data.error||"Access could not be verified.");
-    if(data.token)localStorage.setItem(tokenKey,data.token);
-    else sessionStorage.setItem(tokenKey,response.credential);
-    if(data.token)sessionStorage.removeItem(tokenKey);
+    if(data.token)window.NOVARA_LOCAL_STORAGE.setItem(tokenKey,data.token);
+    else window.NOVARA_SESSION_STORAGE.setItem(tokenKey,response.credential);
+    if(data.token)window.NOVARA_SESSION_STORAGE.removeItem(tokenKey);
     window.location.reload();
 }catch(error){setStatus(error.message||"Google sign-in could not be verified.")}
 }
@@ -16643,18 +16673,19 @@ else setStatus("Google sign-in is temporarily unavailable. Please refresh the pa
 }
 if(window.NOVARA_DEMO_MODE){
 document.body.classList.add("novara-demo-mode");
+const previewLogout = document.getElementById("sidebarLogout");
+if(previewLogout) { previewLogout.textContent = "Exit preview"; previewLogout.title = "Return to sign in"; }
 showWorkspace(window.NOVARA_DEMO_USER);
 setStatus("");
 document.getElementById("sidebarLogout")?.addEventListener("click",()=>{
-    Object.keys(localStorage).filter(key=>key.startsWith("novara_")||key.startsWith("novaradesk_")).forEach(key=>localStorage.removeItem(key));
-    window.location.reload();
+    window.location.replace(window.location.pathname);
 });
 }else{
 document.getElementById("sidebarLogout")?.addEventListener("click",async ()=>{
     try{await fetch(API+"/auth/logout",{method:"POST"})}catch(error){}
     try{window.google?.accounts?.id?.disableAutoSelect()}catch(error){}
-    localStorage.removeItem(tokenKey);
-    sessionStorage.removeItem(tokenKey);
+    window.NOVARA_LOCAL_STORAGE.removeItem(tokenKey);
+    window.NOVARA_SESSION_STORAGE.removeItem(tokenKey);
     window.location.replace(window.location.pathname);
 });
 verifySession().then(active=>{if(!active)renderGoogle()});
@@ -16837,7 +16868,7 @@ if(!wrap||!btn||!input||!results)return;
 let timer=0,items=[];
 
 function dashboardItems(q){
-    try{return loadCustomDashboards().filter(d=>String(d.name||"").toLowerCase().includes(q)).slice(0,6).map(d=>({type:"Dashboard",title:d.name,sub:"Custom dashboard",action:()=>{localStorage.setItem(DASHBOARD_ACTIVE_KEY,d.id);showWorkspace("dashboards");renderCustomDashboard?.();}}));}catch{return []}
+    try{return loadCustomDashboards().filter(d=>String(d.name||"").toLowerCase().includes(q)).slice(0,6).map(d=>({type:"Dashboard",title:d.name,sub:"Custom dashboard",action:()=>{window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,d.id);showWorkspace("dashboards");renderCustomDashboard?.();}}));}catch{return []}
 }
 async function ticketItems(q){
     let tickets=[];
