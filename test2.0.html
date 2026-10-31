@@ -19920,3 +19920,66 @@ body.test2-compact #appSidebar #sidebarLogout{font-size:10px!important;max-width
  render();
 })();
 </script>
+
+<style id="test2-small-analytics-kpis">
+body.test2-compact #panel-ai>.kpi-grid,
+body.test2-compact #panel-human>.kpi-grid {gap:8px!important;margin-bottom:12px!important}
+body.test2-compact #panel-ai>.kpi-grid .kpi-card,
+body.test2-compact #panel-human>.kpi-grid .kpi-card {
+ min-height:90px!important;height:auto!important;padding:11px 12px!important;gap:0!important;
+ border-radius:8px!important;background:var(--bg-card)!important;box-shadow:none!important;
+ justify-content:flex-start!important;overflow:visible!important
+}
+body.test2-compact #panel-ai>.kpi-grid .kpi-card::after,
+body.test2-compact #panel-human>.kpi-grid .kpi-card::after {display:none!important}
+body.test2-compact #panel-ai>.kpi-grid .kpi-label,
+body.test2-compact #panel-human>.kpi-grid .kpi-label {
+ font-size:calc(11px * var(--ui-text-scale))!important;line-height:1.25!important;
+ color:var(--text-secondary)!important;letter-spacing:0!important
+}
+body.test2-compact #panel-ai>.kpi-grid .kpi-value,
+body.test2-compact #panel-human>.kpi-grid .kpi-value {
+ margin-top:6px!important;font-size:calc(25px * var(--ui-text-scale))!important;
+ line-height:1.05!important;letter-spacing:-.6px!important
+}
+body.test2-compact #panel-ai>.kpi-grid .kpi-sub,
+body.test2-compact #panel-human>.kpi-grid .kpi-sub {display:none!important}
+body.test2-compact #panel-ai .kpi-comparison,
+body.test2-compact #panel-human .kpi-comparison {
+ display:flex;align-items:baseline;justify-content:flex-start!important;flex-wrap:nowrap!important;
+ gap:5px!important;min-width:0!important;width:auto!important;margin-top:6px!important;
+ padding:0!important;border:0!important;line-height:1.2!important
+}
+body.test2-compact #panel-ai .kpi-comparison.is-empty,
+body.test2-compact #panel-human .kpi-comparison.is-empty {display:none!important}
+body.test2-compact #panel-ai .kpi-change-value,
+body.test2-compact #panel-human .kpi-change-value {font-size:calc(10px * var(--ui-text-scale))!important}
+body.test2-compact #panel-ai .kpi-previous-group,
+body.test2-compact #panel-human .kpi-previous-group {display:inline-flex!important;flex-wrap:nowrap!important;gap:4px!important}
+body.test2-compact #panel-ai .kpi-previous-group::before,
+body.test2-compact #panel-human .kpi-previous-group::before {content:"·";color:var(--text-muted)}
+body.test2-compact #panel-ai .kpi-previous-group :is(span,strong),
+body.test2-compact #panel-human .kpi-previous-group :is(span,strong) {font-size:calc(9.5px * var(--ui-text-scale))!important;line-height:1.2!important}
+body.test2-compact #panel-ai .kpi-comparison-separator,
+body.test2-compact #panel-human .kpi-comparison-separator {display:none!important}
+@media(max-width:640px){
+ body.test2-compact #panel-ai .kpi-comparison,
+ body.test2-compact #panel-human .kpi-comparison {flex-wrap:wrap!important;row-gap:2px!important}
+}
+</style>
+
+<script id="test2-kpi-explanations">
+(() => {
+ function describeMetrics(){
+  document.querySelectorAll("#panel-ai .kpi-card,#panel-human .kpi-card").forEach((card,index)=>{
+   const sub=card.querySelector(".kpi-sub"),label=card.querySelector(".kpi-label");
+   if(!sub||!label)return;
+   const explanation=sub.textContent.trim();
+   label.title=explanation;
+   if(!sub.id)sub.id="testKpiDescription"+index;
+   card.setAttribute("aria-describedby",sub.id);
+  });
+ }
+ describeMetrics();
+})();
+</script>
