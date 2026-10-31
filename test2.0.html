@@ -19984,32 +19984,38 @@ body.test2-compact #panel-human .kpi-comparison-separator {display:none!importan
 })();
 </script>
 
-<style id="test2-living-light-palette">
-/* A quiet mint/ivory canvas with crisp white working surfaces. */
+<style id="test2-clean-white-palette">
+/* Neutral white workspace; colour is reserved for actions and status. */
 html[data-theme="light"] body.test2-compact {
- --bg:#e9f3ed; --bg-soft:#f0f7f2; --bg-card:#fff; --surface:#fff;
- --surface-light:#f5faf6; --surface-hover:#e5f2e9;
- --border:rgba(41,91,66,.14); --border-strong:rgba(41,91,66,.25);
+ --bg:#ffffff; --bg-soft:#f7f8fa; --bg-card:#ffffff; --surface:#ffffff;
+ --surface-light:#f7f8fa; --surface-hover:#f0f2f5;
+ --border:#e5e7eb; --border-strong:#cdd2d9;
  --accent:#438765; --accent-light:#286548; --accent-dark:#286548;
- --text:#1b3025; --text-secondary:#476052; --text-muted:#667c6d;
- background:radial-gradient(ellipse at 90% 0%,#d6ede0 0%,transparent 58%),
- radial-gradient(ellipse at 12% 100%,#faf3e4 0%,transparent 58%),#edf5ee!important;
- background-attachment:fixed!important;
+ --text:#20252c; --text-secondary:#4b5563; --text-muted:#6b7280;
+ background:#ffffff!important;
 }
 html[data-theme="light"] body.test2-compact #appSidebar {
- background:linear-gradient(165deg,#e2f0e7 0%,#f4f7ec 100%)!important;
- border-right-color:#cadfd1!important;box-shadow:none!important;
+ background:#f8f9fb!important;border-right-color:#e5e7eb!important;box-shadow:none!important;
 }
-html[data-theme="light"] body.test2-compact .test-inbox-nav-link.active {
- background:#d2e8da!important;color:#245c40!important;
+html[data-theme="light"] body.test2-compact :is(.toolbar,.topbar-actions,.agent-profile,.topbar-updated,.refresh-btn,.theme-toggle,.text-size-control,.auto-refresh-control) {
+ background:#ffffff;box-shadow:none;
+}
+html[data-theme="light"] body.test2-compact :is(.nav-item.active,.nav-subitem.active,.test-inbox-nav-link.active) {
+ background:#eceff2!important;color:#20252c!important;box-shadow:none!important;
+}
+html[data-theme="light"] body.test2-compact.test2-inbox #ticketQueuePanel {
+ background:#ffffff!important;
 }
 html[data-theme="light"] body.test2-compact.test2-inbox #ticketDrawerBackdrop .ticket-workspace-scroll {
- background:linear-gradient(155deg,#edf7f0,#f8f8ee)!important;
+ background:#f7f8fa!important;
 }
 html[data-theme="light"] body.test2-compact.test2-inbox #ticketQueuePanel .ticket-queue-card.active {
- background:#e3f2e8!important;box-shadow:inset 3px 0 #438765!important;
+ background:#f0f2f5!important;box-shadow:inset 3px 0 #438765!important;
+}
+html[data-theme="light"] body.test2-compact.test2-inbox #ticketDrawerBackdrop .ticket-thread-message.customer {
+ background:#ffffff!important;color:#20252c!important;border-color:#e5e7eb!important;
 }
 html[data-theme="light"] body.test2-compact.test2-inbox #ticketDrawerBackdrop .ticket-thread-message.agent {
- background:#dbefe2!important;color:#203b2c!important;
+ background:#eef1f5!important;color:#20252c!important;
 }
 </style>
