@@ -20562,3 +20562,39 @@ body.enterprise-test .topbar .topbar-actions #globalSearchResults{top:calc(100% 
 }
 
 </style>
+
+<style id="test2-assist-refinement-v3">
+/* Flatten AI Assist and make secondary controls consistent. */
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel{padding:16px!important;background:#fff!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-title{font-size:15px!important;font-weight:600!important;letter-spacing:-.2px!important;line-height:1.4!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-sub{font-size:11px!important;line-height:1.5!important;color:var(--text-muted)!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-head{margin-bottom:18px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-section{padding:0!important;margin:0 0 18px!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-section+.agent-assist-section{border-top:1px solid var(--border)!important;padding-top:18px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-section-head{gap:8px!important;align-items:flex-start!important;margin-bottom:10px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-label{font-size:12px!important;font-weight:600!important;line-height:1.4!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-hint{font-size:11px!important;line-height:1.5!important;margin-top:4px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-copy{width:28px!important;min-width:28px!important;height:28px!important;padding:5px!important;border:0!important;border-radius:5px!important;background:transparent!important;color:var(--text-muted)!important;box-shadow:none!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-copy:hover{background:var(--surface-light)!important;transform:none!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-suggestion{min-height:100px!important;max-height:220px!important;background:#f7f8fa!important;border:1px solid var(--border)!important;border-radius:7px!important;font-size:12px!important;line-height:1.65!important;padding:12px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;margin-top:10px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel #agentSuggestReply{grid-column:1/-1!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-btn{min-height:32px!important;padding:7px 8px!important;border:1px solid var(--border-strong)!important;border-radius:6px!important;background:#fff!important;color:var(--text-secondary)!important;font-size:11px!important;font-weight:500!important;line-height:1.4!important;white-space:normal!important;box-shadow:none!important;text-align:center!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-btn.primary{background:var(--accent-dark)!important;border-color:var(--accent-dark)!important;color:#fff!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-tone-actions{display:flex!important;flex-wrap:wrap!important;gap:6px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-tone-actions button{flex:1 1 calc(50% - 6px)!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-draft-input{height:110px;min-height:110px!important;border:1px solid var(--border-strong)!important;border-radius:7px!important;background:#fff!important;font-size:12px!important;line-height:1.65!important;padding:11px!important;color:var(--text)!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-status:empty{min-height:0!important;margin:0!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-clear-btn{font-size:11px!important;font-weight:500!important;min-height:32px!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop :is(.ticket-tag,.ticket-add-tag){border-radius:5px!important;font-size:10.5px!important;font-weight:500!important;min-height:26px!important;line-height:1.4!important}
+html[data-theme="light"] body.enterprise-test #ticketQueuePanel .ticket-queue-status{font-size:10px!important;font-weight:500!important;border-radius:4px!important;white-space:nowrap!important}
+html[data-theme="light"] body.enterprise-test #ticketQueuePanel .ticket-queue-status.in_progress{background:#edf2f8!important;color:#41658b!important}
+html[data-theme="light"] body.enterprise-test #ticketQueuePanel .ticket-queue-card{transition:background .15s ease!important}
+html[data-theme="light"] body.enterprise-test #ticketQueuePanel .ticket-queue-card:focus-visible{outline:2px solid var(--accent-dark)!important;outline-offset:-3px!important}
+html[data-theme="light"] body.enterprise-test #chatbotTab-versions .version-row{padding:16px!important;border:1px solid var(--border)!important;border-radius:8px!important;background:#fff!important;box-shadow:none!important}
+html[data-theme="light"] body.enterprise-test #chatbotTab-versions .version-row:hover{transform:none!important;background:var(--surface-light)!important}
+html[data-theme="light"] body.enterprise-test #chatbotTab-versions .version-copy strong{font-size:13px!important;font-weight:600!important}
+html[data-theme="light"] body.enterprise-test #chatbotTab-versions .version-copy>span{font-size:11.5px!important;line-height:1.6!important}
+html[data-theme="light"] body.enterprise-test #chatbotTab-versions .version-state{font-size:10px!important;font-weight:500!important;letter-spacing:0!important;border-radius:5px!important}
+
+</style>
