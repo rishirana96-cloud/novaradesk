@@ -14,9 +14,10 @@
 - SHOPIFY_API_SECRET saved and confirmed as Value encrypted on the staging Worker after user authorization. No secret committed.
 - Health endpoint returned service novaradesk-shopify, status ok. Standalone app loads and refuses unauthenticated access.
 - Development store NovaraDesk Staging created with Shopify-generated test data: novaradesk-staging.myshopify.com.
-- Shopify install consent screen is open; explicit permission grant is pending user authorization.
+- User authorized installation; NovaraDesk successfully installed on NovaraDesk Staging and opens embedded in Shopify admin.
+- First embedded order request returned 503. Identified Cloudflare ExecutionContext incorrectly passed as the injected fetch client. Fixed module entry point and added regression test; all 26 tests pass.
+- Fixed source is in the draft PR; deployment of the fix is pending because the connected browser timed out opening the staging code editor. No successful live order lookup claimed.
 - Shopify version currently has read_orders and the staging URL. Compliance subscriptions still need registration from shopify.app.staging.toml; they are not configured by the dashboard creation form.
-- No dev-store installation or live Shopify order test yet. No production application changes.
+- Development-store installation complete. Live order lookup not yet passing. No production application changes.
 
-Next: authorize installation on development store, register compliance webhooks, run real integration tests, and implement tenant-safe NovaraDesk workspace linking before review.
-
+Next: deploy the Worker entry-point fix to staging, verify embedded order lookup, register compliance webhooks, run real integration tests, and implement tenant-safe NovaraDesk workspace linking before review.
