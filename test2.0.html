@@ -12713,7 +12713,7 @@ const numeric = Number(value);
 return Number.isFinite(numeric) ? numeric : 0;
 }
 const REPORT_PALETTES = {
-standard:["#487563","#c59a57","#bb7279","#7b94ae","#8daf9e","#a8a0bd"],
+standard:["#397b5a","#be9550","#bb6571","#5c7fa6","#8aaa98","#8e81aa"],
 novara:["#315f4a","#78a68e","#b7cdbf","#d6a85f","#cf766c","#668da3"],
 business:["#2563eb","#0891b2","#7c3aed","#ea580c","#16a34a","#dc2626"],
 ocean:["#0f4c5c","#167d9a","#39a6b8","#75c9c8","#9bd8d0","#d5eee8"],
@@ -12723,7 +12723,7 @@ monochrome:["#244f3c","#426d59","#658c77","#8eae9d","#b7cbbf","#dce7e0"]
 };
 let selectedReportPalette = (() => { const saved = window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_palette"); return !saved || saved === "novara" ? "standard" : saved; })();
 function currentReportColors(){return selectedReportPalette === "custom" ? [...document.querySelectorAll("#reportCustomColors input")].map(input=>input.value) : REPORT_PALETTES[selectedReportPalette] || REPORT_PALETTES.standard;}
-function semanticReportColor(label,fallback){const key=String(label??"").trim().toLowerCase();if(/(^|[^a-z])(resolved|positive|success|healthy|improved|retained|answered|satisfied|good)([^a-z]|$)/.test(key))return "#487563";if(/(^|[^a-z])(negative|failed|failure|error|escalated|breached|overdue|dissatisfied|bad)([^a-z]|$)/.test(key))return "#bb7279";if(/(^|[^a-z])(pending|warning|waiting|reopened|partial|at risk)([^a-z]|$)/.test(key))return "#c59a57";if(/(^|[^a-z])neutral([^a-z]|$)/.test(key))return "#c59a57";return fallback;}
+function semanticReportColor(label,fallback){const key=String(label??"").trim().toLowerCase();if(/(^|[^a-z])(resolved|positive|success|healthy|improved|retained|answered|satisfied|good)([^a-z]|$)/.test(key))return "#397b5a";if(/(^|[^a-z])(negative|failed|failure|error|escalated|breached|overdue|dissatisfied|bad)([^a-z]|$)/.test(key))return "#bb6571";if(/(^|[^a-z])(pending|warning|waiting|reopened|partial|at risk)([^a-z]|$)/.test(key))return "#be9550";if(/(^|[^a-z])neutral([^a-z]|$)/.test(key))return "#be9550";return fallback;}
 function applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-tickets,#panel-ai,#panel-human,#panel-dashboards,#panel-reports"))return;const type=chart.config.type;chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>semanticReportColor((chart.data.labels||[])[point],colors[point%colors.length]));else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
 function renderReportPalettePicker(){const picker=document.getElementById("reportPalettePicker");if(!picker)return;let customSaved=null;try{customSaved=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_custom_colors")||"null");}catch{}if(Array.isArray(customSaved))document.querySelectorAll("#reportCustomColors input").forEach((input,index)=>{if(customSaved[index])input.value=customSaved[index];});picker.innerHTML=[...Object.entries(REPORT_PALETTES),["custom",["#315f4a","#d6a85f","#668da3"]]].map(([name,colors])=>`<button class="palette-option ${name===selectedReportPalette?"active":""}" data-report-palette="${name}" type="button"><span class="palette-swatches">${colors.slice(0,4).map(color=>`<i style="background:${color}"></i>`).join("")}</span>${reportLabel(name)}</button>`).join("");document.getElementById("reportCustomColors")?.classList.toggle("open",selectedReportPalette==="custom");picker.querySelectorAll("[data-report-palette]").forEach(button=>button.addEventListener("click",()=>{selectedReportPalette=button.dataset.reportPalette;window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_palette",selectedReportPalette);renderReportPalettePicker();applyAnalyticsChartPalette();scheduleCustomReport();}));}
 function formatReportValue(value) {
@@ -20652,4 +20652,52 @@ html[data-theme="light"] body.enterprise-test .workflow-editor .workflow-rule-re
  html[data-theme="light"] body.enterprise-test .topbar .topbar-actions{width:100%!important;justify-content:flex-end!important;align-self:stretch!important}
 }
 html[data-theme="light"] body.enterprise-test:has(#chatbotTab-model.active) #ticketWorkspaceFloater{bottom:100px!important}
+</style>
+
+<style id="test2-colour-system-v5">
+/* A neutral white canvas, one brand green, and distinct semantic colours. */
+html[data-theme="light"] body.enterprise-test{
+ --bg:#ffffff;--bg-card:#ffffff;--bg-soft:#f7f8fa;--surface:#ffffff;
+ --surface-alt:#f7f8fa;--surface-light:#f7f8fa;--surface-hover:#f0f3f5;
+ --text:#202832;--text-secondary:#475467;--text-muted:#667085;--muted:#667085;
+ --border:#e4e7ec;--border-strong:#cbd2dc;
+ --accent:#26734f;--accent-dark:#216643;--accent-light:#216643;--settings-accent:#216643;
+ --success:#23734b;--warning:#956116;--danger:#b54748;
+ --color-positive-bg:#edf6f0;--color-positive-text:#246745;
+ --color-info-bg:#eef4fc;--color-info-text:#315f96;
+ --color-warning-bg:#fff7e9;--color-warning-text:#8c5b13;
+ --color-negative-bg:#fceff0;--color-negative-text:#a43e47;
+ --color-neutral-bg:#f0f2f5;--color-neutral-text:#596579;
+ --color-reopened-bg:#f3effb;--color-reopened-text:#7150a0;
+ background:#fff!important;color:var(--text)!important;
+}
+html[data-theme="light"] body.enterprise-test #appSidebar{background:#f7f8fa!important;border-right-color:var(--border)!important}
+html[data-theme="light"] body.enterprise-test .test-inbox-nav-link{color:var(--text-secondary)!important}
+html[data-theme="light"] body.enterprise-test .test-inbox-nav-link:hover{background:#edf0f3!important;color:var(--text)!important}
+html[data-theme="light"] body.enterprise-test .test-inbox-nav-link.active{background:#eaf3ed!important;color:#216643!important}
+html[data-theme="light"] body.enterprise-test .test-inbox-nav-link.active::before{background:#26734f!important}
+html[data-theme="light"] body.enterprise-test :is(#tabSwitcher .tab.active,#panel-chatbot .admin-tab.active,#panel-settings .settings-navigation nav button.active){background:#edf5f0!important;color:#216643!important}
+html[data-theme="light"] body.enterprise-test :is(.admin-btn.primary,.report-primary-btn,.settings-primary-btn,.customer-primary-btn,.ticket-send-arrow,.ticket-tag-submit,.workflow-step-number,#ticketWorkspaceFloater){background:#216643!important;border-color:#216643!important;color:#fff!important}
+html[data-theme="light"] body.enterprise-test :is(.admin-btn.primary,.report-primary-btn,.settings-primary-btn,.customer-primary-btn):hover{background:#195437!important;border-color:#195437!important;filter:none!important}
+html[data-theme="light"] body.enterprise-test #ticketDrawerBackdrop #agentAssistPanel .agent-assist-btn.primary{background:#216643!important;border-color:#216643!important;color:#fff!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-thread-message.customer{background:#fff!important;border-color:#e4e7ec!important;color:#202832!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-thread-message.agent{background:#edf3f9!important;border-color:#dce6f0!important;color:#26394f!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-card.active{background:#f0f5f2!important;box-shadow:inset 3px 0 #26734f!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-card:hover:not(.active){background:#f7f8fa!important}
+html[data-theme="light"] body.enterprise-test :is(.badge-resolved,.badge-positive,.badge-yes,.customer-health-pill.healthy,.customer-risk-badge.healthy,.customer-verified-badge,.customer-source-badge){background:var(--color-positive-bg)!important;color:var(--color-positive-text)!important;border-color:transparent!important}
+html[data-theme="light"] body.enterprise-test :is(.badge-escalated,.badge-negative,.badge-no,.customer-health-pill.risk,.customer-risk-badge.risk,.customer-segment.risk,.sla-badge.breached,.ticket-sla-state.overdue){background:var(--color-negative-bg)!important;color:var(--color-negative-text)!important;border-color:transparent!important}
+html[data-theme="light"] body.enterprise-test :is(.badge-pending,.badge-partial,.customer-health-pill.watch,.customer-risk-badge.watch,.sla-badge.warning,.workflow-ready-badge.incomplete){background:var(--color-warning-bg)!important;color:var(--color-warning-text)!important;border-color:transparent!important}
+html[data-theme="light"] body.enterprise-test :is(.badge-unknown,.badge-neutral,.badge-intent,.customer-segment){background:var(--color-neutral-bg)!important;color:var(--color-neutral-text)!important;border-color:transparent!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-status.open{background:var(--color-info-bg)!important;color:var(--color-info-text)!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-status.progress{background:var(--color-info-bg)!important;color:var(--color-info-text)!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-status.pending{background:var(--color-warning-bg)!important;color:var(--color-warning-text)!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-status.resolved{background:var(--color-positive-bg)!important;color:var(--color-positive-text)!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-status.reopened{background:var(--color-reopened-bg)!important;color:var(--color-reopened-text)!important}
+html[data-theme="light"] body.enterprise-test #chatbotTab-model .model-preset.active{background:#f3f8f5!important;border-color:#a8c9b5!important}
+html[data-theme="light"] body.enterprise-test #chatbotTab-model .model-recommended{background:#eaf3ed!important;color:#216643!important}
+html[data-theme="light"] body.enterprise-test :is(.conversation-table,.customer-profile-table,.data-explorer-table) th{background:#f7f8fa!important;color:#596579!important;border-bottom-color:#e4e7ec!important}
+html[data-theme="light"] body.enterprise-test #panel-chatbot .test-message.ai{background:#fff!important;border-color:#e4e7ec!important;color:#202832!important}
+html[data-theme="light"] body.enterprise-test #panel-chatbot .test-message.user{background:#edf3f9!important;color:#26394f!important}
+html[data-theme="light"] body.enterprise-test ::selection{background:#d6eadf;color:#183b2a}
+
 </style>
