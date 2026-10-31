@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8" />
 <meta
@@ -10718,6 +10718,7 @@ document.querySelectorAll("[data-ticket-period]").forEach(button => button.class
 document.getElementById("ticketCustomDateBtn")?.classList.toggle("active", Boolean(currentDateRange));
 refreshTicketWorkspace();
 restoreTicketWorkspaceForSession();
+window.syncTestInbox?.();
 }
 async function refreshTicketsOnly() {
 try {
@@ -14323,7 +14324,7 @@ lastTicketDetailSignature = "";
 const backdrop = document.getElementById("ticketDrawerBackdrop");
 backdrop.classList.add("open");
 backdrop.setAttribute("aria-hidden", "false");
-if (!workspaceWasOpen) setAgentAssistCollapsed(true, false);
+if (!workspaceWasOpen && !document.body.classList.contains("test2-inbox")) setAgentAssistCollapsed(true, false);
 syncTicketWorkspaceFloater(true);
 document.body.style.overflow = "hidden";
 setComposerMode("reply");
@@ -14342,6 +14343,7 @@ document.getElementById("agentInsertSuggestion").disabled = true;
 document.getElementById("agentInsertDraft").disabled = true;
 renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
 await loadOpenTicket();
+window.syncTestInboxSelection?.();
 }
 function closeTicket() {
 if (window.ticketReplySending) { window.NovaraChatDock?.tell("Please wait for your reply to finish sending."); return; }
@@ -15249,8 +15251,8 @@ document
 /* =====================================================
    EXPERIMENTAL APPEARANCE CONTROLS
 ====================================================== */
-const APPEARANCE_THEME_KEY = "novara_experimental_theme";
-const APPEARANCE_THEME_MODE_KEY = "novara_experimental_theme_mode";
+const APPEARANCE_THEME_KEY = "novara_test2_theme";
+const APPEARANCE_THEME_MODE_KEY = "novara_test2_theme_mode";
 const APPEARANCE_TEXT_KEY = "novara_experimental_text_size";
 const themeToggle = document.getElementById("themeToggle");
 const themeToggleLabel = document.getElementById("themeToggleLabel");
@@ -15342,7 +15344,7 @@ window.NOVARA_LOCAL_STORAGE.setItem(APPEARANCE_TEXT_KEY, selected);
 requestAnimationFrame(refreshChartAppearance);
 }
 if (themeMode === "auto") setThemeMode("auto");
-else applyTheme(window.NOVARA_LOCAL_STORAGE.getItem(APPEARANCE_THEME_KEY) || "dark");
+else applyTheme(window.NOVARA_LOCAL_STORAGE.getItem(APPEARANCE_THEME_KEY) || "light");
 applyTextSize(window.NOVARA_LOCAL_STORAGE.getItem(APPEARANCE_TEXT_KEY) || "default");
 themeToggle.addEventListener("click", () => {
 setThemeMode("manual");
@@ -15918,7 +15920,7 @@ document.addEventListener(
         });
     });
     const requestedWorkspace = location.hash.replace("#", "").split("/")[0];
-    showWorkspace(["ai","human","dashboards","tickets","customers","reports","chatbot","knowledge","workflows","settings"].includes(requestedWorkspace) ? requestedWorkspace : "ai", false);
+    showWorkspace(["ai","human","dashboards","tickets","customers","reports","chatbot","knowledge","workflows","settings"].includes(requestedWorkspace) ? requestedWorkspace : "tickets", false);
     updateDashboard(currentPeriod);
 }
 );
@@ -19559,3 +19561,214 @@ body.test2-compact #panel-human .kpi-previous-group {flex-wrap:wrap;justify-cont
 body.test2-compact #panel-ai .kpi-previous-group :is(span,strong),
 body.test2-compact #panel-human .kpi-previous-group :is(span,strong) {font-size:calc(9.5px * var(--ui-text-scale))!important}
 </style>
+
+<style id="test2-conversation-inbox">
+body.test2-inbox .main{padding:12px 14px 14px!important}
+body.test2-inbox .main-inner{max-width:none!important}
+body.test2-inbox .topbar{margin-bottom:12px!important;align-items:center!important}
+body.test2-inbox .page-title h1{font-size:23px!important}
+body.test2-inbox .page-title p{display:none}
+body.test2-inbox #panel-tickets>.ticket-workspace-toolbar,
+body.test2-inbox #panel-tickets>.ticket-kpi-grid,
+body.test2-inbox #panel-tickets>.ticket-compact-metrics,
+body.test2-inbox #panel-tickets>.table-card,
+body.test2-inbox #panel-tickets>.ticket-filter-panel,
+body.test2-inbox #panel-tickets>.ticket-active-filters,
+body.test2-inbox #ticketWorkspaceFloater{display:none!important}
+body.test2-inbox #ticketDrawerBackdrop{
+ --inbox-list-width:280px;--inbox-context-width:290px;
+ position:relative!important;inset:auto!important;width:100%!important;height:calc(100dvh - 82px)!important;
+ max-width:none!important;max-height:none!important;min-height:380px!important;
+ display:grid!important;grid-template-columns:var(--inbox-list-width) minmax(0,1fr) var(--inbox-context-width)!important;
+ gap:0!important;padding:0!important;margin:0!important;background:var(--bg-card)!important;
+ backdrop-filter:none!important;border:1px solid var(--border)!important;border-radius:12px!important;
+ overflow:hidden!important;z-index:10!important;box-shadow:none!important;transform:none!important;
+}
+body.test2-inbox #ticketDrawerBackdrop .ticket-queue-panel{
+ position:relative!important;inset:auto!important;width:auto!important;min-width:0!important;max-width:none!important;
+ height:100%!important;padding:14px 0 0!important;border:0!important;border-right:1px solid var(--border)!important;
+ border-radius:0!important;background:var(--surface)!important;box-shadow:none!important;display:flex!important;
+ grid-column:1;grid-row:1;overflow:hidden!important
+}
+body.test2-inbox #ticketQueuePanel .ticket-queue-head{padding:0 14px!important;margin-bottom:12px!important}
+body.test2-inbox #ticketQueuePanel .ticket-queue-search{margin:0 12px 10px!important;flex-shrink:0}
+body.test2-inbox #ticketQueuePanel .ticket-queue-list{gap:0!important;padding:0!important;overflow-y:auto!important;flex:1;min-height:0}
+body.test2-inbox #ticketQueuePanel .ticket-queue-card{
+ border:0!important;border-bottom:1px solid var(--border)!important;border-radius:0!important;
+ margin:0!important;padding:13px 14px!important;min-height:105px!important;background:transparent!important;
+ box-shadow:none!important;flex-shrink:0!important
+}
+body.test2-inbox #ticketQueuePanel .ticket-queue-card.active{background:color-mix(in srgb,var(--accent) 12%,var(--bg-card))!important;box-shadow:inset 3px 0 var(--accent-dark)!important}
+body.test2-inbox #ticketQueuePanel .ticket-queue-card:hover{background:color-mix(in srgb,var(--accent) 7%,var(--bg-card))!important}
+body.test2-inbox #ticketQueuePanel .ticket-queue-card-name{font-size:12px!important;top:0!important}
+body.test2-inbox #ticketQueuePanel .ticket-queue-card-query{font-size:11px!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden!important}
+body.test2-inbox #ticketQueuePanel .ticket-queue-pagination{flex-shrink:0;padding:10px!important;border-top:1px solid var(--border)}
+body.test2-inbox #ticketQueueResizeHandle{position:absolute!important;right:-3px!important;left:auto!important;top:0!important;bottom:0!important;width:6px!important;z-index:8!important;cursor:col-resize}
+body.test2-inbox #agentAssistDockToggle{display:none!important}
+body.test2-inbox #ticketDrawerBackdrop>.ticket-drawer{
+ position:relative!important;inset:auto!important;width:100%!important;min-width:0!important;height:100%!important;
+ grid-column:2;grid-row:1;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important;
+ background:var(--bg-card)!important;display:flex!important;transform:none!important
+}
+body.test2-inbox #ticketDrawerBackdrop:not(.test-has-selection)>.ticket-drawer{visibility:hidden!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-drawer-head{
+ padding:14px 18px!important;min-height:112px!important;gap:10px!important;border-radius:0!important;
+ background:var(--bg-card)!important;box-shadow:none!important;flex-wrap:wrap!important;align-items:flex-start!important
+}
+body.test2-inbox #ticketDrawerBackdrop .ticket-drawer-head>div:first-of-type{flex:1;min-width:160px;padding-right:0!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-drawer-title{font-size:15px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-head-side{position:static!important;width:auto!important;margin-left:auto;display:flex!important;flex-direction:column;align-items:flex-end;gap:10px}
+body.test2-inbox #ticketDrawerBackdrop .ticket-head-controls{position:static!important;gap:6px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch{position:static!important;right:auto!important;bottom:auto!important;gap:3px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch button{font-size:11px!important;padding:6px 8px!important;min-height:30px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch button::before,
+body.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch button::after{display:none!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-sla-state{position:static!important;transform:none!important;margin-left:6px!important;font-size:10px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-workspace-scroll{flex:1!important;min-height:0!important;overflow-y:auto!important;padding:18px!important;background:var(--bg-soft)!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-thread{padding:0!important;background:transparent!important;border:0!important;min-height:120px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-thread-message{max-width:85%!important;font-size:13px!important;line-height:1.6!important;padding:11px 14px!important;border-radius:12px!important}
+html[data-theme="light"] body.test2-inbox #ticketDrawerBackdrop .ticket-thread-message.customer{background:#fff!important;color:#203b2c!important;border:1px solid #e0e8e3!important;margin-left:0!important;margin-right:auto!important}
+html[data-theme="light"] body.test2-inbox #ticketDrawerBackdrop .ticket-thread-message.agent{background:#e6f2eb!important;color:#203b2c!important;margin-left:auto!important;margin-right:0!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-composer{padding:12px 16px!important;border-top:1px solid var(--border)!important;background:var(--bg-card)!important;box-shadow:none!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-composer textarea{border-radius:10px!important;min-height:70px!important;font-size:13px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-ai-details{border-radius:8px!important;margin-bottom:16px!important}
+body.test2-inbox #ticketDrawerBackdrop .ticket-ai-details summary{font-size:11px!important;padding:10px!important}
+.test-inbox-context{grid-column:3;grid-row:1;min-width:0;min-height:0;border-left:1px solid var(--border);background:var(--bg-card);display:flex;flex-direction:column;overflow:hidden}
+.test-context-tabs{display:flex;gap:4px;padding:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.test-context-tabs button,.test-context-toggle,.test-inbox-back{font:inherit;font-size:12px;padding:8px 11px;color:var(--text-secondary);border:1px solid transparent;border-radius:7px;background:transparent;cursor:pointer}
+.test-context-tabs button.active{background:color-mix(in srgb,var(--accent) 13%,var(--bg-card));color:var(--accent-dark);font-weight:700}
+.test-context-body{min-height:0;overflow-y:auto;flex:1}
+body.test2-inbox #ticketDrawerBackdrop #ticketContext{padding:16px!important;border:0!important;border-radius:0!important;margin:0!important;background:transparent!important}
+body.test2-inbox #ticketDrawerBackdrop #ticketContext :is(.ticket-context-section.identity,.ticket-context-section.case,.ticket-context-identity,.ticket-context-grid){grid-template-columns:1fr!important;display:grid!important}
+body.test2-inbox #ticketDrawerBackdrop #ticketContext .ticket-context-item{padding:11px 0!important;border-bottom:1px solid var(--border);background:transparent!important;font-size:12px!important}
+body.test2-inbox #ticketDrawerBackdrop #ticketContext .ticket-context-item span{font-size:10px!important;letter-spacing:.03em!important}
+body.test2-inbox #ticketDrawerBackdrop .test-inbox-context #agentAssistPanel{
+ position:static!important;inset:auto!important;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;
+ transform:none!important;box-shadow:none!important;border:0!important;border-radius:0!important;padding:16px!important;background:var(--bg-card)!important;
+ display:none!important;overflow:visible!important;color:var(--text)!important
+}
+body.test2-inbox #ticketDrawerBackdrop .show-assist #agentAssistPanel{display:flex!important}
+body.test2-inbox #ticketDrawerBackdrop .show-assist #ticketContext{display:none!important}
+body.test2-inbox #ticketDrawerBackdrop :is(#agentAssistReopen,#agentAssistCollapse){display:none!important}
+body.test2-inbox #ticketDrawerBackdrop .agent-assist-head h3{font-size:14px!important}
+body.test2-inbox #ticketDrawerBackdrop .agent-tone-actions{display:flex!important;flex-wrap:wrap!important;gap:5px}
+body.test2-inbox #ticketDrawerBackdrop .agent-assist-actions{flex-wrap:wrap!important}
+body.test2-inbox #ticketDrawerBackdrop .agent-assist-btn{font-size:11px!important;white-space:normal!important}
+.test-context-toggle,.test-inbox-back{display:none}
+.test-inbox-empty{grid-column:2;grid-row:1;align-self:center;justify-self:center;text-align:center;padding:24px;max-width:340px;color:var(--text-muted)}
+.test-inbox-empty[hidden]{display:none}
+.test-inbox-empty>span{font-size:32px;color:var(--accent)}
+.test-inbox-empty h2{font-size:18px;margin:12px 0 8px;color:var(--text)}
+.test-inbox-empty p{font-size:13px;line-height:1.6}
+@media(min-width:901px){
+ body.test2-inbox.sidebar-pinned .sidebar{width:208px!important}
+ body.test2-inbox.sidebar-pinned .main{margin-left:208px!important;width:calc(100% - 208px)!important}
+ body.test2-inbox .sidebar .nav-item{padding-right:30px!important}
+}
+@media(max-width:1250px){
+ body.test2-inbox #ticketDrawerBackdrop{--inbox-list-width:260px;grid-template-columns:var(--inbox-list-width) minmax(0,1fr)!important}
+ body.test2-inbox #ticketDrawerBackdrop .test-inbox-context{display:none;position:absolute;right:0;top:0;bottom:0;width:290px;z-index:40;box-shadow:-12px 0 30px #0002}
+ body.test2-inbox #ticketDrawerBackdrop.test-context-open .test-inbox-context{display:flex}
+ .test-context-toggle{display:inline-flex;border-color:var(--border)}
+}
+@media(max-width:760px){
+ body.test2-inbox #ticketDrawerBackdrop{grid-template-columns:minmax(0,1fr)!important;height:calc(100dvh - 142px)!important}
+ body.test2-inbox #ticketDrawerBackdrop .ticket-queue-panel{grid-column:1!important}
+ body.test2-inbox #ticketDrawerBackdrop>.ticket-drawer{grid-column:1!important;visibility:hidden!important}
+ body.test2-inbox #ticketDrawerBackdrop.test-has-selection>.ticket-drawer{visibility:visible!important;z-index:3}
+ body.test2-inbox #ticketDrawerBackdrop.test-has-selection .ticket-queue-panel{visibility:hidden!important}
+ body.test2-inbox #ticketDrawerBackdrop .test-inbox-context{width:min(320px,100%);z-index:5}
+ .test-inbox-back{display:inline-flex;min-height:40px;padding:6px}
+ body.test2-inbox #ticketDrawerBackdrop .ticket-drawer-head{padding:10px!important}
+ body.test2-inbox #ticketDrawerBackdrop .ticket-head-side{width:100%!important;flex-direction:row!important;justify-content:space-between}
+ body.test2-inbox #ticketQueueResizeHandle{display:none!important}
+}
+</style>
+
+<script id="test2-inbox-behaviour">
+(() => {
+ const shell=document.getElementById("ticketDrawerBackdrop");
+ const ticketsPanel=document.getElementById("panel-tickets");
+ const drawer=shell.querySelector(".ticket-drawer");
+ const context=document.getElementById("ticketContext");
+ const assist=document.getElementById("agentAssistPanel");
+ const rail=document.createElement("aside");
+ rail.className="test-inbox-context";
+ rail.setAttribute("aria-label","Customer context and AI assistance");
+ rail.innerHTML='<nav class="test-context-tabs" aria-label="Conversation context"><button type="button" class="active" data-context-tab="customer">Customer</button><button type="button" data-context-tab="assist">AI Assist</button></nav><div class="test-context-body"></div>';
+ rail.querySelector(".test-context-body").append(context,assist);
+ shell.append(rail);
+ ticketsPanel.append(shell);
+ drawer.setAttribute("role","region");
+ drawer.removeAttribute("aria-modal");
+ const empty=document.createElement("div");
+ empty.className="test-inbox-empty";
+ empty.innerHTML='<span>✉</span><h2>Your conversation workspace</h2><p>Select a ticket from the inbox to view its conversation and reply.</p>';
+ shell.append(empty);
+ const back=document.createElement("button");
+ back.type="button";back.className="test-inbox-back";back.textContent="‹ Inbox";
+ drawer.querySelector(".ticket-drawer-head").prepend(back);
+ back.addEventListener("click",()=>{shell.classList.remove("test-has-selection");shell.querySelector(".ticket-queue-search input")?.focus();});
+ const contextToggle=document.createElement("button");
+ contextToggle.type="button";contextToggle.className="test-context-toggle";contextToggle.textContent="Customer";
+ contextToggle.setAttribute("aria-expanded","false");
+ drawer.querySelector(".ticket-head-controls").prepend(contextToggle);
+ contextToggle.addEventListener("click",()=>{const open=shell.classList.toggle("test-context-open");contextToggle.setAttribute("aria-expanded",String(open));});
+ rail.querySelectorAll("[data-context-tab]").forEach(button=>button.addEventListener("click",()=>{
+  const ai=button.dataset.contextTab==="assist";
+  rail.classList.toggle("show-assist",ai);
+  rail.querySelectorAll("[data-context-tab]").forEach(tab=>{tab.classList.toggle("active",tab===button);tab.setAttribute("aria-pressed",String(tab===button));});
+  if(ai)setAgentAssistCollapsed(false,false);
+ }));
+ const oldShow=showWorkspace;
+ showWorkspace=function(workspace,refresh=true){
+  if(workspace!=="tickets"&&document.body.classList.contains("test2-inbox"))closeTicket();
+  oldShow(workspace,refresh); sync();
+ };
+ let opening=false;
+ const originalOpen=openTicket;
+ openTicket=async function(id){
+  if(currentTab!=="tickets"){opening=true;showWorkspace("tickets",false);opening=false;}
+  return originalOpen(id);
+ };
+ function sync(){
+  const active=currentTab==="tickets";
+  document.body.classList.toggle("test2-inbox",active);
+  if(!active)return;
+  document.getElementById("pageHeading").textContent="Inbox";
+  shell.setAttribute("aria-hidden","false");
+  document.body.style.overflow="";
+  renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
+  const rows=ticketWorkspaceState.filtered||[];
+  if(!openTicketId&&rows.length&&!opening){
+   opening=true;
+   openTicket(rows[0].dbId).finally(()=>{opening=false;document.body.style.overflow="";selection();});
+  }
+  selection();
+ }
+ function selection(){
+  if(currentTab!=="tickets")return;
+  document.body.style.overflow="";
+  shell.classList.toggle("test-has-selection",Boolean(openTicketId));
+  drawer.setAttribute("aria-hidden",String(!openTicketId));
+  empty.hidden=Boolean(openTicketId);
+ }
+ window.syncTestInbox=sync;window.syncTestInboxSelection=selection;
+ const originalClose=closeTicket;
+ closeTicket=function(){originalClose();if(currentTab==="tickets"){shell.setAttribute("aria-hidden","false");selection();}};
+ const queue=document.getElementById("ticketQueuePanel");
+ // Resize the list without changing the conversation or customer panel.
+ const handle=document.getElementById("ticketQueueResizeHandle");
+ handle.replaceWith(handle.cloneNode(true));
+ const grip=document.getElementById("ticketQueueResizeHandle");
+ grip.addEventListener("pointerdown",event=>{
+  if(window.innerWidth<761)return;
+  event.preventDefault();grip.setPointerCapture(event.pointerId);
+  const start=event.clientX,initial=queue.getBoundingClientRect().width;
+  const move=e=>shell.style.setProperty("--inbox-list-width",Math.max(240,Math.min(380,initial+e.clientX-start))+"px");
+  const stop=()=>{grip.removeEventListener("pointermove",move);grip.removeEventListener("pointerup",stop);grip.removeEventListener("pointercancel",stop);};
+  grip.addEventListener("pointermove",move);grip.addEventListener("pointerup",stop);grip.addEventListener("pointercancel",stop);
+ });
+ document.addEventListener("DOMContentLoaded",()=>{setSidebarPinned(true,false);sync();});
+})();
+</script>
