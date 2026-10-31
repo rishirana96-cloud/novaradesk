@@ -19983,3 +19983,33 @@ body.test2-compact #panel-human .kpi-comparison-separator {display:none!importan
  describeMetrics();
 })();
 </script>
+
+<style id="test2-living-light-palette">
+/* A quiet mint/ivory canvas with crisp white working surfaces. */
+html[data-theme="light"] body.test2-compact {
+ --bg:#e9f3ed; --bg-soft:#f0f7f2; --bg-card:#fff; --surface:#fff;
+ --surface-light:#f5faf6; --surface-hover:#e5f2e9;
+ --border:rgba(41,91,66,.14); --border-strong:rgba(41,91,66,.25);
+ --accent:#438765; --accent-light:#286548; --accent-dark:#286548;
+ --text:#1b3025; --text-secondary:#476052; --text-muted:#667c6d;
+ background:radial-gradient(ellipse at 90% 0%,#d6ede0 0%,transparent 58%),
+ radial-gradient(ellipse at 12% 100%,#faf3e4 0%,transparent 58%),#edf5ee!important;
+ background-attachment:fixed!important;
+}
+html[data-theme="light"] body.test2-compact #appSidebar {
+ background:linear-gradient(165deg,#e2f0e7 0%,#f4f7ec 100%)!important;
+ border-right-color:#cadfd1!important;box-shadow:none!important;
+}
+html[data-theme="light"] body.test2-compact .test-inbox-nav-link.active {
+ background:#d2e8da!important;color:#245c40!important;
+}
+html[data-theme="light"] body.test2-compact.test2-inbox #ticketDrawerBackdrop .ticket-workspace-scroll {
+ background:linear-gradient(155deg,#edf7f0,#f8f8ee)!important;
+}
+html[data-theme="light"] body.test2-compact.test2-inbox #ticketQueuePanel .ticket-queue-card.active {
+ background:#e3f2e8!important;box-shadow:inset 3px 0 #438765!important;
+}
+html[data-theme="light"] body.test2-compact.test2-inbox #ticketDrawerBackdrop .ticket-thread-message.agent {
+ background:#dbefe2!important;color:#203b2c!important;
+}
+</style>
