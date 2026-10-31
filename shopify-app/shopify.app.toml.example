@@ -1,0 +1,16 @@
+client_id = "REPLACE_FROM_SHOPIFY_DEV_DASHBOARD"
+name = "NovaraDesk"
+application_url = "https://REPLACE_STAGING_HOST/"
+embedded = true
+[access_scopes]
+scopes = "read_orders"
+[auth]
+redirect_urls = ["https://REPLACE_STAGING_HOST/auth/callback"]
+[webhooks]
+api_version = "2026-10"
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/webhooks"
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "/webhooks"

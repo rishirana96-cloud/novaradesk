@@ -1,0 +1,16 @@
+client_id = "817075945a261da7fc413a19b6582220"
+name = "NovaraDesk"
+application_url = "https://novaradesk-shopify-staging.rishi-rana96.workers.dev/"
+embedded = true
+[access_scopes]
+scopes = "read_orders"
+[auth]
+redirect_urls = ["https://novaradesk-shopify-staging.rishi-rana96.workers.dev/auth/callback"]
+[webhooks]
+api_version = "2026-10"
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/webhooks"
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "/webhooks"
