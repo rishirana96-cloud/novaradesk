@@ -4762,7 +4762,7 @@ window.NOVARA_DEMO_API = (() => {
         const person = names[index % names.length];
         const subject = subjects[index % subjects.length];
         const status = statuses[index % statuses.length];
-        const ageHours = 2 + index * 21;
+        const ageHours = 2 + index * 45;
         const created = iso(ageHours);
         return {
             id: index + 1,
@@ -4784,6 +4784,9 @@ window.NOVARA_DEMO_API = (() => {
             updated_at: iso(Math.max(0.2, index * 2)),
             first_response_at: status === "open" ? null : iso(ageHours - .25 - (index % 4) * .1),
             resolved_at: status === "resolved" ? iso(Math.max(0.2, index * 2)) : null,
+            handling_time_minutes: status === "resolved" ? 5 + (index % 12) : null,
+            first_response_sla_minutes: 30,
+            agent_online: index % 4 < 2,
             resolution_time_hours: status === "resolved" ? ageHours - Math.max(0.2, index * 2) : 0,
             latest_sender_type: status === "open" || status === "reopened" ? "customer" : "agent",
             needs_reply: status === "open" || status === "reopened",
@@ -4801,7 +4804,9 @@ window.NOVARA_DEMO_API = (() => {
             resolution_status: resolved ? "resolved" : "escalated",
             started_at: iso(index * 8 + 1),
             created_at: iso(index * 8 + 1),
-            response_time_seconds: 7 + (index % 18),
+            response_time_seconds: 1.1 + (index % 12) * .15,
+            confidence_score: .84 + (index % 12) * .01,
+            knowledge_used: index % 5 !== 0,
             message_count: 3 + (index % 8),
             channel: ["website", "whatsapp", "instagram"][index % 3]
         };
@@ -4822,6 +4827,27 @@ window.NOVARA_DEMO_API = (() => {
         cutoff.setUTCDate(cutoff.getUTCDate() - period + 1);
         const cutoffDate = cutoff.toISOString().slice(0, 10);
         return rows.filter(item => String(item[dateKey] || "").slice(0, 10) >= cutoffDate);
+    };
+    // Derive preview metrics from the same dated records used by the workspace.
+    window.NOVARA_PREVIEW_KPIS = query => {
+        const parsed = new URL(`?${query}`, window.location.href);
+        const chats = rowsForRange(conversations, parsed, "created_at");
+        const cases = rowsForRange(tickets, parsed, "created_at");
+        const average = values => values.length ? values.reduce((sum, n) => sum + n, 0) / values.length : null;
+        const responded = cases.filter(t => t.first_response_at);
+        const firstResponse = t => (Date.parse(t.first_response_at) - Date.parse(t.created_at)) / 60000;
+        const closed = cases.filter(t => t.status === "resolved");
+        return {
+            responseSeconds: average(chats.map(c => c.response_time_seconds)),
+            messages: average(chats.map(c => c.message_count)),
+            confidence: chats.length ? average(chats.map(c => c.confidence_score)) * 100 : null,
+            knowledge: chats.length ? chats.filter(c => c.knowledge_used).length / chats.length * 100 : null,
+            handlingMinutes: average(closed.map(t => t.handling_time_minutes)),
+            firstResponseMinutes: average(responded.map(firstResponse)),
+            sla: responded.length ? responded.filter(t => firstResponse(t) <= t.first_response_sla_minutes).length / responded.length * 100 : null,
+            agents: new Set(cases.filter(t => t.agent_online).map(t => t.agent_name)).size,
+            humanResolution: cases.length ? closed.length / cases.length * 100 : null
+        };
     };
     const detail = id => {
         const ticket = tickets.find(item => Number(item.id) === Number(id)) || tickets[0];
@@ -9772,6 +9798,14 @@ sidebarWorkflows?.addEventListener("click", event => { event.preventDefault(); s
 sidebarSettings?.addEventListener("click", event => { event.preventDefault(); showWorkspace("settings"); });
 
 const KPI_COMPARISON_CONFIG = {
+    aiAvgResponseTime: { key: "responseSeconds", format: "decimal", lowerIsBetter: true },
+    aiAvgMessages: { key: "messages", format: "decimal" },
+    aiAvgConfidence: { key: "confidence", format: "percent" },
+    aiKnowledgeUsage: { key: "knowledge", format: "percent" },
+    humanAvgHandlingTime: { key: "handlingMinutes", format: "decimal", lowerIsBetter: true },
+    humanFirstResponseTime: { key: "firstResponseMinutes", format: "decimal", lowerIsBetter: true },
+    humanSlaAttainment: { key: "sla", format: "percent" },
+    humanActiveAgents: { key: "agents", format: "number" },
     aiTotalConversations: { key: "total", format: "number" },
     aiDeflectionRate: { key: "deflection", format: "percent" },
     aiResolutionRate: { key: "resolution", format: "percent" },
@@ -9779,7 +9813,7 @@ const KPI_COMPARISON_CONFIG = {
     humanTotalEscalations: { key: "escalated", format: "number", lowerIsBetter: true },
     humanEscalationRate: { key: "escalation", format: "percent", lowerIsBetter: true },
     humanCsatScore: { key: "rating", format: "decimal" },
-    humanResolutionRate: { key: "resolution", format: "percent" }
+    humanResolutionRate: { key: window.NOVARA_DEMO_MODE ? "humanResolution" : "resolution", format: "percent" }
 };
 function ensureKpiComparisonUi() {
     document.querySelectorAll("#panel-ai .kpi-card, #panel-human .kpi-card").forEach(card => {
@@ -10254,6 +10288,23 @@ try {
     document.getElementById("humanSlaAttainment").textContent = "—";
     const currentKpiSummary = summarizeKpiPeriod(analyticsData, resolutionData, ratingsData, sentimentData);
     const previousKpiSummary = summarizeKpiPeriod(previousAnalyticsData, previousResolutionData, previousRatingsData, previousSentimentData);
+    if (window.NOVARA_DEMO_MODE) {
+        const preview = window.NOVARA_PREVIEW_KPIS(analyticsDateQuery(period));
+        Object.assign(currentKpiSummary, preview);
+        Object.assign(previousKpiSummary, window.NOVARA_PREVIEW_KPIS(comparisonPeriod.query));
+        const setPreviewMetric = (id, value, suffix = "", decimals = 1) => {
+            document.getElementById(id).textContent = value == null ? "—" : `${Number(value).toFixed(decimals)}${suffix}`;
+        };
+        setPreviewMetric("aiAvgResponseTime", preview.responseSeconds);
+        setPreviewMetric("aiAvgMessages", preview.messages);
+        setPreviewMetric("aiAvgConfidence", preview.confidence, "%", 0);
+        setPreviewMetric("aiKnowledgeUsage", preview.knowledge, "%", 0);
+        setPreviewMetric("humanAvgHandlingTime", preview.handlingMinutes);
+        setPreviewMetric("humanFirstResponseTime", preview.firstResponseMinutes, " min");
+        setPreviewMetric("humanSlaAttainment", preview.sla, "%", 0);
+        setPreviewMetric("humanActiveAgents", preview.agents, "", 0);
+        setPreviewMetric("humanResolutionRate", preview.humanResolution, "%", 0);
+    }
     updateKpiComparisons(currentKpiSummary, previousKpiSummary, comparisonPeriod.label);
     /* =================================================
        PERFORMANCE
