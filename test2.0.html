@@ -14904,7 +14904,7 @@ autoResizeTextarea(ticketReplyText);
 ticketSendReply.disabled = ticketReplyText.disabled || !ticketReplyText.value.trim();
 });
 ticketReplyText.addEventListener("keydown", event => {
-if (event.key === "Enter" && !event.shiftKey) {
+if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && !event.isComposing) {
     event.preventDefault();
     if (!ticketSendReply.disabled) sendAgentReply();
 }
@@ -20833,7 +20833,7 @@ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop 
 html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option[data-value="resolved"]{--status-colour:#23734b}
 html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option[data-value="reopened"]{--status-colour:#7150a0}
 html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNoteTab.active{color:#8c5b13!important;border-bottom-color:#b38336!important}
-html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNoteText{height:80px!important;min-height:80px!important;max-height:160px!important;padding:12px!important;border:1px solid #dccba8!important;border-radius:8px!important;background:#fffcf5!important;color:var(--text)!important;font-size:13px!important;line-height:1.6!important;overflow-y:auto!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNoteText{height:80px;min-height:80px!important;max-height:160px!important;padding:12px!important;border:1px solid #dccba8!important;border-radius:8px!important;background:#fffcf5!important;color:var(--text)!important;font-size:13px!important;line-height:1.6!important;overflow-y:auto!important}
 html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNoteText:focus-visible{outline:none!important;border-color:#ac7d2f!important;box-shadow:0 0 0 2px #ac7d2f14!important}
 html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNotePane .ticket-action-row{margin-top:8px!important;gap:8px!important}
 html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketSaveNote{min-height:32px!important;padding:7px 11px!important;border:1px solid #475467!important;border-radius:6px!important;background:#475467!important;color:#fff!important;box-shadow:none!important;font-size:11.5px!important;font-weight:500!important;line-height:1.4!important}
@@ -20958,4 +20958,42 @@ body.enterprise-test.test2-inbox #ticketDrawerBackdrop.test-has-selection>.ticke
 body.enterprise-test.test2-inbox #ticketDrawerBackdrop.test-has-selection .ticket-queue-panel{visibility:hidden!important}
 body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-inbox-back{display:inline-flex!important}
 }
+</style>
+
+<script id="inbox-phase4">
+(() => {
+ const pane=document.getElementById("ticketReplyPane"),reply=document.getElementById("ticketReplyText"),note=document.getElementById("ticketNoteText");
+ const toolbar=document.createElement("div");toolbar.className="inbox-composer-toolbar";toolbar.setAttribute("role","toolbar");toolbar.setAttribute("aria-label","Reply tools");
+ toolbar.innerHTML=`<button type="button" disabled title="Attachments unavailable: no attachment API is configured" aria-label="Attach file — unavailable">Attach</button><button type="button" id="inboxCannedToggle" aria-expanded="false" aria-controls="inboxCannedPanel">Canned replies</button><button type="button" id="inboxComposerAi" disabled>Insert AI suggestion</button><small>⌘ / Ctrl + Enter to send</small>`;
+ pane.prepend(toolbar);
+ const pop=document.createElement("section");pop.id="inboxCannedPanel";pop.hidden=true;pop.setAttribute("role","dialog");pop.setAttribute("aria-label","Canned replies");
+ pop.innerHTML=`<label>Search replies<input type="search" aria-label="Search canned replies"></label><div data-canned-list></div><button type="button" data-save-canned>Save current draft for this session</button><p>Session-only replies. No server library is connected.</p><button type="button" data-close-canned>Close</button>`;toolbar.after(pop);
+ const saved=[];
+ const render=()=>{const q=pop.querySelector("input").value.toLowerCase(),list=pop.querySelector("[data-canned-list]");list.replaceChildren();saved.filter(t=>t.toLowerCase().includes(q)).forEach(t=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.addEventListener("click",()=>{reply.value=t;reply.dispatchEvent(new Event("input",{bubbles:true}));close();reply.focus();});list.append(b);});if(!list.children.length)list.textContent="No saved replies match. Write a draft and save it for reuse.";};
+ const toggle=document.getElementById("inboxCannedToggle");
+ function close(){pop.hidden=true;toggle.setAttribute("aria-expanded","false");}
+ toggle.addEventListener("click",()=>{pop.hidden=!pop.hidden;toggle.setAttribute("aria-expanded",String(!pop.hidden));if(!pop.hidden){render();pop.querySelector("input").focus();}});
+ pop.querySelector("input").addEventListener("input",render);
+ pop.querySelector("[data-save-canned]").addEventListener("click",()=>{const text=reply.value.trim();if(text&&!saved.includes(text))saved.push(text);render();});
+ pop.querySelector("[data-close-canned]").addEventListener("click",()=>{close();toggle.focus();});
+ pop.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();close();toggle.focus();}});
+ document.addEventListener("pointerdown",e=>{if(!toolbar.contains(e.target)&&!pop.contains(e.target))close();});
+ document.getElementById("inboxComposerAi").addEventListener("click",()=>{if(lastAssistSuggestion)document.getElementById("agentInsertSuggestion").click();reply.focus();});
+ note.addEventListener("input",()=>autoResizeTextarea(note));
+ note.addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)&&!e.isComposing&&note.value.trim()){e.preventDefault();document.getElementById("ticketSaveNote").click();}});
+ document.getElementById("ticketSendReply").title="Send reply (⌘ / Ctrl + Enter)";
+})();
+</script>
+<style id="inbox-phase4-style">
+.inbox-composer-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.inbox-composer-toolbar button,#inboxCannedPanel button{font:inherit;font-size:11px;min-height:28px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text-secondary);cursor:pointer}
+.inbox-composer-toolbar button:disabled{opacity:.45;cursor:not-allowed}.inbox-composer-toolbar small{font-size:10px;color:var(--text-muted);margin-left:auto}
+body.enterprise-test #ticketDrawerBackdrop #ticketSendReply:disabled{opacity:1!important;background:#e4e7ec!important;color:#98a2b3!important;cursor:not-allowed!important;border-color:#d0d5dd!important}
+body.enterprise-test #ticketDrawerBackdrop #ticketSendReply:not(:disabled){opacity:1!important;background:#216643!important;color:white!important;cursor:pointer!important}
+body.enterprise-test #ticketDrawerBackdrop .ticket-composer{position:relative}
+#inboxCannedPanel{position:absolute;bottom:calc(100% - 40px);left:12px;right:12px;background:var(--surface);padding:14px;z-index:12;border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 30px #20283222;font-size:12px}
+#inboxCannedPanel label{display:grid;gap:6px}#inboxCannedPanel input{padding:8px;border:1px solid var(--border-strong);border-radius:5px;font:inherit}
+#inboxCannedPanel [data-canned-list]{max-height:200px;overflow:auto;margin:10px 0;display:grid;gap:5px}#inboxCannedPanel [data-canned-list] button{text-align:left;white-space:pre-wrap;line-height:1.5}#inboxCannedPanel p{font-size:11px;color:var(--text-muted)}
+body.enterprise-test #ticketDrawerBackdrop #ticketNoteText{max-height:220px!important;resize:none!important}
+body.enterprise-test #ticketDrawerBackdrop #ticketReplyText{max-height:240px!important;overflow-y:auto!important}
 </style>
