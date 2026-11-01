@@ -9006,12 +9006,6 @@ ORDER BY ticket_count DESC</textarea>
                 <button class="admin-tab" data-chatbot-tab="versions" type="button" role="tab" aria-selected="false" aria-controls="chatbotTab-versions"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.2 8.2V4.5m0 0h3.7m-3.7 0 3 3A8 8 0 1 1 4 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4.5l3 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Version history</span></button>
             </div>
             <div id="chatbotTab-overview" class="admin-tab-panel active">
-                <div class="admin-kpi-grid chatbot-overview-kpis">
-                    <div class="admin-kpi"><span>Deployment</span><strong id="chatbotStatusKpi">—</strong><small id="chatbotDeploymentMeta">Published configuration</small></div>
-                    <div class="admin-kpi"><span>Prompt version</span><strong id="chatbotVersionKpi">—</strong><small id="chatbotVersionMeta">No version loaded</small></div>
-                    <div class="admin-kpi"><span>Active model</span><strong id="chatbotModelKpi">—</strong><small id="chatbotProviderKpi">Provider</small></div>
-                    <div class="admin-kpi"><span>Connected channels</span><strong id="chatbotChannelsKpi">—</strong><small id="chatbotChannelsMeta">Website chat included</small></div>
-                </div>
                 <div class="admin-card live-chatbot-card">
                     <div class="live-chatbot-head">
                         <div><span class="live-chatbot-kicker">Published chatbot preview</span><h3>Test your chatbot</h3><p>See how customers experience your currently published configuration.</p></div>
@@ -15455,20 +15449,8 @@ const state = chatbotControlState;
 if (!state) return;
 const profile = state.profile || {};
 const published = state.published;
-const connected = (state.channels || []).filter(channel => channel.status === "connected").length;
-const websiteIncluded = profile.status !== "disabled";
-const connectedTotal = connected + (websiteIncluded ? 1 : 0);
-document.getElementById("chatbotStatusKpi").textContent = published ? "Published" : "Not published";
-document.getElementById("chatbotDeploymentMeta").textContent = profile.status === "paused" ? "Currently paused" : "Live configuration";
-document.getElementById("chatbotVersionKpi").textContent = published ? `v${published.version_number}` : "—";
-document.getElementById("chatbotVersionMeta").textContent = published?.published_at ? `Published ${formatAdminDate(published.published_at)}` : "No published prompt";
 const rawModel = String(profile.model || "");
 const friendlyModel = rawModel ? rawModel.split("-").map(part => part.toLowerCase()==="deepseek"?"DeepSeek":part.toLowerCase()==="gpt"?"GPT":part.charAt(0).toUpperCase()+part.slice(1)).join(" ") : "—";
-document.getElementById("chatbotModelKpi").textContent = friendlyModel;
-document.getElementById("chatbotModelKpi").title = rawModel;
-document.getElementById("chatbotProviderKpi").textContent = String(profile.provider || "Provider").replace(/^./, char => char.toUpperCase());
-document.getElementById("chatbotChannelsKpi").textContent = connectedTotal;
-document.getElementById("chatbotChannelsMeta").textContent = connectedTotal === 1 ? "Website chat connected" : `${connectedTotal} channels connected`;
 const contextModel=document.getElementById("testContextModel");if(contextModel)contextModel.textContent=friendlyModel;
 const contextPrompt=document.getElementById("testContextPrompt");if(contextPrompt)contextPrompt.textContent=published?`Version ${published.version_number}`:"No published version";
 const headerStatus = document.getElementById("chatbotHeaderStatus");
