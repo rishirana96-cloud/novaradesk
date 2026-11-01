@@ -1,3 +1,4 @@
+import {privacyResponse} from './privacy.js';
 // Staging boundary: never bind the production D1 database or use a real sender.
 export const schema = `CREATE TABLE IF NOT EXISTS wa_inbound (
  id TEXT PRIMARY KEY, sender TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'received',
@@ -29,6 +30,7 @@ export function createHandler(backend, graphFetch = fetch) {
   try { env={...env,...JSON.parse(env.WHATSAPP_STAGING_CONFIG || '{}')}; }
   catch { return new Response('Invalid staging configuration',{status:503}); }
   const url=new URL(request.url);
+  if (request.method==='GET' && ['/privacy','/data-deletion'].includes(url.pathname)) return privacyResponse(url.pathname);
   if (env.APP_ENV !== 'whatsapp-staging') return new Response('Staging configuration required',{status:503});
   if (url.pathname !== '/webhooks/meta') return backend.fetch(request,env,ctx);
   if (request.method==='GET') {

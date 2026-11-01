@@ -21,3 +21,7 @@ The messages field is subscribed; Meta also automatically added its common accou
 Current validation: seven tests passed, including the bundled backend recording a receipt in an isolated SQLite database. Meta confirmed an outbound hello_world test send to the verified recipient. Callback verification succeeded. A signed dashboard sample webhook reached the deployed staging Worker and returned HTTP 200 (Cloudflare outcome ok, 2026-11-01 16:12 IST). The sample contains placeholder WABA/phone IDs, so it validates transport/signature/database initialization but is deliberately excluded from conversation processing. A real WhatsApp inbound-to-reply round trip is not yet validated: Meta states that unpublished apps receive only dashboard test webhooks. The Meta app remains unpublished. Production activation and a real business sender are outside this staging change.
 
 The user explicitly authorized pushing this staging branch, including the copied backend source, to rishirana96-cloud/novaradesk. This branch is not merged into main and has no production deployment workflow.
+
+## Privacy and deletion notice
+
+Public routes /privacy and /data-deletion describe the isolated receipt-mode test integration and use the existing published business contact rishi@novaracx.com. Eight tests pass. These routes are prepared in source but await staging deployment because the Cloudflare browser editor timed out. Meta publication is currently blocked by its missing privacy-policy URL. No Meta publication or business-number registration has been performed.
