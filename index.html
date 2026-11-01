@@ -18275,6 +18275,71 @@ html[data-theme] #panel-tickets .ticket-workspace-toolbar .ticket-view-control s
 
 
 
+<style id="chatbot-visual-refinement">
+/* Scoped visual refinement; existing chatbot controls and state remain intact. */
+html body #panel-chatbot{--bot-surface:var(--surface,var(--bg-card));--bot-line:var(--border);--bot-muted:var(--text-muted);--bot-tint:color-mix(in srgb,var(--text) 4%,var(--bot-surface));--bot-selected:color-mix(in srgb,var(--text) 8%,var(--bot-surface))}
+html[data-theme="light"] body #panel-chatbot{--bot-surface:#fff;--bot-line:#e2e6eb;--bot-muted:#667085;--bot-tint:#f7f8fa;--bot-selected:#eceff2}
+html body #panel-chatbot .admin-workspace{gap:18px!important}
+html body #panel-chatbot #chatbotTabs{display:flex;gap:5px!important;padding:5px!important;border:1px solid var(--bot-line)!important;border-radius:12px!important;background:var(--bot-tint)!important;box-shadow:none!important;overflow-x:auto;scrollbar-width:thin;margin-bottom:18px!important}
+html body #panel-chatbot #chatbotTabs .admin-tab{flex:0 0 auto;min-height:38px!important;height:auto!important;padding:9px 14px!important;border:1px solid transparent!important;border-radius:8px!important;font-size:12px!important;font-weight:550!important;color:var(--bot-muted)!important;background:transparent!important;white-space:nowrap;box-shadow:none!important}
+html body #panel-chatbot #chatbotTabs .admin-tab svg{width:16px!important;height:16px!important;opacity:.85}
+html body #panel-chatbot #chatbotTabs .admin-tab.active{background:var(--bot-surface)!important;color:var(--text)!important;border-color:var(--bot-line)!important;box-shadow:0 1px 3px #10182808!important}
+html body #panel-chatbot #chatbotTabs .admin-tab::after{display:none!important}
+html body #panel-chatbot #chatbotTabs .admin-tab:hover:not(.active){background:var(--bot-selected)!important;color:var(--text)!important}
+html body #panel-chatbot .admin-card{border:1px solid var(--bot-line)!important;border-radius:12px!important;box-shadow:0 2px 6px #10182804!important;background:var(--bot-surface)!important;padding:22px!important}
+html body #panel-chatbot .admin-card-head{margin-bottom:20px!important;gap:12px!important}
+html body #panel-chatbot :is(.admin-card-head,.live-chatbot-head) h3{font-size:18px!important;line-height:1.35!important;letter-spacing:-.35px!important;font-weight:650!important;color:var(--text)!important}
+html body #panel-chatbot :is(.admin-card-head,.live-chatbot-head) p{font-size:12px!important;line-height:1.6!important;color:var(--bot-muted)!important;margin-top:5px!important;max-width:65ch}
+html body #panel-chatbot :is(.model-eyebrow,.live-chatbot-kicker){font-size:10px!important;letter-spacing:.08em!important;font-weight:600!important;color:var(--bot-muted)!important}
+html body #panel-chatbot .live-chatbot-card{padding:0!important;overflow:hidden!important;margin-top:0!important}
+html body #panel-chatbot .live-chatbot-head{padding:20px 22px!important;background:var(--bot-surface)!important;border-bottom:1px solid var(--bot-line)!important;gap:16px!important}
+html body #panel-chatbot .chatbot-simulator-grid{grid-template-columns:minmax(0,1fr) 280px!important;background:var(--bot-tint)!important;min-height:440px!important}
+html body #panel-chatbot .chatbot-test-main{border-right:1px solid var(--bot-line)!important;min-width:0}
+html body #panel-chatbot .test-chat{height:440px!important;min-height:440px!important;max-height:440px!important;background:var(--bot-tint)!important;border:0!important;border-radius:0!important}
+html body #panel-chatbot .test-chat-thread{padding:24px!important;gap:12px!important}
+html body #panel-chatbot .test-message{font-size:13px!important;line-height:1.65!important;padding:12px 15px!important;max-width:85%!important;border-radius:12px!important;box-shadow:0 1px 2px #10182804!important}
+html body #panel-chatbot .test-message.ai{background:var(--bot-surface)!important;color:var(--text)!important;border:1px solid var(--bot-line)!important;border-bottom-left-radius:4px!important}
+html body #panel-chatbot .test-message.user{background:var(--bot-selected)!important;color:var(--text)!important;border:1px solid var(--bot-line)!important;border-bottom-right-radius:4px!important}
+html body #panel-chatbot .chatbot-starter-prompts{padding:0 20px 16px!important;gap:7px!important}
+html body #panel-chatbot .chatbot-starter-prompts button{background:var(--bot-surface)!important;color:var(--bot-muted)!important;border:1px solid var(--bot-line)!important;border-radius:18px!important;font-size:11px!important;font-weight:500!important;min-height:32px!important;padding:6px 12px!important}
+html body #panel-chatbot .chatbot-starter-prompts button:hover{color:var(--text)!important;border-color:var(--bot-muted)!important}
+html body #panel-chatbot .test-composer{padding:14px 18px!important;border-top:1px solid var(--bot-line)!important;background:var(--bot-surface)!important;gap:10px!important}
+html body #panel-chatbot .test-composer textarea{border:1px solid var(--bot-line)!important;border-radius:9px!important;background:var(--bot-tint)!important;color:var(--text)!important;font-size:13px!important;line-height:1.5!important;padding:11px 13px!important;min-height:44px!important;box-shadow:none!important}
+html body #panel-chatbot .chatbot-test-context{display:block!important;background:var(--bot-surface)!important;padding:22px 18px!important}
+html body #panel-chatbot .chatbot-test-context-head{padding-bottom:15px!important;border-color:var(--bot-line)!important}
+html body #panel-chatbot .chatbot-test-context-head>span{font-size:13px!important;color:var(--text)!important;font-weight:600!important}
+html body #panel-chatbot .chatbot-test-context-head small{font-size:11px!important;line-height:1.5!important;color:var(--bot-muted)!important;margin-top:5px!important}
+html body #panel-chatbot .test-meta-item{grid-template-columns:minmax(80px,1fr) minmax(0,1fr)!important;gap:12px!important;padding:15px 0!important;border-color:var(--bot-line)!important}
+html body #panel-chatbot .test-meta-item span{font-size:11px!important;letter-spacing:0!important;text-transform:none!important;color:var(--bot-muted)!important;font-weight:500!important}
+html body #panel-chatbot .test-meta-item strong{font-size:12px!important;line-height:1.5!important;color:var(--text)!important;font-weight:550!important;text-align:right!important}
+html body #panel-chatbot .prompt-sections{gap:16px!important}
+html body #panel-chatbot :is(.prompt-section,.custom-instruction-card){padding:18px!important;border:1px solid var(--bot-line)!important;border-radius:10px!important;background:var(--bot-surface)!important;box-shadow:none!important;min-width:0}
+html body #panel-chatbot .prompt-section-head{display:flex!important;align-items:baseline!important;justify-content:space-between!important;flex-wrap:wrap;gap:5px 12px!important;margin-bottom:12px!important}
+html body #panel-chatbot .prompt-section-head strong{font-size:13px!important;color:var(--text)!important;font-weight:600!important}
+html body #panel-chatbot .prompt-section-head>span{font-size:11px!important;color:var(--bot-muted)!important}
+html body #panel-chatbot :is(.prompt-section,.custom-instruction-card) textarea{padding:12px!important;border:1px solid var(--bot-line)!important;border-radius:7px!important;background:var(--bot-tint)!important;color:var(--text)!important;font-size:13px!important;line-height:1.7!important;min-height:148px!important;resize:vertical;box-shadow:none!important}
+html body #panel-chatbot .prompt-editor-footer{margin-top:18px!important;padding:16px 18px!important;border:1px solid var(--bot-line)!important;border-radius:10px!important;background:var(--bot-surface)!important;gap:16px!important;box-shadow:none!important}
+html body #panel-chatbot :is(.admin-btn,.response-style-btn){border-radius:8px!important;min-height:36px!important;font-size:12px!important;font-weight:550!important;box-shadow:none!important}
+html body #panel-chatbot .admin-btn:not(.primary){background:var(--bot-surface)!important;border:1px solid var(--bot-line)!important;color:var(--text)!important}
+html body #panel-chatbot .admin-form-grid{gap:17px 18px!important}
+html body #panel-chatbot .admin-field>span{font-size:12px!important;font-weight:550!important;color:var(--text)!important;margin-bottom:7px!important}
+html body #panel-chatbot .admin-field :is(input,select,.unified-select-trigger){border:1px solid var(--bot-line)!important;border-radius:7px!important;background:var(--bot-tint)!important;color:var(--text)!important;min-height:39px!important;font-size:13px!important;box-shadow:none!important}
+html body #panel-chatbot .response-style-btn{background:var(--bot-tint)!important;border-color:var(--bot-line)!important;color:var(--bot-muted)!important}
+html body #panel-chatbot .response-style-btn.active{background:var(--bot-selected)!important;color:var(--text)!important;border-color:var(--bot-muted)!important}
+html body #panel-chatbot .model-preset{border:1px solid var(--bot-line)!important;border-radius:9px!important;background:var(--bot-surface)!important;box-shadow:none!important;padding:16px 14px!important;gap:12px!important}
+html body #panel-chatbot .model-preset.active{background:var(--bot-tint)!important;border-color:var(--bot-muted)!important}
+html body #panel-chatbot .model-preset.active::before{background:var(--bot-muted)!important}
+html body #panel-chatbot .model-preset-number{background:var(--bot-selected)!important;color:var(--text)!important;border-color:var(--bot-line)!important}
+html body #panel-chatbot .model-preset div strong{font-size:13px!important;color:var(--text)!important}
+html body #panel-chatbot .model-preset div span{font-size:11px!important;color:var(--bot-muted)!important;line-height:1.6!important}
+html body #panel-chatbot .model-recommended{background:var(--bot-selected)!important;color:var(--text)!important;font-size:10px!important}
+html body #panel-chatbot .channel-grid{gap:16px!important}
+html body #panel-chatbot .channel-card{border:1px solid var(--bot-line)!important;border-radius:10px!important;background:var(--bot-surface)!important;box-shadow:none!important;padding:18px!important}
+html body #panel-chatbot :is(button,input,textarea,select,summary):focus-visible{outline:2px solid var(--text-secondary,#667085)!important;outline-offset:3px!important}
+@media(max-width:1100px){html body #panel-chatbot .chatbot-simulator-grid{grid-template-columns:minmax(0,1fr) 250px!important}}
+@media(max-width:900px){html body #panel-chatbot .chatbot-simulator-grid{grid-template-columns:minmax(0,1fr)!important}html body #panel-chatbot .chatbot-test-main{border-right:0!important}html body #panel-chatbot .chatbot-test-context{border-top:1px solid var(--bot-line)!important}html body #panel-chatbot .chatbot-test-meta{grid-template-columns:1fr 1fr;gap:0 20px}html body #panel-chatbot .admin-grid-2{grid-template-columns:1fr!important}}
+@media(max-width:600px){html body #panel-chatbot .live-chatbot-head{padding:16px!important;flex-direction:row!important;flex-wrap:wrap!important}html body #panel-chatbot .chatbot-test-reset{width:auto!important}html body #panel-chatbot .test-chat-thread{padding:16px!important}html body #panel-chatbot .prompt-sections{grid-template-columns:1fr!important}html body #panel-chatbot .prompt-section.wide{grid-column:auto!important}html body #panel-chatbot .prompt-editor-footer{flex-wrap:wrap!important}html body #panel-chatbot .admin-command-actions{flex-wrap:wrap!important}html body #panel-chatbot .admin-card{padding:16px!important}html body #panel-chatbot .live-chatbot-card{padding:0!important}html body #panel-chatbot .chatbot-test-meta{grid-template-columns:1fr}}
+</style>
 </body>
 </html>
 
