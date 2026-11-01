@@ -14438,6 +14438,22 @@ function renderTicketSlaState(ticket) {
  flag.textContent=timing.warnings.length?"Data inconsistency: "+timing.warnings.join(" "):"";flag.hidden=!timing.warnings.length;
  document.querySelectorAll("[data-inbox-first-response]").forEach(e=>e.textContent=timing.firstResponse);
 }
+/** @typedef {{orderId:string|null,orderStatus:string|null,paymentStatus:string|null,amount:string|null}} InboxCommerceContext */
+function inboxRenderDetails(ticket,data) {
+ const host=document.getElementById("ticketContext"),timing=inboxTimingFor(ticket);
+ const showEmpty=host.querySelector("[data-empty-fields]")?.open||false;
+ const fields=[["Escalation reason",(ticket.escalation_reason||"").replaceAll("_"," ")],["First-response SLA",timing.label],["First response time",timing.firstResponse],["Customer",ticket.customer_name],["Email",ticket.customer_email],["Phone",ticket.customer_phone],["Ticket",ticket.ticket_number],["Created",ticketDateText(ticket.created_at)],["Priority",ticket.priority],["Channel",ticket.channel],["Intent",ticket.intent],["Sentiment",ticket.sentiment],["Original query",ticket.customer_query],["Resolution time",ticket.resolved_at?formatTicketElapsed(ticket.created_at,ticket.resolved_at,""):""]];
+ const row=([label,value])=>`<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value||"Not provided"))}</dd>`;
+ const populated=fields.filter(([,v])=>v!==null&&v!==undefined&&v!==""),empty=fields.filter(([,v])=>v===null||v===undefined||v==="");
+ const order=ticket.order||data.order, payment=ticket.payment||data.payment;
+ /** @type {InboxCommerceContext|null} */
+ const context=order||payment?{orderId:order?.order_number||order?.id||null,orderStatus:order?.status||null,paymentStatus:payment?.status||null,amount:payment?.amount||order?.total||null}:null;
+ // TODO: Wire a documented commerce projection once order/payment fields are supplied by the existing payload.
+ host.innerHTML=`<h3 class="inbox-details-title">Details</h3><dl class="inbox-details-list">${populated.map(row).join("")}</dl>
+ ${empty.length?`<details data-empty-fields ${showEmpty?"open":""}><summary>Show empty fields (${empty.length})</summary><dl class="inbox-details-list">${empty.map(row).join("")}</dl></details>`:""}
+ <details class="inbox-commerce"><summary>Context · Order / payment</summary>${context?`<dl class="inbox-details-list">${Object.entries(context).filter(([,v])=>v!==null).map(row).join("")}</dl>`:'<p>Order/payment context is not available in this payload.</p>'}</details>
+ <details><summary>Similar tickets</summary>${Array.isArray(data.similar_tickets)&&data.similar_tickets.length?data.similar_tickets.map(t=>`<p>${escapeHtml(t.ticket_number||String(t.id))} · ${escapeHtml(t.subject||t.customer_query||"")}</p>`).join(""):'<p>No similar-ticket data provided.</p>'}</details>`;
+}
 async function loadOpenTicket(scrollLatest = false) {
 if (!openTicketId) return;
 if (ticketDetailRequestInFlight) return;
@@ -14475,25 +14491,7 @@ try {
     const agents=[ticket.agent_name || "Novara CX Support","Novara CX Support","Support Agent A","Support Agent B"].filter((value,index,array)=>value&&array.indexOf(value)===index);
     agentSelect.innerHTML=agents.map(agent=>`<option value="${escapeHtml(agent)}">${escapeHtml(agent)}</option>`).join(""); agentSelect.value=ticket.agent_name||"Novara CX Support";
     renderTicketTags(ticket.id);
-    document.getElementById("ticketContext").innerHTML = `
-        <div class="ticket-context-header">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Ticket Information
-        </div>
-        <div class="ticket-context-section identity">
-            <div class="ticket-context-item"><span>Customer name</span>${escapeHtml(ticket.customer_name || "—")}</div>
-            <div class="ticket-context-item"><span>Phone number</span>${escapeHtml(ticket.customer_phone || "—")}</div>
-            <div class="ticket-context-item"><span>Created date</span>${escapeHtml(ticketDatePart(ticket.created_at))}</div>
-            <div class="ticket-context-item"><span>Created time</span>${escapeHtml(ticketTimePart(ticket.created_at))}</div>
-            <div class="ticket-context-item"><span>First response time</span><strong data-inbox-first-response>${escapeHtml(inboxTimingFor(ticket).firstResponse)}</strong></div>
-            <div class="ticket-context-item"><span>Resolution time</span>${escapeHtml(formatTicketElapsed(ticket.created_at, ticket.resolved_at, "In progress"))}</div>
-        </div>
-        <div class="ticket-context-section case">
-            <div class="ticket-context-item"><span>Original query</span>${escapeHtml(ticket.customer_query || "—")}</div>
-            <div class="ticket-context-item"><span>Escalation reason</span>${escapeHtml((ticket.escalation_reason || "—").replaceAll("_", " "))}</div>
-            <div class="ticket-context-item"><span>Sentiment</span>${escapeHtml(ticket.sentiment || "—")}</div>
-        </div>
-    `;
+    inboxRenderDetails(ticket,data);
     updateSuggestedKnowledgeArticle(ticket);
     const cleanTicketText = value => String(value || "")
         .replace(/\[✅ Yes\]\s*\[❌ No\]\s*\[🔄 Not really\]/g, "")
@@ -14633,7 +14631,9 @@ try {
         }
     } });
     if (target === "suggestion") {
+        if(typeof data.suggestion!=="string"||!data.suggestion.trim())throw new Error("No AI suggestion was returned. Try again later.");
         lastAssistSuggestion = data.suggestion;
+        document.getElementById("inboxComposerAi")?.removeAttribute("disabled");
         const suggestionBox = document.getElementById("agentAssistSuggestion");
         suggestionBox.classList.remove("empty");
         suggestionBox.innerHTML = `<div class="ticket-markdown">${renderSafeMarkdown(data.suggestion)}</div>`;
@@ -19743,7 +19743,7 @@ body.test2-inbox .footer{display:none!important}
  const rail=document.createElement("aside");
  rail.className="test-inbox-context";
  rail.setAttribute("aria-label","Customer context and AI assistance");
- rail.innerHTML='<nav class="test-context-tabs" aria-label="Conversation context"><button type="button" class="active" data-context-tab="customer">Customer</button><button type="button" data-context-tab="assist">AI Assist</button></nav><div class="test-context-body"></div>';
+ rail.innerHTML='<nav class="test-context-tabs" aria-label="Conversation context"><button type="button" class="active" data-context-tab="customer">Details</button><button type="button" data-context-tab="assist">AI Assist</button></nav><div class="test-context-body"></div>';
  rail.querySelector(".test-context-body").append(context,assist);
  shell.append(rail);
  ticketsPanel.append(shell);
@@ -19761,7 +19761,7 @@ body.test2-inbox .footer{display:none!important}
  customerHeading.className="test-customer-heading";
  drawer.querySelector(".ticket-heading-row").before(customerHeading);
  const contextToggle=document.createElement("button");
- contextToggle.type="button";contextToggle.className="test-context-toggle";contextToggle.textContent="Customer";
+ contextToggle.type="button";contextToggle.className="test-context-toggle";contextToggle.textContent="Details";
  contextToggle.setAttribute("aria-expanded","false");
  drawer.querySelector(".ticket-head-controls").prepend(contextToggle);
  contextToggle.addEventListener("click",()=>{const open=shell.classList.toggle("test-context-open");contextToggle.setAttribute("aria-expanded",String(open));});
@@ -20931,4 +20931,31 @@ body.enterprise-test #ticketDrawerBackdrop .ticket-thread-message.note{backgroun
 .inbox-time-divider{text-align:center;color:#667085;font-size:11px;margin:16px 0}
 body.enterprise-test #ticketDrawerBackdrop .ticket-workspace-scroll{padding-bottom:24px!important;scroll-padding-bottom:24px}
 body.enterprise-test #ticketDrawerBackdrop #ticketThread{height:auto!important;max-height:none!important;overflow:visible!important;min-height:0!important}
+</style>
+
+<style id="inbox-phase3">
+body.enterprise-test #ticketDrawerBackdrop #ticketContext{padding:12px 16px!important;font-size:12px!important}
+.inbox-details-title{font-size:13px;margin:0 0 12px;font-weight:600}.inbox-details-list{display:grid;grid-template-columns:minmax(85px,.8fr) minmax(0,1.2fr);margin:0;gap:0}
+.inbox-details-list dt,.inbox-details-list dd{padding:7px 0;border-bottom:1px solid var(--border);line-height:1.5;overflow-wrap:anywhere}
+.inbox-details-list dt{color:var(--text-muted);padding-right:10px}.inbox-details-list dd{margin:0;color:var(--text)}
+#ticketContext details{border-bottom:1px solid var(--border);padding:10px 0}#ticketContext summary{cursor:pointer;font-size:11.5px;font-weight:500}#ticketContext details p{line-height:1.6;font-size:11.5px;color:var(--text-muted)}
+@media(min-width:1200px) and (max-width:1250px){
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop{grid-template-columns:var(--inbox-list-width) minmax(0,1fr) var(--inbox-context-width)!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-inbox-context{display:flex!important;position:relative!important;right:auto!important;top:auto!important;bottom:auto!important;width:auto!important;box-shadow:none!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-context-toggle{display:none!important}
+}
+@media(max-width:1199px){
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop{grid-template-columns:var(--inbox-list-width) minmax(0,1fr)!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-inbox-context{display:none!important;position:absolute!important;right:0!important;top:0!important;bottom:0!important;width:min(340px,100%)!important;z-index:40!important;box-shadow:-12px 0 30px #20283222!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop.test-context-open .test-inbox-context{display:flex!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-context-toggle{display:inline-flex!important}
+}
+@media(max-width:899px){
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop{grid-template-columns:minmax(0,1fr)!important;height:calc(100dvh - 150px)!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-queue-panel{grid-column:1!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop>.ticket-drawer{grid-column:1!important;visibility:hidden!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop.test-has-selection>.ticket-drawer{visibility:visible!important;z-index:3!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop.test-has-selection .ticket-queue-panel{visibility:hidden!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-inbox-back{display:inline-flex!important}
+}
 </style>
