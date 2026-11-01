@@ -20784,3 +20784,66 @@ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop 
  html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment .ticket-sla-state{grid-column:1/-1!important;justify-self:start!important;margin:0!important}
 }
 </style>
+
+<style id="test2-inbox-states-v7">
+/* Secondary inbox states use the same visual language as the main workspace. */
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-menu{width:190px!important;padding:5px!important;border:1px solid var(--border)!important;border-radius:8px!important;background:#fff!important;box-shadow:0 10px 28px #2028321a!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option{display:flex!important;align-items:center!important;gap:9px!important;min-height:34px!important;padding:8px 10px!important;border:0!important;border-radius:5px!important;background:transparent!important;color:var(--text-secondary)!important;font-size:12px!important;font-weight:400!important;line-height:1.5!important;filter:none!important;box-shadow:none!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option:hover{background:#f7f8fa!important;color:var(--text)!important;filter:none!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option.active{background:#f0f3f5!important;color:var(--text)!important;font-weight:500!important;filter:none!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option.active::after{color:var(--status-colour)!important;font-size:12px!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-swatch{display:block!important;width:7px!important;height:7px!important;flex:0 0 7px!important;border-radius:50%!important;background:var(--status-colour)!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option[data-value="open"],html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option[data-value="in_progress"]{--status-colour:#315f96}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option[data-value="pending"]{--status-colour:#956116}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option[data-value="resolved"]{--status-colour:#23734b}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-option[data-value="reopened"]{--status-colour:#7150a0}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNoteTab.active{color:#8c5b13!important;border-bottom-color:#b38336!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNoteText{height:80px!important;min-height:80px!important;max-height:160px!important;padding:12px!important;border:1px solid #dccba8!important;border-radius:8px!important;background:#fffcf5!important;color:var(--text)!important;font-size:13px!important;line-height:1.6!important;overflow-y:auto!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNoteText:focus-visible{outline:none!important;border-color:#ac7d2f!important;box-shadow:0 0 0 2px #ac7d2f14!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketNotePane .ticket-action-row{margin-top:8px!important;gap:8px!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketSaveNote{min-height:32px!important;padding:7px 11px!important;border:1px solid #475467!important;border-radius:6px!important;background:#475467!important;color:#fff!important;box-shadow:none!important;font-size:11.5px!important;font-weight:500!important;line-height:1.4!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketSaveNote:disabled{opacity:.4!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-notes-history{max-height:130px!important;margin-top:12px!important;padding-top:0!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-note-date{margin:8px 0 6px!important;font-size:10px!important;font-weight:500!important;line-height:1.5!important;letter-spacing:0!important;text-transform:none!important;color:var(--text-muted)!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-note-entry{padding:10px 12px!important;margin:0 0 8px!important;border:1px solid var(--border)!important;border-left:2px solid #d5b87f!important;border-radius:6px!important;background:#fffdf8!important;box-shadow:none!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-note-meta{font-size:10.5px!important;line-height:1.5!important;color:var(--text-muted)!important;margin-bottom:4px!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-note-body{font-size:12px!important;line-height:1.65!important;color:var(--text-secondary)!important;overflow-wrap:anywhere!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketQueuePanel .ticket-queue-empty{padding:32px 20px!important;font-size:12px!important;line-height:1.7!important;color:var(--text-muted)!important;text-align:center!important;background:transparent!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-inbox-empty{padding:32px!important;color:var(--text-muted)!important;background:#f7f8fa!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-inbox-empty h2{font-size:18px!important;font-weight:600!important;letter-spacing:-.3px!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-inbox-empty p{font-size:12px!important;line-height:1.7!important;max-width:300px!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-customer-heading{overflow-wrap:anywhere!important;min-width:0!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment-copy .unified-select-trigger{width:100%!important;min-width:0!important;max-width:100%!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-queue-card-name{overflow-wrap:anywhere!important;min-width:0!important}
+html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-action-error:not(:empty){font-size:12px!important;line-height:1.6!important;padding:9px 11px!important;border:1px solid #f1d3d6!important;border-radius:6px!important;background:#fceff0!important;color:#a43e47!important;margin-top:10px!important}
+
+</style>
+<style id="test2-inbox-short-laptop-fit">
+@media(min-width:901px) and (max-width:1100px){
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop{height:calc(100dvh - 130px)!important;min-height:0!important}
+}
+@media(min-width:761px) and (max-width:1250px){
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-drawer-head{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-head-side{grid-column:1/-1!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;width:100%!important;max-width:none!important;min-height:30px!important;gap:10px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment{grid-template-columns:max-content minmax(0,160px) auto!important;justify-content:start!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment .ticket-sla-state{grid-column:auto!important}
+}
+</style>
+<style id="test2-pill-and-compact-header">
+body.enterprise-test .topbar .topbar-actions #globalSearchWrap .global-search-shell,
+body.enterprise-test .topbar .topbar-actions #refreshBtn{border-radius:999px!important}
+@media(min-width:761px){
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-drawer-head{padding:12px 16px!important;gap:8px!important;min-height:0!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .test-customer-heading{font-size:15px!important;line-height:1.3!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-heading-row{margin-top:2px!important;gap:6px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment{margin-top:4px!important;gap:3px 5px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-head-side{gap:6px!important;justify-content:space-between!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch,
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch button{height:26px!important;min-height:26px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch button{padding:3px 6px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-status-trigger,
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-close{height:28px!important;min-height:28px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment .unified-select-trigger{height:22px!important;min-height:22px!important;padding-block:1px!important}
+ html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-sla-state{padding:2px 5px!important;font-size:9.5px!important}
+}
+</style>
