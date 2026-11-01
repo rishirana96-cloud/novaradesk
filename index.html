@@ -10804,7 +10804,6 @@ const select = document.getElementById("ticketViewSelect");
 if (select && [...select.options].some(option => option.value === value)) select.value = value;
 ticketWorkspaceState.page = 1;
 refreshTicketWorkspace();
-document.querySelector("#panel-tickets .ticket-table")?.scrollIntoView({ behavior:"smooth", block:"nearest" });
 });
 document.querySelector(".ticket-compact-metrics")?.addEventListener("keydown", event => {
 if (!["Enter", " "].includes(event.key) || !event.target.matches("[data-ticket-kpi-view]")) return;
