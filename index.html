@@ -8584,12 +8584,6 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
     ================================================== -->
     <section id="panel-customers" class="view-panel">
         <div class="customer-profiles-shell">
-            <div class="customer-profile-kpis">
-                <article><span>Total customers</span><strong id="customerKpiTotal">0</strong><small>Known customer identities</small></article>
-                <article><span>Active customers</span><strong id="customerKpiActive">0</strong><small>Engaged in the last 30 days</small></article>
-                <article><span>At risk</span><strong id="customerKpiRisk">0</strong><small>Requires proactive attention</small></article>
-                <article><span>High value</span><strong id="customerKpiValue">0</strong><small>VIP and priority accounts</small></article>
-            </div>
             <section class="customer-directory-card">
                 <div class="customer-directory-toolbar">
                     <label class="customer-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="customerProfileSearch" type="search" placeholder="Search by name, phone, email or organisation…"></label>
@@ -16269,10 +16263,6 @@ const health = document.getElementById("customerHealthFilter")?.value || "";
 const sort = document.getElementById("customerSort")?.value || "recent";
 let rows = customers.filter(customer => (!query || [customer.name,customer.email,customer.phone,customer.organisation,...(customer.tags||[])].join(" ").toLowerCase().includes(query)) && (!segment || customer.segment === segment) && (!health || customer.health === health));
 rows.sort((a,b) => sort === "value" ? b.value-a.value : sort === "tickets" ? b.tickets-a.tickets : sort === "health" ? a.healthScore-b.healthScore : sort === "name" ? a.name.localeCompare(b.name) : new Date(b.lastInteraction)-new Date(a.lastInteraction));
-document.getElementById("customerKpiTotal").textContent = customers.length.toLocaleString("en-IN");
-document.getElementById("customerKpiActive").textContent = customers.filter(item => Date.now()-new Date(item.lastInteraction).getTime() < 30*864e5).length;
-document.getElementById("customerKpiRisk").textContent = customers.filter(item => item.health === "risk").length;
-document.getElementById("customerKpiValue").textContent = customers.filter(item => item.segment === "VIP").length;
 document.getElementById("customerDirectoryCount").textContent = `${rows.length} ${rows.length===1?"customer":"customers"}`;
 const body = document.getElementById("customerProfileBody");
 body.innerHTML = rows.map(customer => `<tr data-customer-id="${escapeHtml(customer.id)}" tabindex="0">
