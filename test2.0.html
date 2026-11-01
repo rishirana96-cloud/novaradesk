@@ -9409,7 +9409,7 @@ ORDER BY ticket_count DESC</textarea>
                 <button class="ticket-status-option" data-value="reopened" type="button"><span class="ticket-status-swatch"></span>Reopened</button>
             </div>
         </div>
-        <button id="ticketDrawerClose" class="ticket-close" type="button" aria-label="Close ticket">✕</button>
+        <button id="ticketDrawerClose" class="ticket-close" type="button" aria-label="Close panel" title="Close panel">↗</button>
     </div>
     
     <div id="ticketChannelSwitch" class="ticket-channel-switch" role="tablist" aria-label="Ticket channel">
@@ -10534,6 +10534,7 @@ return {
     resolvedAt,
     firstResponseAt: ticket.first_response_at || null,
     firstResponseDueAt: ticket.first_response_due_at || null,
+    slaMinutes: ticket.first_response_sla_minutes || null,
     resolutionDueAt: ticket.resolution_due_at || null,
     latestSender,
     unreadCustomerMessages,
@@ -10897,21 +10898,43 @@ document.getElementById("ticketCustomDatePopover").hidden = true;
 updateDashboard(currentPeriod);
 });
 renderTicketViewOptions();
-function ticketSlaDisplay(ticket) {
-const policy = (slaState.policies || []).find(item => String(item.priority).toLowerCase() === ticket.priority)
-    || (slaState.policies || []).find(item => item.priority === "normal");
-if (!policy || !ticket.createdAt) return { label: "SLA not set", className: "met" };
-if (ticket.firstResponseAt) return { label: "First response met", className: "met" };
-const created = new Date(String(ticket.createdAt).includes("T") ? ticket.createdAt : `${String(ticket.createdAt).replace(" ", "T")}Z`);
-if (Number.isNaN(created.getTime())) return { label: "SLA unavailable", className: "met" };
-const serverDue = ticket.firstResponseDueAt ? new Date(ticket.firstResponseDueAt) : null;
-const targetMs = serverDue && !Number.isNaN(serverDue.getTime()) ? serverDue.getTime() - created.getTime() : Number(policy.first_response_minutes || 120) * 60000;
-const elapsed = Date.now() - created.getTime();
-const remaining = serverDue && !Number.isNaN(serverDue.getTime()) ? serverDue.getTime() - Date.now() : targetMs - elapsed;
-if (remaining <= 0) return { label: `Overdue ${formatSlaDuration(Math.abs(remaining))}`, className: "breached" };
-const consumed = elapsed / targetMs;
-return { label: `${formatSlaDuration(remaining)} left`, className: consumed >= ((ticket.slaWarningPercent || 75) / 100) ? "warning" : "" };
+// Inbox timing is a view-only projection of existing payload fields.
+const inboxDetailCache = new Map();
+function inboxTimestamp(value) {
+ if (!value) return null;
+ const text=String(value), n=Date.parse(text.includes("T")?text:text.replace(" ","T")+"Z");
+ return Number.isFinite(n)?n:null;
 }
+function inboxTiming(input, messages = [], now = Date.now(), policies = []) {
+ const t=input||{}, warnings=[];
+ const created=inboxTimestamp(t.created_at||t.createdAt);
+ const response=inboxTimestamp(t.first_response_at||t.firstResponseAt);
+ const policy=policies.find(p=>String(p.priority).toLowerCase()===String(t.priority||"normal").toLowerCase());
+ const minutes=Number(t.first_response_sla_minutes||t.slaMinutes||policy?.first_response_minutes);
+ let due=inboxTimestamp(t.first_response_due_at||t.firstResponseDueAt);
+ if(due===null&&created!==null&&minutes>0)due=created+minutes*60000;
+ if(created===null)warnings.push("Created timestamp missing or invalid.");
+ if(response!==null&&created!==null&&response<created)warnings.push("First response precedes ticket creation.");
+ if(due!==null&&created!==null&&due<created)warnings.push("SLA deadline precedes ticket creation.");
+ if(response===null&&messages.some(m=>m.sender_type==="agent"))warnings.push("Agent messages exist but first_response_at is missing.");
+ if(["resolved","closed"].includes(t.status)&&response===null)warnings.push("Resolved ticket has no first-response timestamp.");
+ const elapsed=created===null?null:Math.max(0,(response??now)-created);
+ const remaining=due===null?null:due-(response??now);
+ const duration=ms=>formatSlaDuration(Math.abs(ms));
+ let label="SLA target unavailable",state="neutral";
+ if(remaining!==null){
+  state=remaining<0?"breached":response===null&&remaining<15*60000?"warning":"neutral";
+  label=response!==null?(remaining<0?"Responded "+duration(remaining)+" late":"Responded within SLA"):(remaining<0?"Overdue "+duration(remaining):duration(remaining)+" remaining");
+ }
+ return {label,state,className:state==="breached"?"breached":state==="warning"?"warning":"met",due,remaining,response,created,warnings,
+  waiting:elapsed===null?"Waiting unavailable":(response!==null?"Responded in ":"Waiting ")+duration(elapsed),
+  firstResponse:response!==null&&elapsed!==null?duration(elapsed):"Awaiting response"};
+}
+function inboxTimingFor(ticket) {
+ const detail=inboxDetailCache.get(String(ticket.dbId??ticket.id));
+ return inboxTiming(detail?.ticket||ticket,detail?.messages||[],Date.now(),slaState.policies||[]);
+}
+function ticketSlaDisplay(ticket) {return inboxTimingFor(ticket);}
 function formatSlaDuration(milliseconds) {
 const minutes = Math.max(0, Math.round(milliseconds / 60000));
 if (minutes < 60) return `${minutes}m`;
@@ -14191,7 +14214,7 @@ list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
     const created = ageSource ? new Date(String(ageSource).includes("T") ? ageSource : `${String(ageSource).replace(" ","T")}Z`) : null;
     const age = created && !isNaN(created) ? formatTicketAge(ageSource) : "—";
     const statusLabel=ticketStatusLabel(ticket.status).replace(/^Resolved by .+$/,"Resolved");
-    const ageLabel=ticket.status==="resolved"?`${age} ago`:`Waiting ${age}`;
+    const ageLabel=inboxTimingFor(ticket).waiting;
     const unread=ticket.unreadCustomerMessages?`<span class="ticket-queue-unread" aria-label="${ticket.unreadCustomerMessages} unread messages">${ticket.unreadCustomerMessages}</span>`:"";
     return `<div class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" role="button" tabindex="0" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${unread}</div>`;
 }).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
@@ -14407,20 +14430,13 @@ document.getElementById("ticketStatusControl")?.setAttribute("data-status",norma
 document.querySelectorAll(".ticket-status-option").forEach(button=>button.classList.toggle("active",button.dataset.value===normalized));
 }
 function renderTicketSlaState(ticket) {
-const element = document.getElementById("ticketSlaState");
-if (!element) return;
-const status = String(ticket?.status || "open").toLowerCase();
-const ticketSeed = Number(ticket?.id || 1);
-if (["closed","resolved"].includes(status)) {
-    element.textContent = `Closed in ${10 + (ticketSeed % 9)} minutes`;
-    element.className = "ticket-sla-state closed";
-} else if (status === "reopened" || String(ticket?.priority || "").toLowerCase() === "urgent") {
-    element.textContent = `Overdue by ${4 + (ticketSeed % 8)} minutes`;
-    element.className = "ticket-sla-state overdue";
-} else {
-    element.textContent = `Due in ${14 + (ticketSeed % 13)} minutes`;
-    element.className = "ticket-sla-state due";
-}
+ const timing=inboxTimingFor(ticket),element=document.getElementById("ticketSlaState");
+ element.textContent=timing.label; element.className="ticket-sla-state "+timing.state;
+ element.title=timing.warnings.join(" ");
+ let flag=document.getElementById("inboxDataWarning");
+ if(!flag){flag=document.createElement("div");flag.id="inboxDataWarning";flag.setAttribute("role","status");element.after(flag);}
+ flag.textContent=timing.warnings.length?"Data inconsistency: "+timing.warnings.join(" "):"";flag.hidden=!timing.warnings.length;
+ document.querySelectorAll("[data-inbox-first-response]").forEach(e=>e.textContent=timing.firstResponse);
 }
 async function loadOpenTicket(scrollLatest = false) {
 if (!openTicketId) return;
@@ -14433,6 +14449,8 @@ try {
     if (!response.ok) throw new Error(data.error || "Could not load ticket.");
     if (openTicketId !== requestedTicketId) return;
     lastOpenTicketData = data;
+    inboxDetailCache.set(String(data.ticket.id),data);
+    renderTicketSlaState(data.ticket);
     const ticket = data.ticket;
     const signature = JSON.stringify([
         ticket?.id, ticket?.status, ticket?.updated_at, ticket?.resolved_at, ticket?.first_response_at,
@@ -14467,7 +14485,7 @@ try {
             <div class="ticket-context-item"><span>Phone number</span>${escapeHtml(ticket.customer_phone || "—")}</div>
             <div class="ticket-context-item"><span>Created date</span>${escapeHtml(ticketDatePart(ticket.created_at))}</div>
             <div class="ticket-context-item"><span>Created time</span>${escapeHtml(ticketTimePart(ticket.created_at))}</div>
-            <div class="ticket-context-item"><span>First response time</span>${escapeHtml(formatTicketElapsed(ticket.created_at, ticket.first_response_at, "Awaiting response"))}</div>
+            <div class="ticket-context-item"><span>First response time</span><strong data-inbox-first-response>${escapeHtml(inboxTimingFor(ticket).firstResponse)}</strong></div>
             <div class="ticket-context-item"><span>Resolution time</span>${escapeHtml(formatTicketElapsed(ticket.created_at, ticket.resolved_at, "In progress"))}</div>
         </div>
         <div class="ticket-context-section case">
@@ -20862,5 +20880,23 @@ body.enterprise-test .topbar .topbar-actions #refreshBtn{border-radius:999px!imp
  html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch{grid-column:3!important;grid-row:2!important;justify-self:end!important;width:max-content!important;max-width:none!important;margin:0!important;gap:0!important}
  html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch button{padding:3px 5px!important;gap:4px!important;min-width:0!important;font-size:10.5px!important}
  html[data-theme="light"] body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-channel-switch .ticket-tab-icon{width:13px!important;height:13px!important}
+}
+</style>
+
+<style id="inbox-phase1">
+body.enterprise-test #ticketSlaState{font-weight:600!important;border:1px solid #cbd2dc!important;background:#f0f2f5!important;color:#344054!important;font-size:11px!important}
+body.enterprise-test #ticketSlaState.breached{background:#b42318!important;border-color:#b42318!important;color:white!important}
+body.enterprise-test #ticketSlaState.warning{background:#fef0c7!important;border-color:#b7791f!important;color:#713b12!important}
+#inboxDataWarning{font-size:11px;line-height:1.5;color:#9c3523;max-width:400px;grid-column:1/-1}
+@media(min-width:901px){
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-drawer-head{grid-template-columns:minmax(100px,1fr) auto auto auto!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-heading-row{display:contents!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-title-copy{grid-row:1;grid-column:2}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-head-controls{grid-row:1!important;grid-column:3!important;gap:12px!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment{display:contents!important}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop .ticket-assignment-copy{grid-row:1;grid-column:4}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketTags{grid-row:2;grid-column:1}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketSlaState{grid-row:2;grid-column:2/4;justify-self:start}
+body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketChannelSwitch{grid-row:2!important;grid-column:4!important}
 }
 </style>
