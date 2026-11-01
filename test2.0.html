@@ -14510,8 +14510,20 @@ try {
             <span class="ticket-thread-name">${escapeHtml(item.name)} · ${escapeHtml(ticketDateText(item.created_at))}</span><div class="ticket-markdown">${renderSafeMarkdown(item.message)}</div>
         </div>
     `).join("") : `<div class="empty-state">No AI conversation available.</div>`;
+    const handoffAt=inboxTimestamp(ticket.handoff_at||ticket.escalated_at);
+    const summary=document.querySelector(".ticket-ai-details summary");
+    summary.textContent=`AI conversation · ${aiThread.length} messages · ${handoffAt!==null?"handed off at "+ticketTimePart(new Date(handoffAt).toISOString()):"handoff time unavailable"}`;
+    let handoff=document.getElementById("inboxHandoffSummary");
+    if(!handoff){handoff=document.createElement("aside");handoff.id="inboxHandoffSummary";document.querySelector(".ticket-ai-details").before(handoff);}
+    handoff.hidden=!ticket.escalation_reason;
+    const lastAi=[...(data.conversation||[])].reverse().find(t=>t.bot_reply);
+    handoff.innerHTML=`<details><summary>AI handoff summary</summary><dl>
+    <dt>Detected intent</dt><dd>${escapeHtml(ticket.intent||"Not provided")}</dd>
+    <dt>AI attempted</dt><dd>${escapeHtml(lastAi?.bot_reply||"Not provided")}</dd>
+    <dt>Escalation reason</dt><dd>${escapeHtml((ticket.escalation_reason||"Not provided").replaceAll("_"," "))}</dd>
+    <dt>Agent next action</dt><dd>${escapeHtml(ticket.agent_next_action||ticket.next_action||"Not provided in ticket payload")}</dd></dl></details>`;
     const humanThread = (data.messages || []).map(message => ({
-        type: message.sender_type === "agent" ? "agent" : "customer",
+        type: message.sender_type === "agent" ? "agent" : message.sender_type === "ai" || message.sender_type === "bot" ? "ai" : message.sender_type === "note" || message.sender_type === "internal_note" ? "note" : "customer",
         name: message.sender_type === "customer" ? cleanConversationSenderName(ticket.customer_name || message.sender_name || "Customer") : (message.sender_name || "Novara CX Support"),
         message: message.message,
         created_at: message.created_at
@@ -14522,8 +14534,12 @@ try {
             <span class="ticket-thread-name">${escapeHtml(item.name)} · ${escapeHtml(ticketDateText(item.created_at))}${item.type === "agent" ? '<span class="ticket-message-state sent">✓ Sent</span>' : ''}</span><div class="ticket-markdown">${renderSafeMarkdown(item.message)}</div>
         </div>
     `).join("") : `<div class="empty-state">No human-support messages yet. Send the first reply below.</div>`;
-    threadElement.scrollTop = threadElement.scrollHeight;
-    if (scrollLatest) {
+    if(handoffAt!==null){
+     const next=humanThread.find(m=>m.type==="customer"&&inboxTimestamp(m.created_at)>handoffAt);
+     if(next){const divider=document.createElement("p");divider.className="inbox-time-divider";divider.textContent=formatSlaDuration(inboxTimestamp(next.created_at)-handoffAt)+" after AI handoff";threadElement.prepend(divider);}
+    }
+    if (scrollLatest || threadElement.dataset.ticketId !== String(ticket.id)) {
+        threadElement.dataset.ticketId=String(ticket.id);
         requestAnimationFrame(() => {
             const workspace = document.querySelector(".ticket-workspace-scroll");
             workspace?.scrollTo({ top: workspace.scrollHeight, behavior: "smooth" });
@@ -14864,6 +14880,7 @@ const optimisticId=`pending-${Date.now()}`;
 thread.querySelector(".empty-state")?.remove();
 thread.insertAdjacentHTML("beforeend",`<div id="${optimisticId}" class="ticket-thread-message agent"><span class="ticket-thread-name">${escapeHtml(document.getElementById("ticketAgentSelect")?.value||"Novara CX Support")} · Just now <span class="ticket-message-state sending">◷ Sending</span></span><div class="ticket-markdown">${renderSafeMarkdown(reply)}</div></div>`);
 thread.scrollTop=thread.scrollHeight;
+document.querySelector(".ticket-workspace-scroll")?.scrollTo({top:document.querySelector(".ticket-workspace-scroll").scrollHeight});
 input.value=""; autoResizeTextarea(input); ticketSendReply.disabled=true;
 try {
     await postTicketAction({ route: "agent-message", body: { ticketId: replyTicketId, message: reply } });
@@ -20899,4 +20916,19 @@ body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketTags{grid-row:2;gr
 body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketSlaState{grid-row:2;grid-column:2/4;justify-self:start}
 body.enterprise-test.test2-inbox #ticketDrawerBackdrop #ticketChannelSwitch{grid-row:2!important;grid-column:4!important}
 }
+</style>
+
+<style id="inbox-phase2">
+body.enterprise-test #ticketDrawerBackdrop #ticketAiTranscript,body.enterprise-test #ticketDrawerBackdrop .ticket-ai-transcript{max-height:none!important;height:auto!important;overflow:visible!important;padding:12px!important}
+body.enterprise-test #ticketDrawerBackdrop .ticket-ai-details{overflow:visible!important}
+body.enterprise-test #ticketDrawerBackdrop .ticket-ai-details summary::after{display:none!important}
+body.enterprise-test #ticketDrawerBackdrop .ticket-thread-message.ai{background:#eef2ff!important;color:#283879!important;border:1px solid #c7d2fe!important}
+body.enterprise-test #ticketDrawerBackdrop .ticket-thread-message.note{background:#fffaeb!important;color:#713b12!important;border:1px solid #ead8ae!important}
+#inboxHandoffSummary{position:sticky;top:-1px;z-index:3;margin-bottom:12px;border:1px solid #c7d2fe;border-radius:8px;background:#f4f5ff;color:#283879;font-size:12px}
+#inboxHandoffSummary summary{padding:10px 12px;cursor:pointer;font-weight:600}
+#inboxHandoffSummary dl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;padding:0 12px 12px;margin:0;max-height:210px;overflow:auto}
+#inboxHandoffSummary dt{font-weight:500}#inboxHandoffSummary dd{margin:0;overflow-wrap:anywhere;line-height:1.6}
+.inbox-time-divider{text-align:center;color:#667085;font-size:11px;margin:16px 0}
+body.enterprise-test #ticketDrawerBackdrop .ticket-workspace-scroll{padding-bottom:24px!important;scroll-padding-bottom:24px}
+body.enterprise-test #ticketDrawerBackdrop #ticketThread{height:auto!important;max-height:none!important;overflow:visible!important;min-height:0!important}
 </style>
