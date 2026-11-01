@@ -7447,6 +7447,13 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
 .novara-preview-button:hover{background:#e5f0e9}.novara-preview-button:focus-visible{outline:3px solid #6caa85;outline-offset:3px}
 .novara-preview-entry p{margin:10px 0 0;color:#68776f;font-size:12px;line-height:1.6;text-align:center}
 </style>
+
+<style id="human-first-response-single-line">
+#panel-human .kpi-card:has(#humanFirstResponseTime){grid-template-columns:minmax(120px,1fr) minmax(0,.8fr);column-gap:12px}
+#panel-human .kpi-card:has(#humanFirstResponseTime)>.kpi-label{white-space:nowrap}
+#panel-human .kpi-card:has(#humanFirstResponseTime)>.kpi-comparison{min-width:0;width:100%}
+#panel-human>.kpi-grid #humanFirstResponseTime{white-space:nowrap;font-size:calc(26px * var(--ui-text-scale))!important;line-height:1.1}
+</style>
 </head>
 <body>
 <div class="novara-auth-screen" id="novaraAuthScreen" aria-label="NovaraDesk sign in">
