@@ -1,0 +1,11 @@
+{
+  "name": "novaradesk-whatsapp-staging",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "build": "node build.js",
+    "check": "node --check src/connector.js && node --check reference/worker.js",
+    "pretest": "npm run build"
+  }
+}
