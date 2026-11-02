@@ -9162,7 +9162,7 @@ ORDER BY ticket_count DESC</textarea>
 </main>
 </div>
 <button id="ticketWorkspaceFloater" class="ticket-workspace-floater" type="button" aria-label="Open ticket workspace" aria-expanded="false" title="Open ticket workspace">
-<svg class="ticket-floater-message-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 18.5 4 21v-5a8 8 0 1 1 3.5 2.5Z"/><path d="M8 9.5h8M8 13h5"/></svg>
+<svg class="ticket-floater-message-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="m8.5 10 2.25 2.25 4.75-4.75"/></svg>
 <svg class="ticket-floater-close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
 <span id="ticketWorkspaceBadge" class="ticket-workspace-badge" hidden>0</span>
 </button>
@@ -19816,3 +19816,11 @@ html body.expanded-inbox-mode #appSidebar #sidebarLogout svg{display:block;width
  button.title=window.NOVARA_DEMO_MODE?"Exit preview":"Sign out";
 })();
 </script>
+
+<style id="ticket-launcher-novara-family">
+html body #ticketWorkspaceFloater,
+html body #ticketWorkspaceFloater.open{background:linear-gradient(135deg,#b4dcc3,#68a982)!important;color:#102b1d!important;border:1px solid #6a9c7f55!important;box-shadow:0 8px 24px #438f6130!important}
+html body #ticketWorkspaceFloater:hover{background:linear-gradient(135deg,#a8d5b9,#5d9f76)!important;box-shadow:0 10px 28px #438f613d!important}
+html body #ticketWorkspaceFloater svg{width:25px!important;height:25px!important;stroke:#102b1d!important;stroke-width:1.8!important;fill:none!important}
+html body #ticketWorkspaceFloater:focus-visible{outline:3px solid #82b296!important;outline-offset:4px!important}
+</style>
