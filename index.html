@@ -12718,6 +12718,9 @@ if (Math.abs(value) >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
 if (Math.abs(value) >= 1000) return `${(value / 1000).toFixed(1)}K`;
 return Number.isInteger(value) ? value.toLocaleString("en-IN") : value.toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
+if (window.NOVARA_DEMO_MODE) {
+ document.getElementById("reportMode")?.querySelector('option[value="sql"]')?.remove();
+}
 function getReportConfig() {
 return {
     name: document.getElementById("reportName").value.trim(),
@@ -13240,6 +13243,7 @@ if (!response.ok) throw new Error(data.error || data.details || "The report quer
 return data;
 }
 async function runRawSqlReport(config) {
+if(window.NOVARA_DEMO_MODE) return;
 if (!config.rawSql.query) {
     setReportMessage("Enter a SELECT query.", "error");
     return;
@@ -13271,6 +13275,7 @@ try {
 }
 }
 function syncReportMode() {
+if(window.NOVARA_DEMO_MODE && document.getElementById("reportMode")?.value === "sql") document.getElementById("reportMode").value="standard";
 const mode = document.getElementById("reportMode")?.value;
 const isPivot = mode === "pivot";
 const isSql = mode === "sql";
@@ -13350,7 +13355,7 @@ customReportUpdateTimer = window.setTimeout(runCustomReport, 300);
 function loadSavedReports() {
 try {
     const reports = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(REPORT_STORAGE_KEY) || "[]");
-    return Array.isArray(reports) ? reports : [];
+    return Array.isArray(reports) ? reports.filter(report => !window.NOVARA_DEMO_MODE || report.mode !== "sql") : [];
 } catch { return []; }
 }
 function storeSavedReports(reports) {
