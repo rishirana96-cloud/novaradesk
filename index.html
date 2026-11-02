@@ -19934,3 +19934,13 @@ html body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-item,
 html body:not(.sidebar-pinned) #appSidebar .nav-item:is(:hover,:focus-visible,.active){box-sizing:border-box!important;width:56px!important;min-width:56px!important;max-width:56px!important;min-height:50px!important;padding:13px 18px!important;gap:14px!important;transform:none!important;scale:1!important;flex-shrink:0!important}
 }
 </style>
+
+<style id="report-heading-inline-actions">
+html #panel-reports:not(.sql-runner-mode) .report-section-heading{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:6px 12px!important;flex-wrap:nowrap!important}
+html #panel-reports:not(.sql-runner-mode) .report-section-heading>div:first-child{display:contents!important}
+html #panel-reports:not(.sql-runner-mode) .report-section-heading .report-eyebrow{grid-column:1 / -1;grid-row:1}
+html #panel-reports:not(.sql-runner-mode) .report-section-heading h2{grid-column:1;grid-row:2;margin:0!important}
+html #panel-reports:not(.sql-runner-mode) .report-section-heading p{grid-column:1 / -1;grid-row:3;margin:2px 0 0!important}
+html #panel-reports:not(.sql-runner-mode) .report-heading-actions{grid-column:2;grid-row:2;display:flex!important;align-items:center!important;justify-content:flex-end!important;width:auto!important;min-width:0!important;margin:0!important;gap:6px!important}
+html #panel-reports:not(.sql-runner-mode) #reportSaveBtn{flex:0 0 auto!important;padding:8px 10px!important;white-space:nowrap!important}
+</style>
