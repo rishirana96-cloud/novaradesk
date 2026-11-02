@@ -20007,3 +20007,8 @@ html body #panel-tickets #inlineTicketBack{display:inline-flex!important;align-i
  if(currentTab==="tickets"){document.body.style.overflow="";renderTicketQueue();fitWorkspace();}
 })();
 </script>
+
+<style id="embedded-ticket-toolbar-removal">
+html body #panel-tickets>.ticket-workspace-toolbar,
+html body #panel-tickets>#ticketFilterPanel{display:none!important}
+</style>
