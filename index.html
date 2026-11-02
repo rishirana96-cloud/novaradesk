@@ -9742,18 +9742,12 @@ const isAnalytics = group === "analytics";
 const activeGroup = isAnalytics ? analyticsNavGroup : ticketsNavGroup;
 const activeSubnav = isAnalytics ? analyticsSubnav : ticketsSubnav;
 const activeToggle = isAnalytics ? analyticsNavToggle : ticketsNavToggle;
-const otherGroup = isAnalytics ? ticketsNavGroup : analyticsNavGroup;
-const otherSubnav = isAnalytics ? ticketsSubnav : analyticsSubnav;
-const otherToggle = isAnalytics ? ticketsNavToggle : analyticsNavToggle;
 activeGroup?.classList.toggle("open", open);
 activeSubnav?.classList.toggle("open", open);
 activeToggle?.setAttribute("aria-expanded", String(open));
-if (open) {
-    otherGroup?.classList.remove("open");
-    otherSubnav?.classList.remove("open");
-    otherToggle?.setAttribute("aria-expanded", "false");
 }
-}
+setSidebarGroup("analytics", true);
+setSidebarGroup("tickets", true);
 analyticsNavToggle?.addEventListener("click", event => {
 event.preventDefault();
 event.stopPropagation();
@@ -19512,4 +19506,13 @@ body:has(#ticketChatDock .dock-chat:not(.collapsed):not([hidden])) #ticketWorksp
 
 <style id="compact-ticket-status-options">
 html body #ticketStatusMenu{width:150px!important;max-width:calc(100vw - 32px)}
+</style>
+
+<style id="slimmer-expanded-sidebar">
+@media(min-width:721px){
+html body.sidebar-pinned #appSidebar{width:232px!important}
+html body.sidebar-pinned .main{width:calc(100% - 232px)!important;margin-left:232px!important}
+html body.sidebar-pinned #appSidebar .authenticated-profile .agent-profile-copy{overflow:hidden!important}
+html body.sidebar-pinned #appSidebar .authenticated-profile .agent-profile-copy :is(strong,span,small){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
 </style>
