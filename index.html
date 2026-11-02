@@ -10645,7 +10645,7 @@ return true;
 function refreshTicketWorkspace() {
 const filters = ticketFilterValues();
 const viewSource = ticketWorkspaceState.activeView === "needs_reply" ? ticketWorkspaceState.source.filter(ticket => ticket.needsReply) : ticketWorkspaceState.source;
-const filtered = viewSource.filter(ticket => ticketMatchesFilters(ticket, filters));
+const filtered = viewSource.filter(ticket => ticketMatchesFilters(ticket, filters) && (!window.expandedInboxSidebarPredicate || window.expandedInboxSidebarPredicate(ticket)));
 ticketWorkspaceState.filtered = filtered;
 const activeFilterCount = Object.values(filters).filter(Boolean).length;
 const count = document.getElementById("ticketFilterCount");
@@ -10699,6 +10699,7 @@ if (tableTitle) tableTitle.textContent = document.getElementById("ticketViewSele
 updateTicketsTable(filtered);
 updateTicketWorkspaceFloater();
 if (document.getElementById("ticketDrawerBackdrop")?.classList.contains("open")) renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
+window.refreshExpandedInboxSidebar?.();
 }
 function updateTicketsDashboard(tickets, analyticsData, period) {
 ticketWorkspaceState.source = (tickets || []).map(normalizeTicket);
@@ -19596,3 +19597,163 @@ html body.sidebar-pinned #appSidebar .sidebar-heading{margin-top:6px!important;m
 }
 @media(max-width:720px){html body #appSidebar .brand{margin-bottom:16px!important}}
 </style>
+
+<style id="expanded-inbox-sidebar">
+.test-inbox-navigation{display:none!important}
+html body.expanded-inbox-mode #appSidebar{padding:22px 12px 12px!important;gap:0!important;box-shadow:none!important}
+html body.expanded-inbox-mode #appSidebar>.nav,
+html body.expanded-inbox-mode #appSidebar>.sidebar-heading{display:none!important}
+html body.expanded-inbox-mode #appSidebar .brand{gap:10px!important;margin-bottom:22px!important;padding:0 9px!important;min-height:44px!important}
+html body.expanded-inbox-mode #appSidebar .brand img{width:30px!important;height:30px!important;flex:0 0 30px!important}
+html body.expanded-inbox-mode #appSidebar .brand-product{display:block!important;opacity:1!important;visibility:visible!important;transform:none!important}
+html body.expanded-inbox-mode #appSidebar .brand-name{font-size:18px!important;font-weight:700!important;letter-spacing:-.7px!important}
+html body.expanded-inbox-mode #appSidebar .brand-endorsement{font-size:10px!important;margin-top:2px!important}
+html body.expanded-inbox-mode #appSidebar .system-status{display:none!important}
+html body.expanded-inbox-mode #appSidebar .authenticated-profile::after{display:none!important}
+html body.expanded-inbox-mode #appSidebar .authenticated-profile .agent-profile-copy,
+html body.expanded-inbox-mode #appSidebar .authenticated-profile .sidebar-profile-logout{position:static!important;width:auto;height:auto;clip-path:none!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;overflow:hidden!important}
+html body.expanded-inbox-mode #appSidebar .sidebar-pin-toggle{top:5px!important;right:5px!important;width:23px!important;height:23px!important}
+@media(min-width:721px){
+ html body.expanded-inbox-mode.sidebar-pinned #appSidebar{width:228px!important;max-width:228px!important}
+ html body.expanded-inbox-mode.sidebar-pinned .main{margin-left:228px!important;width:calc(100% - 228px)!important}
+}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar{--text:#202832;--text-secondary:#475467;--text-muted:#667085;--border:#e4e7ec;--accent:#26734f;--accent-dark:#216643;background:#f8f9fb!important;border-right:1px solid var(--border)!important}
+html body.expanded-inbox-mode #appSidebar .test-inbox-navigation{display:block!important;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-bottom:12px}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-group{margin-bottom:19px}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-group h3{margin:0 12px 7px;color:var(--text-muted);font-size:11px;font-weight:600;letter-spacing:.01em}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link{display:flex;align-items:center;gap:10px;width:100%;min-height:35px;padding:7px 11px;border:0;border-radius:7px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer;text-decoration:none}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link:hover{background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--text)}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link.active{background:color-mix(in srgb,var(--accent) 15%,var(--bg-card));color:var(--text);font-weight:650}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link svg{width:17px;height:17px;flex:0 0 17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-count{color:var(--text-muted);font-size:11px;min-width:18px;text-align:right;font-variant-numeric:tabular-nums}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link[data-inbox-filter="needs"] svg{color:#bc8b28}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link[data-inbox-filter="resolved"] svg{color:#498d72}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link[data-inbox-filter="channel:whatsapp"] svg{color:#22a66a}
+html body.expanded-inbox-mode #appSidebar .test-inbox-nav-link[data-inbox-filter="channel:instagram"] svg{color:#bd5987}
+
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .brand{gap:10px!important;margin-bottom:22px!important;padding:0 9px!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .brand-name{font-size:18px!important;font-weight:700!important;letter-spacing:-.7px!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .brand-endorsement{font-size:10px!important;color:var(--text-muted)!important;margin-top:2px!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .brand img{width:30px!important;height:30px!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-navigation{padding:0 0 12px!important;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-group{margin-bottom:14px!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-group h3{margin:0 10px 5px!important;color:var(--text-muted)!important;font-size:10.5px!important;font-weight:550!important;letter-spacing:.02em!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link{position:relative;min-height:32px!important;padding:6px 10px!important;gap:9px!important;font-size:12px!important;line-height:1.5!important;border-radius:6px!important;color:var(--text-secondary)!important;font-weight:450!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link svg{width:16px!important;height:16px!important;flex-basis:16px!important;stroke-width:1.65}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link.active{background:#eef1f4!important;color:#215d44!important;font-weight:650!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--accent)}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-count{color:var(--text-muted)!important;font-size:10.5px!important;font-weight:450!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .sidebar-bottom{padding:10px 0 0!important;margin-top:0!important;border-top:1px solid var(--border)!important;flex-shrink:0!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile{display:grid!important;grid-template-columns:30px minmax(0,1fr) 28px!important;align-items:center!important;gap:9px!important;min-height:46px!important;border:0!important;border-radius:0!important;padding:4px 7px!important;margin:0!important;background:transparent!important;box-shadow:none!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile-avatar{width:30px!important;height:30px!important;flex-basis:30px!important;border-radius:9px!important;font-size:11px!important;background:#edf3ef!important;color:var(--accent-dark)!important;border:1px solid var(--border)!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile-copy{display:block!important;opacity:1!important;visibility:visible!important;transform:none!important;min-width:0!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile-name{font-size:11.5px!important;font-weight:650!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:128px}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile-role{font-size:10px!important;line-height:1.5!important;color:var(--text-muted)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:128px}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar #sidebarLogout{display:grid!important;place-items:center!important;width:28px!important;height:28px!important;min-width:28px!important;max-width:28px!important;padding:5px!important;border:0!important;border-radius:6px!important;background:transparent!important;color:var(--text-muted)!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile{grid-template-columns:30px minmax(0,1fr) 44px!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile-copy{position:static!important;max-width:100%!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .agent-profile-copy>*{max-width:100%!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar #sidebarLogout{position:static!important;transform:none!important;width:44px!important;min-width:44px!important;max-width:44px!important;height:auto!important;min-height:32px!important;padding:4px!important;font-size:10px!important;line-height:1.3!important;white-space:normal!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link.active{color:var(--text)!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link{color:var(--text-secondary)!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link:hover{background:#f7f8fa!important;color:var(--text)!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link.active{background:#eceff2!important;color:#26313d!important}
+html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link.active::before{background:#475467!important}
+</style>
+<script id="expanded-inbox-sidebar-behaviour">
+(()=>{
+ const sidebar=document.getElementById("appSidebar");
+ const nav=document.createElement("nav");
+ nav.className="test-inbox-navigation";nav.setAttribute("aria-label","Inbox navigation");
+ const paths={
+ inbox:'<path d="M4 4h16v16H4zM4 14h5l2 3h2l2-3h5"/>',
+ needs:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 3v.1"/>',
+ unresolved:'<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>',
+ resolved:'<path d="m4 12 5 5L20 6"/>',
+ person:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
+ web:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+ whatsapp:'<path d="M4 19 3 22l5-2a9 9 0 1 0-4-4"/><path d="M8 7c0 5 4 8 8 9l1-3-3-1-1 1-3-3 1-1-1-3Z"/>',
+ instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/>',
+ email:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',
+ chart:'<path d="M4 3v18h17M8 16v-5m5 5V6m5 10V9"/>'
+ };
+ const icon=name=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[name]||paths.web)+'</svg>';
+ const button=(id,label,glyph)=>'<button type="button" class="test-inbox-nav-link" data-inbox-filter="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span><span class="test-inbox-nav-count"></span></button>';
+ const group=(name,html)=>'<section class="test-inbox-nav-group"><h3>'+name+'</h3>'+html+'</section>';
+ const appLinks=[["sidebarAnalytics","Analytics","chart"],["sidebarCustomers","Customers","person"],["sidebarReports","Reports","chart"],["sidebarChatbot","AI Agent","web"],["sidebarKnowledge","Knowledge Base","inbox"],["sidebarWorkflows","Workflows","web"],["sidebarSettings","Settings","web"]];
+ nav.innerHTML=group("Triage",button("all","All","inbox")+button("needs","Needs you","needs")+button("unresolved","Unresolved","unresolved")+button("resolved","Resolved","resolved"))+
+ group("Conversations",button("conversations","All conversations","inbox")+button("unassigned","Unassigned","person"))+
+ group("Team",'<div id="expandedInboxTeam"></div>')+
+ group("Channels",button("channels","All channels","inbox")+button("channel:website","Web widget","web")+button("channel:whatsapp","WhatsApp","whatsapp")+button("channel:instagram","Instagram","instagram")+button("channel:email","Email","email"))+
+ group("Workspace",appLinks.map(([id,label,glyph])=>'<button type="button" class="test-inbox-nav-link" data-inbox-page="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span></button>').join(""));
+ sidebar.querySelector(".nav").after(nav);
+ let active="all";
+ const matches=(ticket,key)=>{
+  if(key==="needs")return ticket.needsReply;
+  if(key==="unresolved")return ticket.status!=="resolved";
+  if(key==="resolved")return ticket.status==="resolved";
+  if(key==="unassigned")return !ticket.agent||ticket.agent==="Unassigned";
+  if(key.startsWith("channel:"))return ticket.channel===key.slice(8);
+  if(key.startsWith("agent:"))return ticket.agent===key.slice(6);
+  return true;
+ };
+ function render(){
+  const source=ticketWorkspaceState.source||[];
+  const host=document.getElementById("expandedInboxTeam");
+  const agents=[...new Set(source.map(t=>t.agent).filter(a=>a&&a!=="Unassigned"))];
+  const agentSignature=JSON.stringify(agents);
+  if(host.dataset.signature!==agentSignature){
+   host.replaceChildren();
+   agents.forEach(agent=>{
+    const item=document.createElement("button");item.type="button";item.className="test-inbox-nav-link";item.dataset.inboxFilter="agent:"+agent;
+    item.innerHTML=icon("person")+'<span class="test-inbox-nav-label"></span><span class="test-inbox-nav-count"></span>';
+    item.querySelector(".test-inbox-nav-label").textContent=agent;host.append(item);
+   });
+   if(!agents.length){const item=document.createElement("p");item.textContent="No assigned agents";item.style.cssText="font-size:11px;color:var(--text-muted);padding:6px 12px";host.append(item);}
+   host.dataset.signature=agentSignature;
+  }
+  nav.querySelectorAll("[data-inbox-filter]").forEach(item=>{
+   item.querySelector(".test-inbox-nav-count").textContent=source.filter(t=>matches(t,item.dataset.inboxFilter)).length;
+   const selected=currentTab==="tickets"&&item.dataset.inboxFilter===active;
+   item.classList.toggle("active",selected);item.setAttribute("aria-current",selected?"page":"false");
+  });
+  nav.querySelectorAll("[data-inbox-page]").forEach(item=>item.classList.toggle("active",document.getElementById(item.dataset.inboxPage)?.classList.contains("active")));
+
+ }
+ nav.addEventListener("click",event=>{
+  const page=event.target.closest("[data-inbox-page]");
+  if(page){document.getElementById(page.dataset.inboxPage)?.click();render();return;}
+  const item=event.target.closest("[data-inbox-filter]");if(!item)return;
+  active=item.dataset.inboxFilter;
+  window.expandedInboxSidebarPredicate=t=>matches(t,active);
+  applyTicketFilterValues({});ticketWorkspaceState.activeView="all";ticketWorkspaceState.page=1;
+  document.getElementById("ticketViewSelect").value="all";
+  if(currentTab!=="tickets")showWorkspace("tickets",false);
+  refreshTicketWorkspace();renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
+  const rows=ticketWorkspaceState.filtered;
+  if(rows.length&&!rows.some(t=>String(t.dbId)===String(openTicketId)))openTicket(rows[0].dbId);
+  else if(!rows.length)closeTicket();
+  render();
+
+  setMobileSidebar(false);
+ });
+ const priorShow=showWorkspace;
+ showWorkspace=function(...args){const result=priorShow(...args);render();return result;};
+ window.refreshExpandedInboxSidebar=render;
+ function syncExpandedMode(){
+  const expanded=window.innerWidth>720 ? document.body.classList.contains("sidebar-pinned") : document.body.classList.contains("mobile-sidebar-open");
+  if(document.body.classList.contains("expanded-inbox-mode")!==expanded)document.body.classList.toggle("expanded-inbox-mode",expanded);
+ }
+ new MutationObserver(syncExpandedMode).observe(document.body,{attributes:true,attributeFilter:["class"]});
+ window.addEventListener("resize",syncExpandedMode);
+ sidebar.querySelector(".nav").addEventListener("click",()=>{
+  active="all";window.expandedInboxSidebarPredicate=null;
+  queueMicrotask(()=>{refreshTicketWorkspace();render();});
+ });
+ syncExpandedMode();
+ document.addEventListener("DOMContentLoaded",render);
+ render();
+})();
+
+</script>
