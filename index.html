@@ -19824,3 +19824,63 @@ html body #ticketWorkspaceFloater:hover{background:linear-gradient(135deg,#a8d5b
 html body #ticketWorkspaceFloater svg{width:25px!important;height:25px!important;stroke:#102b1d!important;stroke-width:1.8!important;fill:none!important}
 html body #ticketWorkspaceFloater:focus-visible{outline:3px solid #82b296!important;outline-offset:4px!important}
 </style>
+
+<style id="report-builder-visual-refinement">
+/* Form, results and saved reports share a restrained visual hierarchy. */
+html #panel-reports .report-builder-card,
+html #panel-reports .report-preview-card,
+html #panel-reports .saved-reports-card{border:1px solid var(--border)!important;border-radius:14px!important;background:var(--bg-card)!important;box-shadow:0 2px 8px #18252d04!important;min-width:0}
+html #panel-reports:not(.sql-runner-mode) .report-builder-card{padding:22px!important}
+html #panel-reports:not(.sql-runner-mode) .report-preview-card,
+html #panel-reports .saved-reports-card{padding:24px!important}
+html #panel-reports:not(.sql-runner-mode) .reports-shell:not(.stacked):not(.preview-only):not(.builder-focus):not(.preview-focus){grid-template-columns:minmax(320px,370px) minmax(0,1fr)!important;gap:22px!important}
+html #panel-reports:not(.sql-runner-mode) .report-section-heading{display:flex!important;flex-wrap:wrap!important;gap:16px!important;margin-bottom:22px!important;padding-bottom:20px;border-bottom:1px solid var(--border)}
+html #panel-reports:not(.sql-runner-mode) .report-section-heading>div:first-child{flex:1 1 200px;min-width:0}
+html #panel-reports:not(.sql-runner-mode) .report-heading-actions{width:100%;justify-content:flex-end;gap:8px!important}
+html #panel-reports .report-section-heading h2,
+html #panel-reports .report-preview-head h2{font-size:calc(19px * var(--ui-text-scale))!important;line-height:1.3!important;font-weight:650!important;letter-spacing:-.4px!important;margin-top:5px!important}
+html #panel-reports .report-section-heading p,
+html #panel-reports .report-preview-head p{font-size:calc(11px * var(--ui-text-scale))!important;line-height:1.6!important;margin-top:6px!important;color:var(--text-muted)!important}
+html #panel-reports .report-eyebrow{font-size:calc(9px * var(--ui-text-scale))!important;font-weight:650!important;line-height:1.5!important;letter-spacing:.08em!important;color:var(--text-muted)!important}
+html #panel-reports .report-form-grid{gap:17px 12px!important}
+html #panel-reports .report-field>span{margin:0 0 7px!important;font-size:calc(11px * var(--ui-text-scale))!important;font-weight:550!important;letter-spacing:0!important;text-transform:none!important;line-height:1.4!important;color:var(--text-secondary)!important}
+html #panel-reports .report-field input,
+html #panel-reports .report-field select,
+html #panel-reports .report-field .unified-select-trigger{min-height:40px!important;padding:10px 12px!important;border:1px solid var(--border)!important;border-radius:8px!important;background:var(--surface)!important;color:var(--text)!important;font-size:calc(12px * var(--ui-text-scale))!important;line-height:1.4!important;box-shadow:none!important}
+html #panel-reports .report-field input::placeholder{color:var(--text-muted)!important;opacity:.8}
+html #panel-reports .report-field :is(input,select,.unified-select-trigger):hover{border-color:var(--border-strong)!important}
+html #panel-reports .report-field :is(input,select,.unified-select-trigger):focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 35%,transparent)!important;outline-offset:2px!important;border-color:var(--accent)!important}
+html #panel-reports .report-filter-section{margin-top:22px!important;padding-top:20px!important}
+html #panel-reports .report-filter-head{margin-bottom:12px!important;align-items:center!important}
+html #panel-reports .report-filter-head strong{font-size:calc(12px * var(--ui-text-scale))!important;font-weight:600!important;margin-top:4px!important}
+html #panel-reports .report-filter-row{gap:7px!important;grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1fr) 28px!important}
+html #panel-reports .report-filter-row :is(input,select){height:36px!important;padding:7px 8px!important;background:var(--surface)!important;border-radius:7px!important;font-size:calc(11px * var(--ui-text-scale))!important}
+html #panel-reports .report-primary-btn,
+html #panel-reports .report-secondary-btn,
+html #panel-reports .report-text-btn{min-height:36px!important;border-radius:8px!important;padding:8px 12px!important;font-size:calc(11px * var(--ui-text-scale))!important;font-weight:600!important;line-height:1.4!important;white-space:nowrap;transform:none!important;box-shadow:none!important}
+html #panel-reports .report-primary-btn{background:#216643!important;border-color:#216643!important;color:#fff!important}
+html #panel-reports .report-primary-btn:hover{background:#195437!important;border-color:#195437!important}
+html #panel-reports .report-secondary-btn,
+html #panel-reports .report-text-btn{background:var(--surface)!important;color:var(--text-secondary)!important;border:1px solid var(--border)!important}
+html #panel-reports .report-reset-icon{width:36px!important;height:36px!important;flex-basis:36px!important;border-radius:8px!important}
+html #panel-reports .report-builder-message{font-size:calc(11px * var(--ui-text-scale))!important;line-height:1.5!important;margin-top:14px!important}
+html #panel-reports .report-preview-head{flex-wrap:wrap!important;align-items:flex-start!important;gap:14px!important}
+html #panel-reports .report-preview-actions{flex-wrap:wrap;gap:8px!important}
+html #panel-reports .report-summary-strip{margin-top:22px!important;border-radius:10px!important;border-color:var(--border)!important}
+html #panel-reports .report-summary-strip>div{background:var(--surface-light,var(--surface))!important;padding:16px!important;min-width:0}
+html #panel-reports .report-summary-strip span{font-size:calc(10px * var(--ui-text-scale))!important;letter-spacing:0!important;text-transform:none!important;line-height:1.4!important}
+html #panel-reports .report-summary-strip strong{font-size:calc(21px * var(--ui-text-scale))!important;font-weight:650!important;line-height:1.2!important;letter-spacing:-.5px!important;margin-top:7px!important;overflow-wrap:anywhere}
+html #panel-reports .report-chart-wrap{margin-top:24px!important;padding:8px 0!important}
+html #panel-reports .report-table-wrap{margin-top:22px!important;border:1px solid var(--border)!important;border-radius:10px!important;overflow:auto!important}
+html #panel-reports .report-preview-table th{background:var(--surface-light,var(--surface))!important;padding:12px 16px!important;font-weight:600!important;color:var(--text-muted)!important;letter-spacing:0!important;text-transform:none!important}
+html #panel-reports .report-preview-table td{padding:13px 16px!important;border-top:1px solid var(--border)!important;font-variant-numeric:tabular-nums}
+html #panel-reports .report-preview-empty{min-height:300px!important;padding:28px!important;gap:10px!important}
+html #panel-reports .report-empty-icon{width:48px!important;height:48px!important;display:grid;place-items:center;border-radius:12px!important;background:var(--surface-light,var(--surface))!important;color:var(--text-muted)!important;margin-bottom:4px}
+html #panel-reports .report-preview-empty strong{font-size:calc(13px * var(--ui-text-scale))!important;font-weight:600!important}
+html #panel-reports .report-preview-empty span{font-size:calc(11px * var(--ui-text-scale))!important;line-height:1.6!important;max-width:300px}
+html[data-theme="light"] #panel-reports :is(.report-builder-card,.report-preview-card,.saved-reports-card){background:#fff!important;border-color:#e4e7ec!important}
+html[data-theme="light"] #panel-reports :is(.report-summary-strip>div,.report-preview-table th,.report-empty-icon){background:#f7f8fa!important}
+html #panel-reports [hidden]{display:none!important}
+@media(max-width:1100px){html #panel-reports:not(.sql-runner-mode) .reports-shell:not(.preview-only){grid-template-columns:minmax(0,1fr)!important}html #panel-reports:not(.sql-runner-mode) .report-builder-card{position:static!important}}
+@media(max-width:600px){html #panel-reports:not(.sql-runner-mode) :is(.report-builder-card,.report-preview-card),html #panel-reports .saved-reports-card{padding:16px!important}html #panel-reports .report-form-grid{grid-template-columns:minmax(0,1fr)!important}html #panel-reports .report-summary-strip>div{padding:12px 9px!important}html #panel-reports .report-summary-strip strong{font-size:calc(18px * var(--ui-text-scale))!important}html #panel-reports .report-filter-row{grid-template-columns:minmax(0,1fr) 28px!important}html #panel-reports .report-filter-row :is(input,select){grid-column:1}html #panel-reports .report-filter-remove{grid-column:2;grid-row:1 / 4;align-self:center}}
+</style>
