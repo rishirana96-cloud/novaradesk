@@ -14418,7 +14418,7 @@ if (ticketDetailRequestInFlight) return;
 ticketDetailRequestInFlight = true;
 const requestedTicketId = openTicketId;
 try {
-    const response = await fetch(`${API_URL}/ticket-detail?id=${encodeURIComponent(requestedTicketId)}`);
+    const response = await fetch(`${API_URL}/ticket-detail?id=${encodeURIComponent(requestedTicketId)}`, {cache:"no-store"});
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Could not load ticket.");
     if (openTicketId !== requestedTicketId) return;
@@ -14916,10 +14916,10 @@ ticketDetailPollTimer = setTimeout(async () => {
     if (!document.hidden && openTicketId && document.getElementById("ticketDrawerBackdrop")?.classList.contains("open")) {
         await loadOpenTicket();
         ticketRealtimeCycle += 1;
-        if (ticketRealtimeCycle % 3 === 0) await refreshTicketsOnly();
+        if (ticketRealtimeCycle % 9 === 0) await refreshTicketsOnly();
     }
     scheduleTicketDetailPoll();
-}, 3000);
+}, document.hidden ? 15000 : 1000);
 }
 scheduleTicketDetailPoll();
 let ticketListRealtimeBusy = false;
@@ -19471,7 +19471,7 @@ body:has(#ticketChatDock .dock-chat:not(.collapsed):not([hidden])) #ticketWorksp
     pollTimer = setTimeout(async () => {
       if (!document.hidden) await Promise.allSettled([...chats.values()].map(refresh));
       schedulePoll();
-    }, 5000);
+    }, [...chats.values()].some(chat => !chat.collapsed) ? 1000 : 5000);
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { [...chats.values()].forEach(refresh); schedulePoll(); } });
   window.addEventListener('pagehide', () => { clearTimeout(pollTimer); chats.forEach(c => c.controller?.abort()); });
