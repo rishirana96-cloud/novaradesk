@@ -9162,7 +9162,7 @@ ORDER BY ticket_count DESC</textarea>
 </main>
 </div>
 <button id="ticketWorkspaceFloater" class="ticket-workspace-floater" type="button" aria-label="Open ticket workspace" aria-expanded="false" title="Open ticket workspace">
-<svg class="ticket-floater-message-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17.5 3.5 20v-5.2A8.5 8.5 0 1 1 7 17.5Z"/><path d="M8 9h8M8 13h5"/></svg>
+<svg class="ticket-floater-message-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 18.5 4 21v-5a8 8 0 1 1 3.5 2.5Z"/><path d="M8 9.5h8M8 13h5"/></svg>
 <svg class="ticket-floater-close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
 <span id="ticketWorkspaceBadge" class="ticket-workspace-badge" hidden>0</span>
 </button>
@@ -16632,7 +16632,7 @@ cancel.addEventListener('click',()=>finish(false));
   // Use the index launcher glyph exactly.
   const launcher=document.getElementById('ticketWorkspaceFloater');
   const icon=launcher?.querySelector('.ticket-floater-message-icon');
-  if(icon)icon.innerHTML='<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/>';
+  if(icon)icon.innerHTML='<path d="M7.5 18.5 4 21v-5a8 8 0 1 1 3.5 2.5Z"/><path d="M8 9.5h8M8 13h5"/>';
 })();
 </script>
 <script id="novara-google-auth">
@@ -19532,4 +19532,15 @@ html body #appSidebar .nav-item{padding-right:12px!important}
 
 <style id="sidebar-suboption-type-size">
 html body #appSidebar .nav-subitem{font-size:calc(11px * var(--ui-text-scale))!important}
+</style>
+
+<style id="graceful-ticket-chat-launcher">
+html body #ticketWorkspaceFloater{background:#354b5d!important;color:#fff!important;border:1px solid #ffffff26!important;box-shadow:0 5px 16px #1f304326,0 1px 3px #1f30431a!important;transition:background .16s ease,box-shadow .16s ease!important}
+html body #ticketWorkspaceFloater::before{display:none!important;animation:none!important}
+html body #ticketWorkspaceFloater:hover{background:#293e50!important;transform:none!important;box-shadow:0 7px 20px #1f304333!important}
+html body #ticketWorkspaceFloater svg{width:25px!important;height:25px!important;stroke:#fff!important;stroke-width:1.6!important;stroke-linecap:round!important;stroke-linejoin:round!important;fill:none!important}
+html body #ticketWorkspaceFloater.open{background:#354b5d!important;color:#fff!important}
+html body #ticketWorkspaceFloater:focus-visible{outline:3px solid #8298ad!important;outline-offset:4px!important}
+html body #ticketWorkspaceBadge{background:#c65350!important;color:#fff!important;border:2px solid #fff!important;box-shadow:none!important;font-weight:650!important}
+@media(prefers-reduced-motion:reduce){html body #ticketWorkspaceFloater{transition:none!important}}
 </style>
