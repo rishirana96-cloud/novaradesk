@@ -19944,3 +19944,26 @@ html #panel-reports:not(.sql-runner-mode) .report-section-heading p{grid-column:
 html #panel-reports:not(.sql-runner-mode) .report-heading-actions{grid-column:2;grid-row:2;display:flex!important;align-items:center!important;justify-content:flex-end!important;width:auto!important;min-width:0!important;margin:0!important;gap:6px!important}
 html #panel-reports:not(.sql-runner-mode) #reportSaveBtn{flex:0 0 auto!important;padding:8px 10px!important;white-space:nowrap!important}
 </style>
+
+<style id="sidebar-icon-centre-alignment">
+@media(min-width:721px){
+html body:not(.sidebar-pinned) #appSidebar{padding-left:8px!important;padding-right:8px!important}
+html body:not(.sidebar-pinned) #appSidebar .brand{display:grid!important;place-items:center!important;width:56px!important;min-width:56px!important;max-width:56px!important;padding:0!important;margin-left:auto!important;margin-right:auto!important}
+html body:not(.sidebar-pinned) #appSidebar .brand-product,
+html body:not(.sidebar-pinned) #appSidebar .nav-item>span{display:none!important}
+html body:not(.sidebar-pinned) #appSidebar .nav,
+html body:not(.sidebar-pinned) #appSidebar .nav-parent-row{width:56px!important;margin-left:auto!important;margin-right:auto!important;padding:0!important}
+html body:not(.sidebar-pinned) #appSidebar .nav-item,
+html body:not(.sidebar-pinned) #appSidebar:hover .nav-item,
+html body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-item{display:grid!important;place-items:center!important;justify-content:center!important;width:56px!important;min-width:56px!important;max-width:56px!important;padding:0!important;gap:0!important;margin-left:auto!important;margin-right:auto!important}
+html body:not(.sidebar-pinned) #appSidebar .nav-item svg{display:block!important;margin:0!important;justify-self:center!important;align-self:center!important}
+html body:not(.sidebar-pinned) #appSidebar .sidebar-pin-toggle{left:8px!important;right:auto!important;width:56px!important;display:grid!important;place-items:center!important;padding:0!important}
+html body:not(.sidebar-pinned) #appSidebar .authenticated-profile{width:56px!important;min-width:56px!important;max-width:56px!important;margin-left:auto!important;margin-right:auto!important;padding:10px!important;justify-content:center!important}
+}
+html[data-theme] body.expanded-inbox-mode #appSidebar .brand{display:grid!important;grid-template-columns:18px minmax(0,1fr)!important;align-items:center!important;gap:10px!important;padding:0 12px!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .brand img{justify-self:center!important;margin:0!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link{display:grid!important;grid-template-columns:18px minmax(0,1fr) auto!important;align-items:center!important;column-gap:10px!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-link svg{grid-column:1;justify-self:center!important;align-self:center!important;margin:0!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-label{grid-column:2;min-width:0!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-count{grid-column:3;justify-self:end!important}
+</style>
