@@ -13713,6 +13713,7 @@ return starter;
 }
 function saveCustomDashboards(dashboards) {
 window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(dashboards));
+window.refreshExpandedInboxSidebar?.();
 }
 function activeCustomDashboard(dashboards = loadCustomDashboards()) {
 const activeId = window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_ACTIVE_KEY);
@@ -13839,6 +13840,7 @@ const dashboards = loadCustomDashboards();
 const active = activeCustomDashboard(dashboards);
 window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY, active.id);
 updateDashboardSelect(dashboards, active);
+window.refreshExpandedInboxSidebar?.();
 const activeTitle = document.getElementById("dashboardActiveTitle");
 if (activeTitle) activeTitle.textContent = active.name;
 const widgetCount = document.getElementById("dashboardWidgetCount");
@@ -19687,8 +19689,9 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
  const icon=name=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[name]||paths.web)+'</svg>';
  const button=(id,label,glyph)=>'<button type="button" class="test-inbox-nav-link" data-inbox-filter="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span><span class="test-inbox-nav-count"></span></button>';
  const group=(name,html)=>'<section class="test-inbox-nav-group"><h3>'+name+'</h3>'+html+'</section>';
- const appLinks=[["sidebarAnalytics","Analytics","chart"],["sidebarCustomers","Customers","customers"],["sidebarReports","Reports","report"],["sidebarChatbot","AI Agent","ai"],["sidebarKnowledge","Knowledge Base","knowledge"],["sidebarWorkflows","Workflows","workflow"],["sidebarSettings","Settings","settings"]];
+ const appLinks=[["sidebarCustomers","Customers","customers"],["sidebarReports","Reports","report"],["sidebarChatbot","AI Chatbot","ai"],["sidebarKnowledge","Knowledge Base","knowledge"],["sidebarWorkflows","Workflows","workflow"],["sidebarSettings","Settings","settings"]];
  nav.innerHTML=group("Workspace",appLinks.map(([id,label,glyph])=>'<button type="button" class="test-inbox-nav-link" data-inbox-page="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span></button>').join(""))+
+ group("Analytics",'<button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarAiAgent">'+icon("ai")+'<span class="test-inbox-nav-label">AI Agent</span></button><button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarHumanAgent">'+icon("person")+'<span class="test-inbox-nav-label">Human Agent</span></button><div id="expandedAnalyticsDashboards"></div>')+
  group("Triage",button("all","All","inbox")+button("needs","Needs you","needs")+button("unresolved","Unresolved","unresolved")+button("resolved","Resolved","resolved"))+
  group("Channels",button("channels","All channels","inbox")+button("channel:website","Web widget","web")+button("channel:whatsapp","WhatsApp","whatsapp")+button("channel:instagram","Instagram","instagram")+button("channel:email","Email","email"))+
  group("Team",'<div id="expandedInboxTeam"></div>');
@@ -19704,6 +19707,24 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
   return true;
  };
  function render(){
+  const dashboardHost=document.getElementById("expandedAnalyticsDashboards");
+  const dashboards=loadCustomDashboards();
+  const dashboardSignature=JSON.stringify(dashboards.map(d=>[d.id,d.name]));
+  if(dashboardHost.dataset.signature!==dashboardSignature){
+   dashboardHost.replaceChildren();
+   dashboards.forEach(dashboard=>{
+    const item=document.createElement("button");item.type="button";item.className="test-inbox-nav-link";item.dataset.analyticsDashboard=dashboard.id;
+    item.innerHTML=icon("web")+'<span class="test-inbox-nav-label"></span>';
+    item.querySelector(".test-inbox-nav-label").textContent=dashboard.name||"Untitled dashboard";
+    item.title=dashboard.name||"Untitled dashboard";dashboardHost.append(item);
+   });
+   dashboardHost.dataset.signature=dashboardSignature;
+  }
+  const activeDashboardId=window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_ACTIVE_KEY);
+  dashboardHost.querySelectorAll("[data-analytics-dashboard]").forEach(item=>{
+   const selected=currentTab==="dashboards"&&item.dataset.analyticsDashboard===activeDashboardId;
+   item.classList.toggle("active",selected);if(selected)item.setAttribute("aria-current","page");else item.removeAttribute("aria-current");
+  });
   const source=ticketWorkspaceState.source||[];
   const host=document.getElementById("expandedInboxTeam");
   const agents=[...new Set(source.map(t=>t.agent).filter(a=>a&&a!=="Unassigned"))];
@@ -19727,6 +19748,8 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
 
  }
  nav.addEventListener("click",event=>{
+  const dashboard=event.target.closest("[data-analytics-dashboard]");
+  if(dashboard){window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,dashboard.dataset.analyticsDashboard);showWorkspace("dashboards");render();setMobileSidebar(false);return;}
   const page=event.target.closest("[data-inbox-page]");
   if(page){document.getElementById(page.dataset.inboxPage)?.click();render();return;}
   const item=event.target.closest("[data-inbox-filter]");if(!item)return;
