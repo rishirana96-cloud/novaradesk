@@ -4924,7 +4924,7 @@ body:not(.novara-authenticated){overflow:hidden!important}
 body:not(.novara-authenticated) .app{visibility:hidden}
 .novara-auth-screen{position:fixed;inset:0;z-index:100000;display:grid;grid-template-columns:minmax(360px,.9fr) minmax(480px,1.1fr);min-height:100dvh;color:var(--auth-ink);background:var(--auth-paper)}
 body.novara-authenticated .novara-auth-screen{display:none}
-body.novara-demo-mode .authenticated-profile::after{content:"PREVIEW";position:absolute;right:9px;top:50%;transform:translateY(-50%);padding:3px 6px;border:1px solid rgba(167,216,189,.35);border-radius:999px;background:rgba(167,216,189,.12);color:#9fd3b4;font-size:8px;font-weight:800;letter-spacing:.08em}
+body.novara-demo-mode .authenticated-profile::after{content:none!important;display:none!important}
 .novara-auth-brand{position:relative;overflow:hidden;padding:clamp(36px,6vw,84px);display:flex;flex-direction:column;justify-content:space-between;color:#f7fbf8;background:var(--auth-green)}
 .novara-auth-brand::before{content:"";position:absolute;width:520px;height:520px;right:-230px;bottom:-230px;border:1px solid rgba(167,216,189,.22);border-radius:50%;box-shadow:0 0 0 80px rgba(167,216,189,.035),0 0 0 160px rgba(167,216,189,.025)}
 .novara-auth-logo,.novara-auth-promise{position:relative;z-index:1}
