@@ -19510,9 +19510,26 @@ html body #ticketStatusMenu{width:150px!important;max-width:calc(100vw - 32px)}
 
 <style id="slimmer-expanded-sidebar">
 @media(min-width:721px){
-html body.sidebar-pinned #appSidebar{width:232px!important}
-html body.sidebar-pinned .main{width:calc(100% - 232px)!important;margin-left:232px!important}
+html body.sidebar-pinned #appSidebar{width:212px!important}
+html body.sidebar-pinned .main{width:calc(100% - 212px)!important;margin-left:212px!important}
 html body.sidebar-pinned #appSidebar .authenticated-profile .agent-profile-copy{overflow:hidden!important}
 html body.sidebar-pinned #appSidebar .authenticated-profile .agent-profile-copy :is(strong,span,small){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+</style>
+
+<style id="sidebar-brand-and-arrow-refinement">
+html body #appSidebar .nav-expand-toggle{display:none!important}
+html body #appSidebar .nav-parent-row{grid-template-columns:minmax(0,1fr)!important}
+html body.sidebar-pinned #appSidebar .nav-item,html body #appSidebar:hover .nav-item{padding-right:12px!important}
+html body.sidebar-pinned #appSidebar .brand{padding:0 4px!important;gap:10px!important}
+html body.sidebar-pinned #appSidebar .brand img{width:40px!important;height:40px!important;flex:0 0 40px!important}
+html body.sidebar-pinned #appSidebar .brand-product{min-width:0!important}
+html body.sidebar-pinned #appSidebar .brand-name{font-size:20px!important;letter-spacing:-.65px!important;line-height:1.15!important}
+html body.sidebar-pinned #appSidebar .brand-endorsement{font-size:10px!important;letter-spacing:0!important;line-height:1.5!important}
+@media(max-width:720px){
+html body #appSidebar .brand{gap:10px!important}
+html body #appSidebar .brand-name{font-size:20px!important;letter-spacing:-.65px!important}
+html body #appSidebar .brand-endorsement{font-size:10px!important}
+html body #appSidebar .nav-item{padding-right:12px!important}
 }
 </style>
