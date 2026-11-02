@@ -19925,3 +19925,12 @@ html body.sidebar-pinned #appSidebar .brand img,
 html body.expanded-inbox-mode #appSidebar .brand img,
 html[data-theme="light"] body.expanded-inbox-mode #appSidebar .brand img{width:30px!important;height:30px!important;min-width:30px!important;max-width:30px!important;min-height:30px!important;max-height:30px!important;flex:0 0 30px!important;object-fit:contain!important;transform:none!important;transition:opacity .12s ease!important}
 </style>
+
+<style id="collapsed-sidebar-stable-hover">
+@media(min-width:721px){
+html body:not(.sidebar-pinned) #appSidebar .nav-item,
+html body:not(.sidebar-pinned) #appSidebar:hover .nav-item,
+html body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-item,
+html body:not(.sidebar-pinned) #appSidebar .nav-item:is(:hover,:focus-visible,.active){box-sizing:border-box!important;width:56px!important;min-width:56px!important;max-width:56px!important;min-height:50px!important;padding:13px 18px!important;gap:14px!important;transform:none!important;scale:1!important;flex-shrink:0!important}
+}
+</style>
