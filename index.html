@@ -19690,10 +19690,10 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
  const button=(id,label,glyph)=>'<button type="button" class="test-inbox-nav-link" data-inbox-filter="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span><span class="test-inbox-nav-count"></span></button>';
  const group=(name,html)=>'<section class="test-inbox-nav-group"><h3>'+name+'</h3>'+html+'</section>';
  const appLinks=[["sidebarCustomers","Customers","customers"],["sidebarReports","Reports","report"],["sidebarChatbot","AI Chatbot","ai"],["sidebarKnowledge","Knowledge Base","knowledge"],["sidebarWorkflows","Workflows","workflow"],["sidebarSettings","Settings","settings"]];
- nav.innerHTML=group("Workspace",appLinks.map(([id,label,glyph])=>'<button type="button" class="test-inbox-nav-link" data-inbox-page="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span></button>').join(""))+
- group("Analytics",'<button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarAiAgent">'+icon("ai")+'<span class="test-inbox-nav-label">AI Agent</span></button><button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarHumanAgent">'+icon("person")+'<span class="test-inbox-nav-label">Human Agent</span></button><div id="expandedAnalyticsDashboards"></div>')+
+ nav.innerHTML=group("Analytics",'<button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarAiAgent">'+icon("ai")+'<span class="test-inbox-nav-label">AI Agent</span></button><button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarHumanAgent">'+icon("person")+'<span class="test-inbox-nav-label">Human Agent</span></button><div id="expandedAnalyticsDashboards"></div>')+
  group("Triage",button("all","All","inbox")+button("needs","Needs you","needs")+button("unresolved","Unresolved","unresolved")+button("resolved","Resolved","resolved"))+
  group("Channels",button("channels","All channels","inbox")+button("channel:website","Web widget","web")+button("channel:whatsapp","WhatsApp","whatsapp")+button("channel:instagram","Instagram","instagram")+button("channel:email","Email","email"))+
+ group("Workspace",appLinks.map(([id,label,glyph])=>'<button type="button" class="test-inbox-nav-link" data-inbox-page="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span></button>').join(""))+
  group("Team",'<div id="expandedInboxTeam"></div>');
  sidebar.querySelector(".nav").after(nav);
  let active="all";
