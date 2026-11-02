@@ -9160,7 +9160,7 @@ ORDER BY ticket_count DESC</textarea>
 </main>
 </div>
 <button id="ticketWorkspaceFloater" class="ticket-workspace-floater" type="button" aria-label="Open ticket workspace" aria-expanded="false" title="Open ticket workspace">
-<svg class="ticket-floater-message-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+<svg class="ticket-floater-message-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 <svg class="ticket-floater-close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
 <span id="ticketWorkspaceBadge" class="ticket-workspace-badge" hidden>0</span>
 </button>
@@ -16669,7 +16669,7 @@ cancel.addEventListener('click',()=>finish(false));
   // Use the index launcher glyph exactly.
   const launcher=document.getElementById('ticketWorkspaceFloater');
   const icon=launcher?.querySelector('.ticket-floater-message-icon');
-  if(icon)icon.innerHTML='<path d="M7.5 18.5 4 21v-5a8 8 0 1 1 3.5 2.5Z"/><path d="M8 9.5h8M8 13h5"/>';
+  // Keep the launcher SVG defined in the markup; do not replace its shape.
 })();
 </script>
 <script id="novara-google-auth">
@@ -19982,4 +19982,8 @@ html body #panel-customers .customer-cell-identity>.customer-list-avatar{display
 html[data-theme] body.sidebar-pinned #appSidebar .sidebar-pin-toggle{top:30px!important;right:8px!important;left:auto!important;width:28px!important;height:28px!important;padding:0!important;display:grid!important;place-items:center!important;transform:none!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important}
 html[data-theme] body.sidebar-pinned #appSidebar .brand{padding-right:38px!important}
 }
+</style>
+
+<style id="ticket-launcher-square-bubble-match">
+html body #ticketWorkspaceFloater svg{width:26px!important;height:26px!important;stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important}
 </style>
