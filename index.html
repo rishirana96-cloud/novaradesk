@@ -12460,7 +12460,13 @@ document
 ====================================================== */
 let openTicketId = null;
 let lastOpenTicketData = null;
-let ticketDetailRequestInFlight = false;
+let ticketDetailRequest = null;
+const ticketDetailCache = new Map();
+const TICKET_DETAIL_CACHE_TTL = 30000;
+function cancelTicketDetailRequest() {
+    ticketDetailRequest?.controller.abort();
+    ticketDetailRequest = null;
+}
 let lastTicketDetailSignature = "";
 function ticketDateText(value) {
 if (!value) return "—";
@@ -14307,6 +14313,9 @@ if (!ticketId) return;
 if (window.ticketReplySending) { window.NovaraChatDock?.tell("Please wait for your reply to finish sending."); return; }
 window.NovaraChatDock?.beforeSwitch(ticketId);
 window.setTicketChannel?.("chat");
+cancelTicketDetailRequest();
+const cachedDetail = ticketDetailCache.get(String(ticketId));
+const cachedData = cachedDetail && Date.now() - cachedDetail.savedAt < TICKET_DETAIL_CACHE_TTL ? cachedDetail.data : null;
 setTicketSwitchLoading(true);
 const workspaceWasOpen = document.getElementById("ticketDrawerBackdrop")?.classList.contains("open");
 openTicketId = ticketId;
@@ -14334,11 +14343,16 @@ document.getElementById("agentRegenerate").disabled = true;
 document.getElementById("agentInsertSuggestion").disabled = true;
 document.getElementById("agentInsertDraft").disabled = true;
 renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
+if (cachedData) {
+    renderOpenTicket(cachedData);
+    setTicketSwitchLoading(false);
+}
 await loadOpenTicket();
 }
 function closeTicket() {
 if (window.ticketReplySending) { window.NovaraChatDock?.tell("Please wait for your reply to finish sending."); return; }
 window.NovaraChatDock?.afterClose();
+cancelTicketDetailRequest();
 openTicketId = null;
 setTicketSwitchLoading(false);
 const backdrop = document.getElementById("ticketDrawerBackdrop");
@@ -14414,14 +14428,36 @@ if (["closed","resolved"].includes(status)) {
 }
 async function loadOpenTicket(scrollLatest = false) {
 if (!openTicketId) return;
-if (ticketDetailRequestInFlight) return;
-ticketDetailRequestInFlight = true;
+if (ticketDetailRequest?.ticketId === openTicketId) return;
+cancelTicketDetailRequest();
 const requestedTicketId = openTicketId;
+const request = { ticketId: requestedTicketId, controller: new AbortController() };
+ticketDetailRequest = request;
+const timeout = window.setTimeout(() => request.controller.abort(), 15000);
 try {
-    const response = await fetch(`${API_URL}/ticket-detail?id=${encodeURIComponent(requestedTicketId)}`, {cache:"no-store"});
+    const response = await fetch(`${API_URL}/ticket-detail?id=${encodeURIComponent(requestedTicketId)}`, {cache:"no-store", signal: request.controller.signal});
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Could not load ticket.");
-    if (openTicketId !== requestedTicketId) return;
+    if (ticketDetailRequest !== request || openTicketId !== requestedTicketId) return;
+    if (String(data.ticket?.id) !== String(requestedTicketId)) throw new Error("Ticket response did not match this ticket.");
+    ticketDetailCache.delete(String(requestedTicketId));
+    ticketDetailCache.set(String(requestedTicketId), {data, savedAt: Date.now()});
+    if (ticketDetailCache.size > 20) ticketDetailCache.delete(ticketDetailCache.keys().next().value);
+    renderOpenTicket(data, scrollLatest);
+    document.getElementById("ticketActionError").textContent = "";
+} catch (error) {
+    if (ticketDetailRequest === request && openTicketId === requestedTicketId) {
+        document.getElementById("ticketActionError").textContent = error.name === "AbortError" ? "Ticket loading timed out. Please reopen the ticket to retry." : error.message;
+    }
+} finally {
+    window.clearTimeout(timeout);
+    if (ticketDetailRequest === request) {
+        ticketDetailRequest = null;
+        setTicketSwitchLoading(false);
+    }
+}
+}
+function renderOpenTicket(data, scrollLatest = false) {
     lastOpenTicketData = data;
     const ticket = data.ticket;
     const signature = JSON.stringify([
@@ -14512,14 +14548,8 @@ try {
     document.getElementById("ticketSendReply").disabled = ticket.status === "resolved" || !replyInput.value.trim();
     document.getElementById("ticketEmojiButton").disabled = ticket.status === "resolved";
     renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
-} catch (error) {
-    document.getElementById("ticketActionError").textContent = error.message;
-} finally {
-    ticketDetailRequestInFlight = false;
-    if (openTicketId && openTicketId !== requestedTicketId) window.setTimeout(() => loadOpenTicket(), 0);
-    else setTicketSwitchLoading(false);
 }
-}
+
 async function postTicketAction(payload) {
 const response = await fetch(`${API_URL}/ticket/${payload.route}`, {
     method: "POST",
@@ -14528,6 +14558,7 @@ const response = await fetch(`${API_URL}/ticket/${payload.route}`, {
 });
 const data = await response.json();
 if (!response.ok) throw new Error(data.error || "Ticket action failed.");
+ticketDetailCache.delete(String(payload.body?.ticketId));
 return data;
 }
 let lastAssistSuggestion = "";
@@ -19527,7 +19558,9 @@ html body #appSidebar .nav-expand-toggle{display:none!important}
 html body #appSidebar .nav-parent-row{grid-template-columns:minmax(0,1fr)!important}
 html body.sidebar-pinned #appSidebar .nav-item,html body #appSidebar:hover .nav-item{padding-right:12px!important}
 html body.sidebar-pinned #appSidebar .brand{padding:0 4px!important;gap:10px!important}
-html body.sidebar-pinned #appSidebar .brand img{width:40px!important;height:40px!important;flex:0 0 40px!important}
+html body.sidebar-pinned #appSidebar .brand img,
+html body #appSidebar:hover .brand img{width:32px!important;height:32px!important;flex:0 0 32px!important}
+@media(max-width:720px){html body #appSidebar .brand img{width:32px!important;height:32px!important;flex:0 0 32px!important}}
 html body.sidebar-pinned #appSidebar .brand-product{min-width:0!important}
 @media(max-width:720px){
 html body #appSidebar .brand{gap:10px!important}
