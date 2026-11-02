@@ -7636,17 +7636,12 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
     </a>
     <!-- AI Chatbot -->
     <a href="#chatbot" class="nav-item" id="sidebarChatbot" data-tab="chatbot">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 8.5h10A3.5 3.5 0 0 1 20.5 12v4A3.5 3.5 0 0 1 17 19.5H9l-4.5 2V12A3.5 3.5 0 0 1 8 8.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-            <path d="M9 13h.01M12.5 13h.01M16 13h.01M12 3v3M9.5 3h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 3V6a3 3 0 0 1 3-3h7.5a7.5 7.5 0 0 1 7.5 7.5Z"/><path d="M8 8h8M8 12h5"/></svg>
         <span>AI Chatbot</span>
     </a>
     <!-- Knowledge Base -->
     <a href="#knowledge" class="nav-item" id="sidebarKnowledge" data-tab="knowledge">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5v-16ZM20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 3H20v19H6.5A2.5 2.5 0 0 1 4 19.5v-14A2.5 2.5 0 0 1 6.5 3Z"/><path d="M8 7h8M8 11h6"/></svg>
         <span>Knowledge Base</span>
     </a>
     <!-- Workflows -->
@@ -19669,8 +19664,9 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
  const nav=document.createElement("nav");
  nav.className="test-inbox-navigation";nav.setAttribute("aria-label","Inbox navigation");
  const paths={
+ chat:'<path d="M21 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 3V6a3 3 0 0 1 3-3h7.5a7.5 7.5 0 0 1 7.5 7.5Z"/><path d="M8 8h8M8 12h5"/>',
  report:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
- knowledge:'<path d="M12 5v15M3 4h5a4 4 0 0 1 4 2 4 4 0 0 1 4-2h5v15h-5a5 5 0 0 0-4 2 5 5 0 0 0-4-2H3Z"/>',
+ knowledge:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 3H20v19H6.5A2.5 2.5 0 0 1 4 19.5v-14A2.5 2.5 0 0 1 6.5 3Z"/><path d="M8 7h8M8 11h6"/>',
  workflow:'<rect x="8" y="3" width="8" height="5" rx="1.5"/><rect x="2" y="16" width="8" height="5" rx="1.5"/><rect x="14" y="16" width="8" height="5" rx="1.5"/><path d="M12 8v4M6 16v-4h12v4"/>',
  settings:'<path d="m9 3-.6 2.4-2.1 1.2-2.4-.7-2 3.4 1.8 1.7v2l-1.8 1.7 2 3.4 2.4-.7 2.1 1.2L9 21h4l.6-2.4 2.1-1.2 2.4.7 2-3.4-1.8-1.7v-2l1.8-1.7-2-3.4-2.4.7-2.1-1.2L13 3Z"/><circle cx="11" cy="12" r="3"/>',
  ai:'<rect x="4" y="6" width="16" height="14" rx="4"/><path d="M12 3v3M8 11h.01M16 11h.01M8 16h8M1 11v4M23 11v4"/>',
@@ -19689,7 +19685,7 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
  const icon=name=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[name]||paths.web)+'</svg>';
  const button=(id,label,glyph)=>'<button type="button" class="test-inbox-nav-link" data-inbox-filter="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span><span class="test-inbox-nav-count"></span></button>';
  const group=(name,html)=>'<section class="test-inbox-nav-group"><h3>'+name+'</h3>'+html+'</section>';
- const appLinks=[["sidebarCustomers","Customers","customers"],["sidebarReports","Reports","report"],["sidebarChatbot","AI Chatbot","ai"],["sidebarKnowledge","Knowledge Base","knowledge"],["sidebarWorkflows","Workflows","workflow"],["sidebarSettings","Settings","settings"]];
+ const appLinks=[["sidebarCustomers","Customers","customers"],["sidebarReports","Reports","report"],["sidebarChatbot","AI Chatbot","chat"],["sidebarKnowledge","Knowledge Base","knowledge"],["sidebarWorkflows","Workflows","workflow"],["sidebarSettings","Settings","settings"]];
  nav.innerHTML=group("Analytics",'<button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarAiAgent">'+icon("ai")+'<span class="test-inbox-nav-label">AI Agent</span></button><button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarHumanAgent">'+icon("person")+'<span class="test-inbox-nav-label">Human Agent</span></button><div id="expandedAnalyticsDashboards"></div>')+
  group("Triage",button("all","All","inbox")+button("needs","Needs you","needs")+button("unresolved","Unresolved","unresolved")+button("resolved","Resolved","resolved"))+
  group("Channels",button("channels","All channels","inbox")+button("channel:website","Web widget","web")+button("channel:whatsapp","WhatsApp","whatsapp")+button("channel:instagram","Instagram","instagram")+button("channel:email","Email","email"))+
