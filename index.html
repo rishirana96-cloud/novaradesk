@@ -10698,7 +10698,7 @@ const tableTitle = document.querySelector("#panel-tickets .table-title");
 if (tableTitle) tableTitle.textContent = document.getElementById("ticketViewSelect")?.selectedOptions?.[0]?.textContent || "All Tickets";
 updateTicketsTable(filtered);
 updateTicketWorkspaceFloater();
-if (window.NOVARA_INLINE_TICKETS || document.getElementById("ticketDrawerBackdrop")?.classList.contains("open")) renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
+if (document.getElementById("ticketDrawerBackdrop")?.classList.contains("open")) renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
 window.refreshExpandedInboxSidebar?.();
 }
 function updateTicketsDashboard(tickets, analyticsData, period) {
@@ -12069,7 +12069,7 @@ try {
 function closeConversationDetail() {
 const backdrop = document.getElementById("conversationDetailBackdrop");
 backdrop.classList.remove("open");
-backdrop.setAttribute("aria-hidden", window.NOVARA_INLINE_TICKETS ? "false" : "true");
+backdrop.setAttribute("aria-hidden", "true");
 }
 ["aiConversationsBody", "humanConversationsBody"].forEach(id => {
 document.getElementById(id)?.addEventListener("click", event => {
@@ -14314,7 +14314,6 @@ document.getElementById("ticketActionError").textContent = "";
 async function openTicket(ticketId) {
 if (!ticketId) return;
 if (window.ticketReplySending) { window.NovaraChatDock?.tell("Please wait for your reply to finish sending."); return; }
-if (window.NOVARA_INLINE_TICKETS && currentTab !== "tickets") showWorkspace("tickets", false);
 window.NovaraChatDock?.beforeSwitch(ticketId);
 window.setTicketChannel?.("chat");
 cancelTicketDetailRequest();
@@ -14331,7 +14330,7 @@ backdrop.classList.add("open");
 backdrop.setAttribute("aria-hidden", "false");
 if (!workspaceWasOpen) setAgentAssistCollapsed(true, false);
 syncTicketWorkspaceFloater(true);
-document.body.style.overflow = window.NOVARA_INLINE_TICKETS ? "" : "hidden";
+document.body.style.overflow = "hidden";
 setComposerMode("reply");
 lastAssistSuggestion = "";
 originalAssistDraft = "";
@@ -19934,81 +19933,4 @@ html body:not(.sidebar-pinned) #appSidebar:hover .nav-item,
 html body:not(.sidebar-pinned) #appSidebar:has(:focus-visible) .nav-item,
 html body:not(.sidebar-pinned) #appSidebar .nav-item:is(:hover,:focus-visible,.active){box-sizing:border-box!important;width:56px!important;min-width:56px!important;max-width:56px!important;min-height:50px!important;padding:13px 18px!important;gap:14px!important;transform:none!important;scale:1!important;flex-shrink:0!important}
 }
-</style>
-
-<style id="embedded-ticket-workspace">
-html body #panel-tickets>.table-card{display:none!important}
-html body #panel-tickets #ticketDrawerBackdrop{--queue-width:clamp(210px,24%,280px)!important;position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:var(--inline-ticket-height,calc(100dvh - 220px))!important;min-height:380px!important;max-height:none!important;margin:0!important;padding:0!important;z-index:1!important;border:1px solid var(--border)!important;border-radius:14px!important;background:var(--bg-card)!important;backdrop-filter:none!important;overflow:hidden!important;isolation:isolate}
-html body #panel-tickets #ticketDrawerBackdrop #ticketQueuePanel{position:absolute!important;display:flex!important;left:0!important;top:0!important;bottom:0!important;width:var(--queue-width)!important;min-width:0!important;max-width:none!important;border:0!important;border-right:1px solid var(--border)!important;border-radius:0!important;box-shadow:none!important;padding:16px 12px!important;z-index:2!important}
-html body #panel-tickets #ticketDrawerBackdrop .ticket-drawer{position:absolute!important;left:var(--queue-width)!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;height:auto!important;max-width:none!important;min-width:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
-html body #panel-tickets #ticketDrawerBackdrop .ticket-workspace-scroll{flex:1 1 0!important;min-height:0!important;overflow:auto!important;overscroll-behavior:contain}
-html body #panel-tickets #ticketQueueList{flex:1 1 0!important;min-height:0!important;overflow:auto!important;overscroll-behavior:contain}
-html body #panel-tickets #ticketDrawerBackdrop .ticket-composer{flex-shrink:0!important}
-html body #panel-tickets #ticketDrawerBackdrop .ticket-drawer-head{flex-shrink:0!important}
-html body #panel-tickets #ticketDrawerBackdrop #agentAssistPanel{position:absolute!important;top:0!important;bottom:0!important;left:var(--queue-width)!important;width:min(360px,calc(100% - var(--queue-width)))!important;height:auto!important;border-radius:0!important;z-index:20!important;box-shadow:8px 0 24px #18252d18!important}
-html body #panel-tickets #ticketDrawerBackdrop.assist-collapsed #agentAssistPanel{display:none!important}
-html body #panel-tickets #ticketDrawerBackdrop #ticketQueueResizeHandle,
-html body #panel-tickets #ticketDrawerClose,
-html body #panel-tickets #ticketDrawerMinimize{display:none!important}
-html body:has(#panel-tickets.active) #ticketWorkspaceFloater{display:none!important}
-html body #panel-tickets #ticketDrawerBackdrop:not(.open) .ticket-drawer{visibility:hidden!important}
-html body #panel-tickets #ticketDrawerBackdrop .inline-ticket-empty{display:none;position:absolute;left:var(--queue-width);right:0;top:0;bottom:0;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:28px;text-align:center;color:var(--text-muted);background:var(--bg-card);pointer-events:none}
-html body #panel-tickets #ticketDrawerBackdrop:not(.open) .inline-ticket-empty{display:flex}
-html body #panel-tickets .inline-ticket-empty strong{font-size:15px;color:var(--text);font-weight:600}
-html body #panel-tickets .inline-ticket-empty span{font-size:12px;line-height:1.6;max-width:280px}
-@media(max-width:720px){
-html body #panel-tickets #ticketDrawerBackdrop{--queue-width:0px!important;min-height:460px!important}
-html body #panel-tickets #ticketDrawerBackdrop #ticketQueuePanel{display:none!important}
-html body #panel-tickets #ticketDrawerBackdrop:not(.open) #ticketQueuePanel{display:flex!important;width:100%!important;border-right:0!important}
-html body #panel-tickets #ticketDrawerBackdrop:not(.open) .inline-ticket-empty{display:none!important}
-html body #panel-tickets #inlineTicketBack{display:inline-flex!important;align-items:center;gap:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);border-radius:7px;padding:6px 9px;font:inherit;font-size:11px;margin-bottom:8px}
-}
-#inlineTicketBack{display:none}
-</style>
-<script id="embedded-ticket-workspace-behaviour">
-(()=>{
- const panel=document.getElementById("panel-tickets");
- const workspace=document.getElementById("ticketDrawerBackdrop");
- if(!panel||!workspace)return;
- window.NOVARA_INLINE_TICKETS=true;
- panel.append(workspace);
- workspace.setAttribute("aria-hidden","false");
- const drawer=workspace.querySelector(".ticket-drawer");
- drawer.setAttribute("role","region");drawer.removeAttribute("aria-modal");
- const empty=document.createElement("div");empty.className="inline-ticket-empty";
- empty.innerHTML='<strong>Select a ticket</strong><span>Choose a ticket from the queue to view its conversation and reply.</span>';
- workspace.append(empty);
- const back=document.createElement("button");back.id="inlineTicketBack";back.type="button";back.textContent="← Ticket queue";
- drawer.querySelector(".ticket-drawer-head").prepend(back);
- back.addEventListener("click",closeTicket);
- let sizeFrame=0;
- function fitWorkspace(){
-  cancelAnimationFrame(sizeFrame);
-  sizeFrame=requestAnimationFrame(()=>{
-   if(currentTab!=="tickets")return;
-   const top=workspace.getBoundingClientRect().top;
-   workspace.style.setProperty("--inline-ticket-height",Math.max(380,window.innerHeight-Math.max(12,top)-20)+"px");
-  });
- }
- const previousShow=showWorkspace;
- showWorkspace=function(...args){
-  if(args[0]!=="tickets"&&openTicketId)closeTicket();
-  const result=previousShow(...args);
-  if(currentTab==="tickets"){
-   workspace.setAttribute("aria-hidden","false");
-   renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
-   fitWorkspace();
-  }
-  return result;
- };
- new ResizeObserver(fitWorkspace).observe(panel.querySelector(".ticket-workspace-toolbar"));
- window.addEventListener("resize",fitWorkspace);
- new MutationObserver(fitWorkspace).observe(document.body,{attributes:true,attributeFilter:["class"]});
- if(currentTab==="tickets"){document.body.style.overflow="";renderTicketQueue();fitWorkspace();}
-})();
-</script>
-
-<style id="embedded-ticket-toolbar-removal">
-html body #panel-tickets>.ticket-workspace-toolbar,
-html body #panel-tickets>#ticketFilterPanel{display:none!important}
 </style>
