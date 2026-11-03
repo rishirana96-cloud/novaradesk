@@ -20080,3 +20080,13 @@ html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-righ
 html body .toolbar:has(#tabSwitcher:not([style*="display: none"])){padding:6px 8px!important;gap:6px 10px!important}
 @media(max-width:720px){html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right{flex-wrap:wrap!important;max-width:100%!important}}
 </style>
+
+<style id="restore-analytics-toolbar-original-height">
+@media(min-width:901px){
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])){height:56px!important;min-height:56px!important;max-height:56px!important;padding:5px 7px 5px 9px!important;margin-bottom:16px!important;flex-wrap:nowrap!important;align-items:center!important;gap:8px!important}
+html body .toolbar #tabSwitcher{flex:1 1 0!important;width:auto!important;min-width:0!important;height:40px!important;min-height:40px!important;max-height:40px!important;padding:4px!important;box-sizing:border-box!important;overflow-y:hidden!important;align-items:center!important;align-self:center!important}
+html body .toolbar #tabSwitcher .tab{height:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important;box-sizing:border-box!important}
+html body .toolbar #tabSwitcher .dashboard-tab-add{height:32px!important;min-height:32px!important;max-height:32px!important;width:32px!important;min-width:32px!important;box-sizing:border-box!important;align-self:center!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right{height:42px!important;min-height:42px!important;max-height:42px!important;flex:0 0 auto!important;flex-wrap:nowrap!important;align-items:center!important}
+}
+</style>
