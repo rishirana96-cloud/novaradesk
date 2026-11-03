@@ -20071,3 +20071,12 @@ html body .toolbar>.dashboard-title-menu{top:54px!important;left:8px!important;r
  renderSavedReports();
 })();
 </script>
+
+<style id="dashboard-toolbar-remove-duplicate-selector">
+html body .toolbar #dashboardToolbarSelector,
+html body .toolbar #dashboardToolbarSelector.open{display:none!important;flex:none!important;width:0!important;min-width:0!important;margin:0!important;padding:0!important}
+html body .toolbar #tabSwitcher{flex:1 1 480px!important;width:auto!important;min-width:0!important;max-width:100%!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right{flex:0 0 auto!important;width:auto!important;margin-left:auto!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])){padding:6px 8px!important;gap:6px 10px!important}
+@media(max-width:720px){html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right{flex-wrap:wrap!important;max-width:100%!important}}
+</style>
