@@ -20090,3 +20090,18 @@ html body .toolbar #tabSwitcher .dashboard-tab-add{height:32px!important;min-hei
 html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right{height:42px!important;min-height:42px!important;max-height:42px!important;flex:0 0 auto!important;flex-wrap:nowrap!important;align-items:center!important}
 }
 </style>
+
+<style id="analytics-toolbar-compact-dimensions">
+@media(min-width:721px){
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])){box-sizing:border-box!important;height:48px!important;min-height:48px!important;max-height:48px!important;padding:5px 7px!important;flex-wrap:nowrap!important;align-items:center!important;gap:8px!important}
+html body .toolbar #tabSwitcher{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;padding:2px!important;margin:0!important;align-items:center!important;overflow-y:hidden!important}
+html body .toolbar #tabSwitcher .tab,
+html body .toolbar #tabSwitcher .dashboard-tab-add{box-sizing:border-box!important;height:30px!important;min-height:30px!important;max-height:30px!important;margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important;align-self:center!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;padding-top:0!important;padding-bottom:0!important;align-items:center!important;flex-wrap:nowrap!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) :is(.layout-controls,.dashboard-customize-wrap){display:flex!important;align-items:center!important;height:36px!important;min-height:0!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .layout-control-btn{box-sizing:border-box!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding-top:0!important;padding-bottom:0!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) #periodSelector{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;padding:3px!important;align-items:center!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) #periodSelector button{box-sizing:border-box!important;height:28px!important;min-height:28px!important;max-height:28px!important;padding-top:0!important;padding-bottom:0!important;line-height:1!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right::before{height:24px!important}
+}
+</style>
