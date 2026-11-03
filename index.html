@@ -7798,10 +7798,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="2"/><rect x="17" y="12" width="4" height="7" rx="2"/><path d="M17 19a3 3 0 0 1-3 2h-2"/></svg>
                                 Human Agent
             </button>
-            <button class="tab" data-tab="dashboards">
-                <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M9 9v11M13 13h4M13 16h4"/></svg>
-                Custom Dashboards
-            </button>
+
         </div>
         <div id="reportModeToolbar" class="report-mode-toolbar">
             <span>Report Type</span>
@@ -13704,6 +13701,27 @@ try {
     const stored = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_STORAGE_KEY) || "[]");
     if (Array.isArray(stored) && stored.length) return stored;
 } catch {}
+
+if(window.NOVARA_DEMO_MODE){
+ const now=new Date().toISOString();
+ const definitions=[
+  ["preview_ticket_status","Ticket status","tickets","status","__count","count","doughnut"],
+  ["preview_ticket_intents","Escalation reasons","tickets","intent","__count","count","bar"],
+  ["preview_agent_workload","Agent workload","tickets","agent_name","__count","count","bar"],
+  ["preview_ai_volume","Conversation volume","analytics","date","total_conversations","sum","line"],
+  ["preview_sentiment_mix","Customer sentiment","sentiment","sentiment","count","sum","doughnut"],
+  ["preview_intent_mix","Top customer intents","intents","intent","count","sum","bar"]
+ ];
+ const reports=loadSavedReports();
+ definitions.forEach(([id,name,dataset,dimension,metric,aggregation,visual])=>{if(!reports.some(r=>r.id===id))reports.push({id,name,dataset,dimension,metric,aggregation,visual,mode:"standard",sort:visual==="line"?"label":"desc",filters:[],updatedAt:now,updatedLabel:"Preview sample"});});
+ storeSavedReports(reports);
+ const make=(id,name,ids)=>({id,name,updatedAt:now,widgets:ids.map((reportId,i)=>({id:id+"_widget_"+i,reportId,colSpan:i===2?12:6,rowSpan:8}))});
+ const samples=[make("preview_support","Support Overview",definitions.slice(0,3).map(r=>r[0])),make("preview_ai","AI Performance",definitions.slice(3).map(r=>r[0]))];
+ window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_STORAGE_KEY,JSON.stringify(samples));
+ window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,samples[0].id);
+ return samples;
+}
+
 const starter = [{ id: `dashboard_${Date.now()}`, name: "My Dashboard", widgets: [], updatedAt:new Date().toISOString() }];
 window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(starter));
 window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY, starter[0].id);
@@ -13712,6 +13730,7 @@ return starter;
 function saveCustomDashboards(dashboards) {
 window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(dashboards));
 window.refreshExpandedInboxSidebar?.();
+window.refreshDashboardTabs?.();
 }
 function activeCustomDashboard(dashboards = loadCustomDashboards()) {
 const activeId = window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_ACTIVE_KEY);
@@ -13748,6 +13767,7 @@ const save = () => {
     const active = activeCustomDashboard(dashboards);
     document.getElementById("dashboardActiveTitle").textContent = active.name;
     updateDashboardSelect(dashboards, active);
+window.refreshDashboardTabs?.();
     keepDashboardTitleMenuOpen();
     setDashboardStatus("Dashboard name updated.");
 };
@@ -19991,3 +20011,63 @@ html body #ticketWorkspaceFloater svg{width:26px!important;height:26px!important
 <style id="expanded-sidebar-larger-text">
 html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-group h3{font-size:calc(12px * var(--ui-text-scale))!important;line-height:18px!important}
 </style>
+
+<style id="individual-dashboard-tabs">
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])){flex-wrap:wrap!important;height:auto!important;max-height:none!important;min-height:56px!important;gap:8px!important}
+html body .toolbar #tabSwitcher{display:flex;flex:1 1 100%!important;width:100%!important;min-width:0!important;max-width:100%!important;flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:thin;gap:4px!important;justify-content:flex-start!important}
+html body #tabSwitcher .tab{flex:0 0 auto!important;white-space:nowrap!important;width:auto!important;min-width:max-content!important}
+html body #tabSwitcher .dashboard-tab-add{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-secondary);cursor:pointer;margin-left:4px}
+html body #tabSwitcher .dashboard-tab-add svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+html body #tabSwitcher .dashboard-tab-add:hover{background:var(--surface-hover);color:var(--text)}
+html body #tabSwitcher .dashboard-tab-add:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+html body #dashboardToolbarSelector{display:none!important}
+html body .toolbar:has(#tabSwitcher:not([style*="display: none"])) .toolbar-right{margin-left:auto!important;min-width:0;max-width:100%;flex-wrap:wrap!important}
+html body .toolbar>.dashboard-title-menu{top:54px!important;left:8px!important;right:auto!important;z-index:100}
+</style>
+<script id="individual-dashboard-tabs-behaviour">
+(()=>{
+ const tabs=document.getElementById("tabSwitcher");
+ const toolbar=tabs.closest(".toolbar");
+ const menu=document.getElementById("dashboardTitleMenu");
+ toolbar.append(menu);
+ tabs.setAttribute("role","tablist");tabs.setAttribute("aria-label","Analytics dashboards");
+ const glyph='<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M9 9v11"/></svg>';
+ function renderTabs(){
+  const dashboards=loadCustomDashboards();
+  const signature=JSON.stringify(dashboards.map(d=>[d.id,d.name]));
+  if(tabs.dataset.dashboardSignature!==signature){
+   tabs.querySelectorAll("[data-dashboard-tab],.dashboard-tab-add").forEach(n=>n.remove());
+   dashboards.forEach(d=>{
+    const button=document.createElement("button");button.type="button";button.className="tab";button.dataset.dashboardTab=d.id;
+    button.innerHTML=glyph+'<span></span>';button.querySelector("span").textContent=d.name;
+    button.title=d.name+" · Right-click for dashboard options";tabs.append(button);
+   });
+   const add=document.createElement("button");add.type="button";add.className="dashboard-tab-add";add.setAttribute("aria-label","Create new dashboard");add.title="Create new dashboard";add.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';tabs.append(add);
+   tabs.dataset.dashboardSignature=signature;
+  }
+  const selectedId=window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_ACTIVE_KEY);
+  tabs.querySelectorAll(".tab").forEach(button=>{
+   const active=button.dataset.dashboardTab ? currentTab==="dashboards"&&button.dataset.dashboardTab===selectedId : button.dataset.tab===currentTab;
+   button.classList.toggle("active",active);button.setAttribute("role","tab");button.setAttribute("aria-selected",String(active));button.setAttribute("aria-controls",button.dataset.dashboardTab?"panel-dashboards":"panel-"+button.dataset.tab);
+  });
+ }
+ tabs.addEventListener("click",async event=>{
+  const button=event.target.closest("[data-dashboard-tab]");
+  if(button){window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,button.dataset.dashboardTab);showWorkspace("dashboards");renderTabs();return;}
+  if(event.target.closest(".dashboard-tab-add")){
+   const before=window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_ACTIVE_KEY);
+   await createNamedDashboard();
+   if(window.NOVARA_LOCAL_STORAGE.getItem(DASHBOARD_ACTIVE_KEY)!==before){showWorkspace("dashboards");renderTabs();tabs.querySelector(".tab.active")?.scrollIntoView({block:"nearest",inline:"nearest"});}
+  }
+ });
+ tabs.addEventListener("contextmenu",event=>{
+  const button=event.target.closest("[data-dashboard-tab]");if(!button)return;
+  event.preventDefault();window.NOVARA_LOCAL_STORAGE.setItem(DASHBOARD_ACTIVE_KEY,button.dataset.dashboardTab);showWorkspace("dashboards");menu.classList.add("open");
+ });
+ const priorShow=showWorkspace;
+ showWorkspace=function(...args){const result=priorShow(...args);renderTabs();return result;};
+ window.refreshDashboardTabs=renderTabs;
+ renderTabs();
+ renderSavedReports();
+})();
+</script>
