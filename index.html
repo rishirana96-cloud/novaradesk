@@ -9384,7 +9384,7 @@ ORDER BY ticket_count DESC</textarea>
             <span class="ticket-title-copy"><span id="ticketDrawerTitle" class="ticket-drawer-title">Ticket</span><button id="ticketCopyId" class="ticket-copy-id" type="button" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>
             <div id="ticketTags" class="ticket-tags"></div>
         </div>
-        <div class="ticket-assignment"><small class="ticket-assignment-label">Assigned to</small><span class="ticket-assignment-avatar" aria-hidden="true">NC</span><span class="ticket-assignment-copy"><select id="ticketAgentSelect" class="ticket-agent-select" aria-label="Assigned agent"><option>Novara CX Support</option></select></span><span id="ticketFirstResponseState" class="ticket-first-response-state" aria-live="polite">First Response: Pending</span><div id="ticketSlaState" class="ticket-sla-state due" aria-live="polite">Due in 18 minutes</div></div>
+        <div class="ticket-assignment"><small class="ticket-assignment-label">Assigned to</small><span class="ticket-assignment-avatar" aria-hidden="true">NC</span><span class="ticket-assignment-copy"><select id="ticketAgentSelect" class="ticket-agent-select" aria-label="Assigned agent"><option>Novara CX Support</option></select></span><span id="ticketFirstResponseState" class="ticket-first-response-state" aria-live="polite"><span class="first-response-label">First Response:</span> <span class="first-response-value pending">Pending</span></span><div id="ticketSlaState" class="ticket-sla-state due" aria-live="polite">Due in 18 minutes</div></div>
     </div>
     <div class="ticket-head-side">
     <div class="ticket-head-controls">
@@ -14501,7 +14501,10 @@ function renderOpenTicket(data, scrollLatest = false) {
     setTicketStatusUi(ticket.status === "resolved" ? "resolved" : ticket.status === "pending_revert" ? "pending" : (ticket.status || "open"));
     renderTicketSlaState(ticket);
     const firstResponseState = document.getElementById("ticketFirstResponseState");
-    if (firstResponseState) firstResponseState.textContent = "First Response: " + (ticket.first_response_at ? "Complete" : "Pending");
+    if (firstResponseState) {
+        const complete = Boolean(ticket.first_response_at);
+        firstResponseState.innerHTML = '<span class="first-response-label">First Response:</span> <span class="first-response-value ' + (complete ? 'complete' : 'pending') + '">' + (complete ? 'Complete' : 'Pending') + '</span>';
+    }
     const agentSelect=document.getElementById("ticketAgentSelect");
     const agents=[ticket.agent_name || "Novara CX Support","Novara CX Support","Support Agent A","Support Agent B"].filter((value,index,array)=>value&&array.indexOf(value)===index);
     agentSelect.innerHTML=agents.map(agent=>`<option value="${escapeHtml(agent)}">${escapeHtml(agent)}</option>`).join(""); agentSelect.value=ticket.agent_name||"Novara CX Support";
@@ -20165,4 +20168,13 @@ html body #panel-reports .report-preview-head .report-eyebrow{text-transform:upp
 
 <style id="ticket-first-response-header">
 html body .ticket-assignment #ticketFirstResponseState{display:inline-flex;align-items:center;flex:0 0 auto;white-space:nowrap;font-size:11px;font-weight:600;line-height:1.4;color:var(--text-secondary);margin-left:10px}
+</style>
+
+<style id="ticket-first-response-colors-separators">
+html body .ticket-drawer-head .ticket-assignment #ticketFirstResponseState{gap:4px;margin:0 0 0 7px!important;padding:2px 0 2px 12px!important;border-left:1px solid var(--border)!important;font-size:10px!important;line-height:1.4!important}
+html body #ticketFirstResponseState .first-response-label{color:var(--text-muted)!important;font-weight:500}
+html body #ticketFirstResponseState .first-response-value.complete{color:#278454!important}
+html body #ticketFirstResponseState .first-response-value.pending{color:#c45149!important}
+html[data-theme="dark"] body #ticketFirstResponseState .first-response-value.complete{color:#79c39a!important}
+html[data-theme="dark"] body #ticketFirstResponseState .first-response-value.pending{color:#df8d82!important}
 </style>
