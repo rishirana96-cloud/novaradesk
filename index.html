@@ -12230,8 +12230,11 @@ document.body.style.overflow = "";
 }
 function openExplorerRecord(row) {
 if (!row) return;
-closeDataExplorer();
-if (row.dataset.openKind === "ticket") openTicket(Number(row.dataset.openId));
+// Keep conversation lists mounted so closing a chat returns to the same view.
+if (row.dataset.openKind === "ticket") {
+    closeDataExplorer();
+    openTicket(Number(row.dataset.openId));
+}
 if (row.dataset.openKind === "ai" || row.dataset.openKind === "human") openConversationDetail(row.dataset.openId, row.dataset.openKind);
 }
 async function openViewAll(kind) {
@@ -12371,7 +12374,13 @@ const row = event.target.closest("tr[data-open-kind]");
 if (row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); openExplorerRecord(row); }
 });
 document.addEventListener("keydown", event => {
-if (event.key === "Escape" && document.getElementById("dataExplorerBackdrop")?.classList.contains("open")) closeDataExplorer();
+if (event.key !== "Escape") return;
+if (document.getElementById("conversationDetailBackdrop")?.classList.contains("open")) {
+    event.preventDefault();
+    closeConversationDetail();
+} else if (document.getElementById("dataExplorerBackdrop")?.classList.contains("open")) {
+    closeDataExplorer();
+}
 });
 /* =====================================================
    HTML ESCAPE
