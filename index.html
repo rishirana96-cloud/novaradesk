@@ -13861,6 +13861,10 @@ updateDashboardSelect(dashboards, active);
 window.refreshExpandedInboxSidebar?.();
 const activeTitle = document.getElementById("dashboardActiveTitle");
 if (activeTitle) activeTitle.textContent = active.name;
+if (currentTab === "dashboards") {
+    document.getElementById("pageHeading").textContent = active.name;
+    document.title = `NovaraDesk — ${active.name}`;
+}
 const widgetCount = document.getElementById("dashboardWidgetCount");
 if (widgetCount) widgetCount.textContent = String(active.widgets.length);
 const reportCount = document.getElementById("dashboardReportCount");
