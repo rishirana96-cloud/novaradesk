@@ -4785,6 +4785,9 @@ window.NOVARA_DEMO_API = (() => {
             first_response_at: status === "open" ? null : iso(ageHours - .25 - (index % 4) * .1),
             resolved_at: status === "resolved" ? iso(Math.max(0.2, index * 2)) : null,
             handling_time_minutes: status === "resolved" ? 5 + (index % 12) : null,
+            resolution_due_at: status === "resolved"
+                ? iso(Math.max(0.2, index * 2) + (index % 2 ? 2 : -2))
+                : iso(index % 3 === 0 ? -4 : 2),
             first_response_sla_minutes: 30,
             agent_online: index % 4 < 2,
             resolution_time_hours: status === "resolved" ? ageHours - Math.max(0.2, index * 2) : 0,
@@ -20225,4 +20228,19 @@ html body .ticket-queue-card .ticket-queue-sla.unset{color:var(--text-muted);bac
 html body .ticket-queue-card .ticket-queue-footer-status .ticket-queue-unread{position:static!important;inset:auto!important;transform:none!important}
 html[data-theme="dark"] body .ticket-queue-card .ticket-queue-sla.within{color:#79c39a}
 html[data-theme="dark"] body .ticket-queue-card .ticket-queue-sla.overdue{color:#df8d82}
+</style>
+
+<style id="ticket-card-consistent-dimensions">
+html body .ticket-drawer-backdrop .ticket-queue-list .ticket-queue-card{grid-template-rows:24px 18px 14px 48px!important;grid-auto-rows:unset!important;gap:3px!important;padding:12px 13px!important;min-width:0!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-top{min-width:0;height:24px}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-middle{min-width:0;height:18px}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-name{display:block!important;top:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;line-height:18px!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-query{line-height:14px!important;height:14px!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-footer{box-sizing:border-box;height:48px!important;min-height:48px!important;align-items:start!important;gap:7px!important;margin-top:7px!important;padding-top:8px!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-dates{min-width:0!important;gap:4px!important;line-height:13px!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-dates>span{grid-template-columns:43px minmax(0,1fr)!important;gap:5px!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-dates>span>span{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-footer-status{display:grid!important;grid-template-rows:18px 16px!important;gap:4px!important;justify-items:end!important;align-items:center!important;height:38px!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-sla{box-sizing:border-box!important;height:18px!important;padding:2px 5px!important;font-size:8px!important;line-height:14px!important}
+html body .ticket-queue-list .ticket-queue-card .ticket-queue-footer-status .ticket-queue-unread{box-sizing:border-box!important;display:grid!important;place-items:center!important;width:16px!important;height:16px!important;min-width:16px!important;padding:0!important;font-size:8px!important;line-height:1!important}
 </style>
