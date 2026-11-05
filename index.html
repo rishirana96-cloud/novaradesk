@@ -14215,6 +14215,12 @@ list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
         || (slaState.policies || []).find(item => item.priority === "normal");
     const dueDate = parseCardDate(ticket.resolutionDueAt || ticket.firstResponseDueAt)
         || (createdDate && policy?.first_response_minutes ? new Date(createdDate.getTime() + Number(policy.first_response_minutes) * 60000) : null);
+    const resolutionDeadline = parseCardDate(ticket.resolutionDueAt);
+    const completedAt = parseCardDate(resolutionDeadline ? ticket.resolvedAt : ticket.firstResponseAt);
+    const slaOverdue = dueDate && (completedAt ? completedAt.getTime() : Date.now()) > dueDate.getTime();
+    const slaLabel = !dueDate ? "SLA not set" : slaOverdue ? "Overdue" : "Within SLA";
+    const slaClass = !dueDate ? "unset" : slaOverdue ? "overdue" : "within";
+    const slaBadge = '<span class="ticket-queue-sla ' + slaClass + '">' + slaLabel + '</span>';
     const cardDateText = date => date ? date.toLocaleDateString("en-IN", {day:"2-digit",month:"short", ...(date.getFullYear() !== new Date().getFullYear() ? {year:"numeric"} : {})}) + " · " + date.toLocaleTimeString("en-IN", {hour:"numeric",minute:"2-digit",hour12:true}) : "Not set";
     const cardDates = '<span class="ticket-queue-dates"><span><span class="ticket-queue-date-label">Created:</span><span>' + escapeHtml(cardDateText(createdDate)) + '</span></span><span><span class="ticket-queue-date-label">Due by:</span><span>' + escapeHtml(cardDateText(dueDate)) + '</span></span></span>';
     const ageSource=ticket.status==="resolved"&&ticket.resolvedAt?ticket.resolvedAt:ticket.createdAt;
@@ -14223,7 +14229,7 @@ list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
     const statusLabel=ticketStatusLabel(ticket.status).replace(/^Resolved by .+$/,"Resolved");
     const ageLabel=ticket.status==="resolved"?`${age} ago`:`Waiting ${age}`;
     const unread=ticket.unreadCustomerMessages?`<span class="ticket-queue-unread" aria-label="${ticket.unreadCustomerMessages} unread messages">${ticket.unreadCustomerMessages}</span>`:"";
-    return `<div class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" role="button" tabindex="0" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${cardDates}${unread}</div>`;
+    return `<div class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" role="button" tabindex="0" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span><span class="ticket-queue-footer">${cardDates}<span class="ticket-queue-footer-status">${slaBadge}${unread}</span></span></div>`;
 }).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
 list.querySelectorAll("[data-queue-ticket-id]").forEach(card => {
     const open = () => openTicket(Number(card.dataset.queueTicketId));
@@ -20206,4 +20212,17 @@ html body .ticket-queue-card .ticket-queue-date-label{color:var(--text-muted);fo
 <style id="ticket-card-single-line-preview">
 html body .ticket-queue-list .ticket-queue-card{min-width:0!important}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-query{display:block!important;min-width:0!important;max-width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;overflow-wrap:normal!important;-webkit-line-clamp:unset!important}
+</style>
+
+<style id="ticket-card-sla-footer">
+html body .ticket-queue-card .ticket-queue-footer{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;margin-top:7px;padding-top:8px;border-top:1px solid var(--border);min-width:0}
+html body .ticket-queue-card .ticket-queue-footer .ticket-queue-dates{margin:0;padding:0;border:0}
+html body .ticket-queue-card .ticket-queue-footer-status{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+html body .ticket-queue-card .ticket-queue-sla{display:inline-flex;align-items:center;white-space:nowrap;font-size:8px;line-height:1.5;font-weight:650;padding:3px 6px;border-radius:5px}
+html body .ticket-queue-card .ticket-queue-sla.within{color:#278454;background:#2784540d}
+html body .ticket-queue-card .ticket-queue-sla.overdue{color:#c45149;background:#c451490d}
+html body .ticket-queue-card .ticket-queue-sla.unset{color:var(--text-muted);background:var(--surface)}
+html body .ticket-queue-card .ticket-queue-footer-status .ticket-queue-unread{position:static!important;inset:auto!important;transform:none!important}
+html[data-theme="dark"] body .ticket-queue-card .ticket-queue-sla.within{color:#79c39a}
+html[data-theme="dark"] body .ticket-queue-card .ticket-queue-sla.overdue{color:#df8d82}
 </style>
