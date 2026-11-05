@@ -19837,9 +19837,8 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
   document.getElementById("ticketViewSelect").value="all";
   if(currentTab!=="tickets")showWorkspace("tickets",false);
   refreshTicketWorkspace();renderTicketQueue(document.getElementById("ticketQueueSearch")?.value);
-  const rows=ticketWorkspaceState.filtered;
-  if(rows.length&&!rows.some(t=>String(t.dbId)===String(openTicketId)))openTicket(rows[0].dbId);
-  else if(!rows.length)closeTicket();
+  // Sidebar filters navigate to the ticket list; only a ticket click opens details.
+  closeTicket();
   render();
 
   setMobileSidebar(false);
