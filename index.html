@@ -14205,13 +14205,25 @@ const totalPages = Math.max(1, Math.ceil(rows.length / TICKET_QUEUE_PAGE_SIZE));
 ticketQueuePage = Math.min(ticketQueuePage, totalPages);
 const visibleRows = rows.slice((ticketQueuePage - 1) * TICKET_QUEUE_PAGE_SIZE, ticketQueuePage * TICKET_QUEUE_PAGE_SIZE);
 list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
+    const parseCardDate = value => {
+        if (!value) return null;
+        const date = new Date(String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z");
+        return Number.isNaN(date.getTime()) ? null : date;
+    };
+    const createdDate = parseCardDate(ticket.createdAt);
+    const policy = (slaState.policies || []).find(item => String(item.priority).toLowerCase() === ticket.priority)
+        || (slaState.policies || []).find(item => item.priority === "normal");
+    const dueDate = parseCardDate(ticket.resolutionDueAt || ticket.firstResponseDueAt)
+        || (createdDate && policy?.first_response_minutes ? new Date(createdDate.getTime() + Number(policy.first_response_minutes) * 60000) : null);
+    const cardDateText = date => date ? date.toLocaleDateString("en-IN", {day:"2-digit",month:"short", ...(date.getFullYear() !== new Date().getFullYear() ? {year:"numeric"} : {})}) + " · " + date.toLocaleTimeString("en-IN", {hour:"numeric",minute:"2-digit",hour12:true}) : "Not set";
+    const cardDates = '<span class="ticket-queue-dates"><span><span class="ticket-queue-date-label">Created:</span><span>' + escapeHtml(cardDateText(createdDate)) + '</span></span><span><span class="ticket-queue-date-label">Due by:</span><span>' + escapeHtml(cardDateText(dueDate)) + '</span></span></span>';
     const ageSource=ticket.status==="resolved"&&ticket.resolvedAt?ticket.resolvedAt:ticket.createdAt;
     const created = ageSource ? new Date(String(ageSource).includes("T") ? ageSource : `${String(ageSource).replace(" ","T")}Z`) : null;
     const age = created && !isNaN(created) ? formatTicketAge(ageSource) : "—";
     const statusLabel=ticketStatusLabel(ticket.status).replace(/^Resolved by .+$/,"Resolved");
     const ageLabel=ticket.status==="resolved"?`${age} ago`:`Waiting ${age}`;
     const unread=ticket.unreadCustomerMessages?`<span class="ticket-queue-unread" aria-label="${ticket.unreadCustomerMessages} unread messages">${ticket.unreadCustomerMessages}</span>`:"";
-    return `<div class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" role="button" tabindex="0" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${unread}</div>`;
+    return `<div class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" role="button" tabindex="0" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span>${cardDates}${unread}</div>`;
 }).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
 list.querySelectorAll("[data-queue-ticket-id]").forEach(card => {
     const open = () => openTicket(Number(card.dataset.queueTicketId));
@@ -20180,3 +20192,9 @@ html[data-theme="dark"] body #ticketFirstResponseState .first-response-value.pen
 </style>
 
 
+
+<style id="ticket-card-created-due-dates">
+html body .ticket-queue-card .ticket-queue-dates{display:grid;gap:4px;margin-top:7px;padding-top:8px;border-top:1px solid var(--border);color:var(--text-secondary);font-size:9px;line-height:1.4;font-weight:500}
+html body .ticket-queue-card .ticket-queue-dates>span{display:grid;grid-template-columns:48px minmax(0,1fr);gap:6px;align-items:baseline}
+html body .ticket-queue-card .ticket-queue-date-label{color:var(--text-muted);font-weight:400}
+</style>
