@@ -10671,7 +10671,7 @@ return true;
 function refreshTicketWorkspace() {
 const filters = ticketFilterValues();
 const viewSource = ticketWorkspaceState.activeView === "needs_reply" ? ticketWorkspaceState.source.filter(ticket => ticket.needsReply) : ticketWorkspaceState.source;
-const filtered = viewSource.filter(ticket => ticketMatchesFilters(ticket, filters) && (!window.expandedInboxSidebarPredicate || window.expandedInboxSidebarPredicate(ticket)));
+const filtered = viewSource.filter(ticket => ticketMatchesFilters(ticket, filters) && (!window.expandedInboxSidebarPredicate || window.expandedInboxSidebarPredicate(ticket)) && (!window.ticketColumnPredicate || window.ticketColumnPredicate(ticket)));
 ticketWorkspaceState.filtered = filtered;
 const activeFilterCount = Object.values(filters).filter(Boolean).length;
 const count = document.getElementById("ticketFilterCount");
@@ -20344,3 +20344,89 @@ html[data-theme] body.expanded-inbox-mode #appSidebar .brand-endorsement{font-si
 <style id="ticket-status-dropdown-narrower">
 html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-width:calc(100vw - 24px)!important;box-sizing:border-box!important}
 </style>
+
+<style id="ticket-column-filter-styles">
+#panel-tickets .ticket-table th{overflow:visible}
+.ticket-column-filter{position:relative}
+.ticket-column-filter>summary{display:flex;align-items:center;gap:7px;cursor:pointer;list-style:none;white-space:nowrap}
+.ticket-column-filter>summary::-webkit-details-marker{display:none}
+.ticket-column-filter>summary::after{content:"";width:5px;height:5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);opacity:.6;margin-top:-3px}
+.ticket-column-filter.filtered>summary{color:var(--accent)}
+.ticket-column-filter[open]{z-index:50}
+.ticket-column-filter-panel{position:absolute;top:calc(100% + 12px);left:0;width:220px;padding:12px;display:grid;gap:9px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);box-shadow:0 12px 30px #10182820;color:var(--text);text-align:left;white-space:normal;font-size:11px;font-weight:500}
+.ticket-table th:last-child .ticket-column-filter-panel{left:auto;right:0}
+.ticket-column-filter-panel label{display:grid;gap:5px;color:var(--text-muted)}
+.ticket-column-filter-panel input,.ticket-column-filter-panel select{width:100%;min-width:0;box-sizing:border-box;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text);font:inherit}
+.ticket-column-filter-panel button{justify-self:end;border:0;background:transparent;color:var(--text-secondary);font:inherit;cursor:pointer;padding:4px}
+</style>
+<script id="ticket-column-filter-behavior">
+(()=>{
+ const headers=document.querySelectorAll("#panel-tickets .ticket-table thead th");
+ const state={};
+ const definitions=[
+  {key:"id",label:"Ticket",search:true,placeholder:"Search ticket number"},
+  {key:"created",label:"Created",dates:true},
+  {key:"customer",label:"Customer / Query",search:true,placeholder:"Search customer or query"},
+  {key:"agent",label:"Assigned To"},
+  {key:"status",label:"Status",options:[["open","Open"],["progress","In Progress"],["pending","Pending Revert"],["resolved","Resolved"],["reopened","Reopened"]]},
+  {key:"age",label:"Age",options:[["under24","Under 24 hours"],["1to7","1–7 days"],["over7","Over 7 days"]]},
+  {key:"resolution",label:"Resolution",options:[["unresolved","Unresolved"],["under1","Resolved under 1 hour"],["1to24","Resolved in 1–24 hours"],["over24","Resolved over 24 hours"],["unset","SLA not set"]]}
+ ];
+ function dateValue(value){if(!value)return NaN;return new Date(String(value).includes("T")?value:String(value).replace(" ","T")+"Z").getTime();}
+ window.ticketColumnPredicate=t=>{
+  if(state.id&&!String(t.id).toLowerCase().includes(state.id.toLowerCase()))return false;
+  if(state.customer&&![t.customer,t.query].some(v=>String(v||"").toLowerCase().includes(state.customer.toLowerCase())))return false;
+  const created=dateValue(t.createdAt);
+  if(state.from&&!(created>=new Date(state.from+"T00:00:00").getTime()))return false;
+  if(state.to&&!(created<=new Date(state.to+"T23:59:59.999").getTime()))return false;
+  if(state.agent&&t.agent!==state.agent)return false;
+  if(state.status&&t.status!==state.status)return false;
+  const hours=((t.status==="resolved"?dateValue(t.resolvedAt):Date.now())-created)/3600000;
+  if(state.age==="under24"&&!(hours<24))return false;
+  if(state.age==="1to7"&&!(hours>=24&&hours<=168))return false;
+  if(state.age==="over7"&&!(hours>168))return false;
+  const resolution=Number(t.resolutionTime||0);
+  if(state.resolution==="unresolved"&&t.status==="resolved")return false;
+  if(state.resolution==="under1"&&!(t.status==="resolved"&&resolution>0&&resolution<1))return false;
+  if(state.resolution==="1to24"&&!(t.status==="resolved"&&resolution>=1&&resolution<=24))return false;
+  if(state.resolution==="over24"&&!(t.status==="resolved"&&resolution>24))return false;
+  if(state.resolution==="unset"&&(t.resolutionDueAt||t.firstResponseDueAt||(slaState.policies||[]).some(p=>String(p.priority).toLowerCase()===t.priority||p.priority==="normal")))return false;
+  return true;
+ };
+ definitions.forEach((def,index)=>{
+  const th=headers[index];if(!th)return;
+  const details=document.createElement("details");details.className="ticket-column-filter";
+  const summary=document.createElement("summary");summary.textContent=def.label;details.append(summary);
+  const panel=document.createElement("div");panel.className="ticket-column-filter-panel";details.append(panel);
+  const keys=def.dates?["from","to"]:[def.key];
+  keys.forEach(key=>{
+   const label=document.createElement("label");label.textContent=def.dates?(key==="from"?"From date":"To date"):"Filter "+def.label;
+   const input=document.createElement(def.search||def.dates?"input":"select");
+   if(def.search){input.type="search";input.placeholder=def.placeholder;}
+   else if(def.dates)input.type="date";
+   else{
+    input.add(new Option("All",""));
+    (def.options||[]).forEach(([value,text])=>input.add(new Option(text,value)));
+    if(def.key==="agent")details.addEventListener("toggle",()=>{
+     if(!details.open)return;
+     input.replaceChildren(new Option("All",""));
+     [...new Set(ticketWorkspaceState.source.map(t=>t.agent).filter(Boolean))].sort().forEach(v=>input.add(new Option(v,v)));
+     input.value=state.agent||"";
+    });
+   }
+   input.setAttribute("aria-label",label.textContent);input.dataset.columnKey=key;
+   input.addEventListener(def.search?"input":"change",()=>{
+    state[key]=input.value;details.classList.toggle("filtered",keys.some(k=>state[k]));
+    ticketWorkspaceState.page=1;refreshTicketWorkspace();
+   });
+   label.append(input);panel.append(label);
+  });
+  const clear=document.createElement("button");clear.type="button";clear.textContent="Clear";
+  clear.onclick=()=>{keys.forEach(k=>delete state[k]);panel.querySelectorAll("input,select").forEach(el=>el.value="");details.classList.remove("filtered");ticketWorkspaceState.page=1;refreshTicketWorkspace();};
+  panel.append(clear);th.replaceChildren(details);
+  details.addEventListener("toggle",()=>{if(details.open)headers.forEach(h=>{const other=h.querySelector("details");if(other!==details&&other)other.open=false;});});
+ });
+ document.addEventListener("click",event=>{if(!event.target.closest(".ticket-column-filter"))headers.forEach(h=>{const d=h.querySelector("details");if(d)d.open=false;});});
+ document.addEventListener("keydown",event=>{if(event.key==="Escape")headers.forEach(h=>{const d=h.querySelector("details");if(d)d.open=false;});});
+})();
+</script>
