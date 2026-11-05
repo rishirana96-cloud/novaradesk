@@ -8729,7 +8729,6 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
             <aside class="report-builder-card">
                 <div class="report-section-heading">
                     <div>
-                        <span class="report-eyebrow">Report Builder</span>
                         <h2>Build a report</h2>
                         <p>Turn your CX data into a focused business view.</p>
                     </div>
@@ -13331,10 +13330,8 @@ document.querySelectorAll(".visual-report-control").forEach(element => element.h
 document.getElementById("rawSqlControls").hidden = !isSql;
 document.getElementById("pivotOptions").hidden = !isPivot;
 const heading = document.querySelector("#panel-reports .report-section-heading h2");
-const eyebrow = document.querySelector("#panel-reports .report-section-heading .report-eyebrow");
 const description = document.querySelector("#panel-reports .report-section-heading p");
 if (heading) heading.textContent = isSql ? "SQL Studio" : "Build a report";
-if (eyebrow) eyebrow.textContent = isSql ? "Read-only query workspace" : "Report builder";
 if (description) description.textContent = isSql ? "Write, run, inspect, visualise and save governed D1 queries." : "Turn your CX data into a focused business view.";
 if (isSql) { ensureRawSqlDates(); setSqlOutputTab("results"); }
 syncRawSqlVisual();
