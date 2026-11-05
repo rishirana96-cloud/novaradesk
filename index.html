@@ -9668,7 +9668,7 @@ if (event.pointerType === "mouse" && event.target.closest("a,button")) event.tar
 const workspaceCopy = {
 ai: ["Analytics", "Monitor AI conversations, resolution and customer experience performance."],
 human: ["Analytics", "Monitor human-agent escalations, outcomes and service performance."],
-dashboards: ["Custom Dashboards", "Arrange saved reports into focused, reusable operational views."],
+dashboards: ["Analytics", "Arrange saved reports into focused, reusable operational views."],
 tickets: ["Tickets", "Manage escalated customer requests and resolutions."],
 customers: ["Customer Profiles", "Understand every customer across support, commerce and connected channels."],
 reports: ["Report Builder", "Build, save and export focused views of your CX data."],
@@ -13861,10 +13861,6 @@ updateDashboardSelect(dashboards, active);
 window.refreshExpandedInboxSidebar?.();
 const activeTitle = document.getElementById("dashboardActiveTitle");
 if (activeTitle) activeTitle.textContent = active.name;
-if (currentTab === "dashboards") {
-    document.getElementById("pageHeading").textContent = active.name;
-    document.title = `NovaraDesk — ${active.name}`;
-}
 const widgetCount = document.getElementById("dashboardWidgetCount");
 if (widgetCount) widgetCount.textContent = String(active.widgets.length);
 const reportCount = document.getElementById("dashboardReportCount");
