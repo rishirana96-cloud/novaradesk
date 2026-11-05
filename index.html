@@ -20297,3 +20297,47 @@ html[data-theme] body.expanded-inbox-mode #appSidebar .brand{grid-template-colum
 html body #appSidebar .brand-endorsement,
 html[data-theme] body.expanded-inbox-mode #appSidebar .brand-endorsement{font-size:9px!important;font-weight:500!important;letter-spacing:.015em!important;line-height:1.3!important;color:var(--text-muted)!important;margin-top:2px!important}
 </style>
+
+<script id="ticket-session-scroll-memory">
+(()=>{
+ const memory=new Map();
+ let applying=false;
+ const workspace=()=>document.querySelector(".ticket-workspace-scroll");
+ const thread=()=>document.getElementById("ticketThread");
+ const queue=()=>document.querySelector(".ticket-queue-list");
+ const read=element=>({top:element?.scrollTop||0,left:element?.scrollLeft||0});
+ const restore=(element,position)=>{if(element&&position){element.scrollTop=position.top;element.scrollLeft=position.left;}};
+ let queuePosition=read(queue());
+ function remember(){
+  if(applying)return;
+  queuePosition=read(queue());
+  if(openTicketId)memory.set(String(openTicketId),{workspace:read(workspace()),thread:read(thread())});
+ }
+ document.addEventListener("scroll",event=>{
+  if([workspace(),thread(),queue()].includes(event.target))remember();
+ },true);
+ const priorOpen=openTicket;
+ openTicket=function(...args){remember();return priorOpen.apply(this,args);};
+ const priorRender=renderOpenTicket;
+ renderOpenTicket=function(data,scrollLatest=false){
+  const saved=memory.get(String(data.ticket.id));
+  applying=true;
+  const result=priorRender.call(this,data,scrollLatest);
+  requestAnimationFrame(()=>{
+   if(String(openTicketId)===String(data.ticket.id)&&saved&&!scrollLatest){
+    restore(workspace(),saved.workspace);restore(thread(),saved.thread);
+   }
+   applying=false;
+  });
+  return result;
+ };
+ const priorQueue=renderTicketQueue;
+ renderTicketQueue=function(...args){
+  const position=read(queue());
+  const result=priorQueue.apply(this,args);
+  restore(queue(),position);
+  queuePosition=position;
+  return result;
+ };
+})();
+</script>
