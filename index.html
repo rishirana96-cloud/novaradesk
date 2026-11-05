@@ -20194,6 +20194,10 @@ html[data-theme="dark"] body #ticketFirstResponseState .first-response-value.pen
 
 
 <style id="ticket-card-created-due-dates">
+/* Keep each card at its full content height inside the scrolling queue. */
+html body .ticket-drawer-backdrop .ticket-queue-list{align-content:start!important;grid-auto-rows:max-content!important}
+html body .ticket-drawer-backdrop .ticket-queue-list .ticket-queue-card{flex:0 0 auto!important;box-sizing:border-box!important;min-height:min-content!important;height:auto!important;max-height:none!important;grid-template-rows:none!important;grid-auto-rows:max-content!important;align-content:start!important}
+
 html body .ticket-queue-card .ticket-queue-dates{display:grid;gap:4px;margin-top:7px;padding-top:8px;border-top:1px solid var(--border);color:var(--text-secondary);font-size:9px;line-height:1.4;font-weight:500}
 html body .ticket-queue-card .ticket-queue-dates>span{display:grid;grid-template-columns:48px minmax(0,1fr);gap:6px;align-items:baseline}
 html body .ticket-queue-card .ticket-queue-date-label{color:var(--text-muted);font-weight:400}
