@@ -9093,7 +9093,6 @@ ORDER BY ticket_count DESC</textarea>
     ================================================== -->
     <section id="panel-knowledge" class="view-panel">
         <div class="admin-workspace">
-            <div class="admin-kpi-grid"><div class="admin-kpi"><span>Total content</span><strong id="kbTotal">—</strong><small>All knowledge entries</small></div><div class="admin-kpi"><span>Published</span><strong id="kbPublished">—</strong><small>Available to the AI</small></div><div class="admin-kpi"><span>Drafts</span><strong id="kbDrafts">—</strong><small>Awaiting publication</small></div><div class="admin-kpi"><span>Needs review</span><strong id="kbNeedsReview">—</strong><small>Potentially outdated</small></div></div>
             <div id="knowledgeListCard" class="admin-card"><div class="kb-toolbar"><input id="kbSearch" type="search" placeholder="Search knowledge…"><select id="kbCategoryFilter"><option value="">All categories</option></select><select id="kbStatusFilter"><option value="">All statuses</option><option value="published">Published</option><option value="draft">Draft</option><option value="inactive">Inactive</option><option value="needs_review">Needs review</option></select><button id="newKnowledgeArticle" class="admin-btn primary" type="button">New article</button></div><div id="knowledgeArticleList" class="kb-list" style="margin-top:15px"><div class="admin-loading">Loading Knowledge Base…</div></div></div>
             <div id="knowledgeEditor" class="kb-editor admin-card"><div class="admin-card-head"><div><h3 id="knowledgeEditorTitle">New knowledge article</h3><p>Draft content remains unavailable to customers until published.</p></div><button id="closeKnowledgeEditor" class="admin-btn" type="button">Close</button></div>
                 <input id="knowledgeArticleId" type="hidden"><div class="admin-form-grid">
@@ -15690,7 +15689,6 @@ try { const data=await adminApi("/admin/knowledge"); knowledgeState={articles:da
 catch(error){document.getElementById("knowledgeArticleList").innerHTML=`<div class="empty-state">${escapeHtml(error.message)} Run the supplied D1 migration and deploy the Worker.</div>`;}
 }
 function renderKnowledgeBase() {
-const summary=knowledgeState.summary||{}; document.getElementById("kbTotal").textContent=summary.total||0;document.getElementById("kbPublished").textContent=summary.published||0;document.getElementById("kbDrafts").textContent=summary.drafts||0;document.getElementById("kbNeedsReview").textContent=summary.needs_review||0;
 const categories=[...new Set(knowledgeState.articles.map(article=>article.category).filter(Boolean))].sort();const select=document.getElementById("kbCategoryFilter");const current=select.value;select.innerHTML='<option value="">All categories</option>'+categories.map(category=>`<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("");select.value=current;
 filterKnowledgeBase();
 }
