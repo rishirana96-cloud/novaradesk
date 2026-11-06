@@ -20430,3 +20430,12 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
  document.addEventListener("keydown",event=>{if(event.key==="Escape")headers.forEach(h=>{const d=h.querySelector("details");if(d)d.open=false;});});
 })();
 </script>
+
+<style id="expanded-sidebar-spacing-account-refinement">
+html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-group h3{font-size:calc(11px * var(--ui-text-scale))!important;line-height:16px!important;margin-bottom:5px!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-group{margin-bottom:10px!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .test-inbox-nav-group+.test-inbox-nav-group{padding-top:10px!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .agent-profile.authenticated-profile{grid-template-rows:20px 15px!important;min-height:55px!important;padding:9px!important;row-gap:1px!important;flex-shrink:0!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .authenticated-profile #sidebarUserName{font-size:11px!important;line-height:18px!important}
+html[data-theme] body.expanded-inbox-mode #appSidebar .authenticated-profile #sidebarUserRole{font-size:9px!important;line-height:15px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+</style>
