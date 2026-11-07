@@ -20656,7 +20656,7 @@ const search=document.getElementById("globalSearchWrap");if(!search)return;
 const trigger=document.createElement("button");trigger.id="deskAskAIButton";trigger.type="button";trigger.setAttribute("aria-controls","deskAI");trigger.setAttribute("aria-expanded","false");
 trigger.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3Z"/></svg><span>Ask AI</span>';search.after(trigger);
 const panel=document.createElement("aside");panel.id="deskAI";panel.hidden=true;panel.setAttribute("role","dialog");panel.setAttribute("aria-label","Ask AI workspace assistant");
-panel.innerHTML='<header class="desk-ai-head"><div><h2>Ask AI</h2><p>Workspace insights & reports</p></div><div><button class="desk-ai-icon" id="deskAINew" aria-label="New conversation" title="New conversation">↺</button><button class="desk-ai-icon" id="deskAIClose" aria-label="Close Ask AI">×</button></div></header><div class="desk-ai-body" id="deskAIBody" aria-live="polite"><div class="desk-ai-intro"><h3>What would you like to understand?</h3><p>Ask about tickets, analytics, reports, chatbot instructions, or loaded workspace settings.</p><div class="desk-ai-prompts"><button>What needs attention in my tickets?</button><button>Summarise AI performance</button><button>Review the chatbot instructions</button><button>Create a PDF report with highlights and lowlights</button></div></div></div><form class="desk-ai-foot" id="deskAIForm"><textarea id="deskAIQuestion" aria-label="Ask a workspace question" placeholder="Ask about your workspace…" maxlength="2000"></textarea><div class="desk-ai-foot-row"><small>Read-only · Selected period · Review AI findings</small><button class="desk-ai-send" id="deskAISend" type="submit">Ask AI</button></div></form>';
+panel.innerHTML='<header class="desk-ai-head"><div class="desk-ai-identity"><img src="assets/logo-mark.png" alt=""><div><h2>Novara<span> AI</span></h2><p>NovaraDesk workspace assistant</p></div></div><div><button class="desk-ai-icon" id="deskAINew" aria-label="New conversation" title="New conversation">↺</button><button class="desk-ai-icon" id="deskAIClose" aria-label="Close Ask AI">×</button></div></header><div class="desk-ai-body" id="deskAIBody" aria-live="polite"><div class="desk-ai-intro"><h3>What would you like to understand?</h3><p>Ask about tickets, analytics, reports, chatbot instructions, or loaded workspace settings.</p><div class="desk-ai-prompts"><button>What needs attention in my tickets?</button><button>Summarise AI performance</button><button>Review the chatbot instructions</button><button>Create a PDF report with highlights and lowlights</button></div></div></div><form class="desk-ai-foot" id="deskAIForm"><textarea id="deskAIQuestion" aria-label="Ask a workspace question" rows="1" placeholder="Type your message…" maxlength="2000"></textarea><div class="desk-ai-foot-row"><small>Read-only · Selected period · Review AI findings</small><button class="desk-ai-send" id="deskAISend" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7z"/></svg></button></div></form>';
 document.body.append(panel);
 const body=panel.querySelector("#deskAIBody"),input=panel.querySelector("textarea"),send=panel.querySelector("#deskAISend");let busy=false,controller=null,history=[];
 const intro=body.innerHTML;
@@ -20743,3 +20743,44 @@ input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventD
 body.addEventListener("click",e=>{const btn=e.target.closest(".desk-ai-prompts button");if(btn)ask(btn.textContent);});
 })();
 </script>
+<style id="ask-ai-match-novara-cx-chatbox">
+#deskAI{
+inset:auto 24px 96px auto!important;width:410px!important;max-width:calc(100vw - 40px)!important;
+height:min(640px,calc(100dvh - 124px))!important;border:1px solid rgba(15,24,19,.22)!important;border-radius:20px!important;
+box-shadow:0 26px 72px rgba(7,14,10,.3),0 3px 12px rgba(7,14,10,.08)!important;background:#111118!important;overflow:hidden!important;
+font-family:Inter,sans-serif!important;color:#17241c!important;
+}
+#deskAI .desk-ai-head{position:relative;min-height:62px;padding:9px 14px;background:linear-gradient(120deg,rgba(47,78,64,.56),rgba(61,94,77,.52) 58%,rgba(75,108,89,.48));border-bottom:1px solid rgba(210,232,218,.26);backdrop-filter:blur(22px) saturate(126%);box-shadow:inset 0 1px 0 rgba(240,250,244,.13),inset 0 -1px 0 rgba(25,52,39,.16);flex-shrink:0}
+#deskAI .desk-ai-identity{display:flex;align-items:center;gap:11px;min-width:0}
+#deskAI .desk-ai-identity>img{width:36px;height:36px;object-fit:contain;padding:7px;border-radius:11px;background:linear-gradient(135deg,#a7c9b5,#6f9580)}
+#deskAI .desk-ai-head h2{color:#fff;font-size:16px;font-weight:760;letter-spacing:-.025em;line-height:1.3}
+#deskAI .desk-ai-head h2 span{color:#a9e5c0}
+#deskAI .desk-ai-head p{margin-top:2px;color:rgba(239,248,242,.72);font-size:10px;font-weight:550;line-height:1.15}
+#deskAI .desk-ai-head>div:last-child{display:flex;gap:6px}
+#deskAI .desk-ai-icon{display:grid;place-items:center;width:34px;height:34px;padding:0;border-radius:10px;border:1px solid rgba(225,240,231,.18);background:rgba(29,57,44,.28);color:#e5efe8;font-size:20px;transition:background .18s ease,border-color .18s ease;transform:none}
+#deskAI .desk-ai-icon:hover{background:rgba(24,49,37,.42);border-color:rgba(231,244,236,.3)}
+#deskAI .desk-ai-body{display:flex;flex-direction:column;gap:12px;padding:19px 16px;background:linear-gradient(145deg,#f2f6f3 0%,#edf3ef 55%,#eef4f0 100%);scrollbar-width:thin;scrollbar-color:rgba(70,102,84,.28) transparent}
+#deskAI .desk-ai-intro h3{font-size:14px;color:#17241c}
+#deskAI .desk-ai-intro p{color:#53635a;font-size:13px}
+#deskAI .desk-ai-prompts{gap:8px;margin:14px 0}
+#deskAI .desk-ai-prompts button{border:1px solid #d5ded8;border-radius:12px;background:#fff;color:#3f5c4b;font-size:12px;padding:9px 12px}
+#deskAI .desk-ai-message{position:relative;align-self:flex-start;width:fit-content;max-width:88%;margin:0;padding:8px 12px;border:1px solid #d9e2dc;border-radius:13px 13px 13px 3px;background:rgba(255,255,255,.94);box-shadow:0 4px 14px rgba(25,55,37,.035);font-size:13px;line-height:1.48;color:#17241c}
+#deskAI .desk-ai-message.user{align-self:flex-end;min-width:126px;font-weight:500;border-color:#a2c3b0;border-radius:13px 13px 3px 13px;background:#adcebc;box-shadow:0 4px 14px rgba(38,73,53,.065)}
+#deskAI .desk-ai-message.error{color:#b33f38}
+#deskAI .desk-ai-sources{margin:0;gap:6px}
+#deskAI .desk-ai-sources button{background:#fff;border-color:#d5ded8;color:#53635a}
+#deskAI .desk-ai-report{background:#fff;border-color:#d9e2dc;border-radius:13px;padding:12px;margin:0}
+#deskAI .desk-ai-report h3{color:#17241c}
+#deskAI .desk-ai-report p{color:#68786e}
+#deskAI .desk-ai-report button{background:#6f9580;color:#fff}
+#deskAI .desk-ai-foot{position:relative;flex-shrink:0;padding:10px 68px 32px 13px;background:#fff;border-top:0}
+#deskAI .desk-ai-foot textarea{box-sizing:border-box;display:block;width:100%;height:46px;min-height:46px;max-height:132px;resize:none;overflow-y:auto;padding:12px 15px;border:1px solid #d5ded8;border-radius:17px;outline:0;background:#f5f8f6;color:#17241c;font:500 13px/1.45 Inter,sans-serif}
+#deskAI .desk-ai-foot textarea::placeholder{color:#78857d}
+#deskAI .desk-ai-foot textarea:focus{border-color:#789b88;background:#fff;box-shadow:0 0 0 3px rgba(92,132,110,.11)}
+#deskAI .desk-ai-foot-row{display:block;margin:0}
+#deskAI .desk-ai-send{position:absolute;right:13px;top:10px;display:grid;place-items:center;width:46px;height:46px;padding:0;border-radius:50%;background:#6f9580;color:#0b1710;transition:background .16s ease}
+#deskAI .desk-ai-send:hover{background:#82a591}
+#deskAI .desk-ai-send svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#deskAI .desk-ai-foot small{position:absolute;bottom:9px;left:13px;right:13px;text-align:center;color:#8a948e;font-size:9px;line-height:1.3}
+@media(max-width:520px){#deskAI{inset:0!important;width:100%!important;max-width:none!important;height:100dvh!important;border:0!important;border-radius:0!important}#deskAI .desk-ai-head{padding-top:max(9px,env(safe-area-inset-top))}#deskAI .desk-ai-foot{padding-bottom:max(32px,env(safe-area-inset-bottom))}}
+</style>
