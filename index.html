@@ -20572,3 +20572,16 @@ html body .toolbar:has(#reportModeToolbar.open) #reportModeToolbar{box-sizing:bo
 html body .toolbar:has(#reportModeToolbar.open) #reportModeToolbar :is(select,.unified-select-trigger){box-sizing:border-box!important;height:30px!important;min-height:30px!important;max-height:30px!important;padding-top:0!important;padding-bottom:0!important}
 }
 </style>
+<style id="ticket-toolbar-match-analytics-controls">
+#panel-tickets #ticketFilterToggle{order:-1;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+@media(min-width:721px){
+html body #panel-tickets .ticket-workspace-toolbar{box-sizing:border-box!important;height:48px!important;min-height:48px!important;max-height:48px!important;padding:5px!important;margin-bottom:16px!important;align-items:center!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:8px!important;border-radius:16px!important}
+html body #panel-tickets .ticket-toolbar-right{display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;margin-left:auto!important;box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;transform:none!important}
+html body #panel-tickets .ticket-toolbar-right::before{content:"";order:-2;width:1px;height:24px;background:var(--border);margin-right:12px;flex:0 0 1px}
+html body #panel-tickets #ticketPeriodSelector{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;padding:3px!important;gap:2px!important;align-items:center!important}
+html body #panel-tickets #ticketPeriodSelector button{box-sizing:border-box!important;height:28px!important;min-height:28px!important;max-height:28px!important;padding-top:0!important;padding-bottom:0!important;line-height:1!important;flex:0 0 auto!important}
+html body #panel-tickets #ticketFilterToggle{box-sizing:border-box!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding:0 10px!important;border-radius:8px!important;font-size:calc(9px * var(--ui-text-scale))!important;font-weight:650!important;color:var(--text-secondary)!important}
+html body #panel-tickets .ticket-view-control{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;align-items:center!important}
+html body #panel-tickets .ticket-view-control :is(select,.unified-select-trigger){height:30px!important;min-height:30px!important;max-height:30px!important}
+}
+</style>
