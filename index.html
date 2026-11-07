@@ -8657,7 +8657,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 </nav>
             </aside>
             <div class="settings-content">
-                <header class="settings-content-head"><div><span class="report-eyebrow">Administration</span><h2 id="settingsSectionTitle">General</h2><p id="settingsSectionDescription">Configure the identity and operating defaults for this workspace.</p></div><span id="settingsSaveState" class="settings-save-state">All changes saved</span></header>
+                <header class="settings-content-head"><div><span class="report-eyebrow">Administration</span><h2 id="settingsSectionTitle">General</h2><p id="settingsSectionDescription">Configure the identity and operating defaults for this workspace.</p></div></header>
                 <section class="settings-section active" data-settings-panel="general">
                     <article class="settings-block"><div class="settings-block-head"><div><h3>Workspace identity</h3><p>How NovaraDesk appears to agents and customers.</p></div></div><div class="settings-form-grid"><label><span>Workspace name</span><input data-setting-key="workspaceName" value="NovaraDesk" required></label><label><span>Support email</span><input data-setting-key="supportEmail" type="email" value="support@novaracx.com" required></label><label><span>Default language</span><select data-setting-key="language"><option>English</option><option>Hindi</option><option>Hinglish</option></select></label><label><span>Time zone</span><select data-setting-key="timezone"><option>Asia/Kolkata</option><option>UTC</option><option>Asia/Dubai</option></select></label></div></article>
                     <article class="settings-block"><div class="settings-block-head"><div><h3>Business hours</h3><p>Used for SLA calculations and channel availability.</p></div></div><div class="settings-form-grid"><label><span>Working day starts</span><input data-setting-key="businessStart" type="time" value="09:00"></label><label><span>Working day ends</span><input data-setting-key="businessEnd" type="time" value="18:00"></label><label class="settings-switch-row wide"><span><strong>Include Saturdays</strong><small>Count Saturday inside business-hour SLAs.</small></span><input data-setting-key="includeSaturday" type="checkbox"><i></i></label></div></article>
@@ -8691,7 +8691,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                         <div class="customizer-actions"><button id="customizerReset" class="settings-text-btn" type="button">Restore default layout</button><span class="customizer-storage-note">Changes are saved on this device</span><button id="customizerPublish" class="settings-primary-btn" type="button">Save layout</button></div>
                     </div>
                 </section>
-                <footer class="settings-save-bar"><div><strong>Workspace settings</strong><span id="settingsFooterState">Settings are saved on this device.</span></div><button id="settingsReset" class="settings-secondary-btn" type="button">Reset section</button><button id="settingsSave" class="settings-primary-btn" type="button">Save changes</button></footer>
+                <footer class="settings-save-bar"><div><strong>Workspace settings</strong><span id="settingsFooterState">Settings are saved on this device.</span></div><span id="settingsSaveState" class="settings-save-state">All changes saved</span><button id="settingsReset" class="settings-secondary-btn" type="button">Reset section</button><button id="settingsSave" class="settings-primary-btn" type="button">Save changes</button></footer>
             </div>
         </div>
     </section>
@@ -20453,7 +20453,12 @@ html body :is(#panel-ai,#panel-human)>.kpi-grid .kpi-previous-group{grid-column:
 
 
 
-<style id="settings-general-remove-heading-block">
-html body #panel-settings .settings-content:has([data-settings-panel="general"].active)>.settings-content-head>div{display:none!important}
-html body #panel-settings .settings-content:has([data-settings-panel="general"].active)>.settings-content-head{min-height:0!important;height:auto!important;padding:0!important;border:0!important;justify-content:flex-end!important}
+
+
+<style id="settings-all-sections-heading-alignment">
+html body #panel-settings .settings-content>.settings-content-head{display:none!important}
+html body #panel-settings .settings-content{padding-top:0!important;margin-top:0!important}
+html body #panel-settings .settings-section.active{margin-top:0!important;padding-top:0!important}
+html body #panel-settings .settings-section.active>.settings-block:first-child{margin-top:0!important}
+html body #panel-settings .settings-save-bar #settingsSaveState{flex:0 0 auto}
 </style>
