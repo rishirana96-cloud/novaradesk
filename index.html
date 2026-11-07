@@ -18469,6 +18469,27 @@ html[data-theme="light"] body :is(.kpi-card,.ticket-kpi-card,.chart-card,.admin-
 <style id="restore-ticket-chat-palette">
 html[data-theme="light"] body :is(#ticketDrawerBackdrop,#ticketChatDock){--bg:#f4f7f5;--bg-soft:#eef2f0;--surface:#fff;--surface-light:#f8faf9;--surface-hover:#f2f6f4;--border:#dce4df;--border-strong:#bdcec4;--text:#17231c;--text-secondary:rgba(23,35,28,.70);--text-muted:rgba(23,35,28,.48);--bg-card:initial;--bg-panel:initial}
 </style>
+
+<style id="chatbot-tabs-match-analytics-bar">
+html body #panel-chatbot #chatbotTabs{
+display:flex!important;align-items:center!important;justify-content:flex-start!important;
+box-sizing:border-box!important;width:100%!important;height:48px!important;min-height:48px!important;max-height:48px!important;
+padding:7px 9px!important;gap:4px!important;margin:0!important;flex-wrap:nowrap!important;
+border:1px solid color-mix(in srgb,var(--border) 72%,transparent)!important;border-radius:16px!important;
+background:var(--bg-card)!important;box-shadow:var(--shadow-soft)!important;overflow-x:auto!important;overflow-y:hidden!important;
+}
+html body #panel-chatbot #chatbotTabs .admin-tab{
+display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;
+box-sizing:border-box!important;flex:0 0 auto!important;height:30px!important;min-height:30px!important;max-height:30px!important;
+padding:0 13px!important;margin:0!important;border:0!important;border-radius:8px!important;
+background:transparent!important;color:var(--text-secondary)!important;font-size:12px!important;font-weight:500!important;line-height:1!important;box-shadow:none!important;
+}
+html body #panel-chatbot #chatbotTabs .admin-tab.active{background:transparent!important;color:var(--text)!important;font-weight:700!important;box-shadow:none!important}
+html body #panel-chatbot #chatbotTabs .admin-tab:hover{background:transparent!important;color:var(--text)!important}
+html body #panel-chatbot #chatbotTabs .admin-tab svg{width:16px!important;height:16px!important;flex:0 0 16px!important;opacity:1!important}
+html body #panel-chatbot #chatbotTabs .admin-tab:focus-visible{outline:2px solid var(--accent)!important;outline-offset:1px!important}
+</style>
+
 </body>
 </html>
 
