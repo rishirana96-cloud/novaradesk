@@ -10680,22 +10680,24 @@ count.hidden = !activeFilterCount;
 window.syncTicketFilterPanelUi?.(filters);
 const ticketTableSubtitle = document.getElementById("ticketTableSubtitle");
 if (ticketTableSubtitle) ticketTableSubtitle.textContent = `${filtered.length.toLocaleString("en-IN")} of ${ticketWorkspaceState.source.length.toLocaleString("en-IN")} tickets · selected view and filters`;
-const total = filtered.length;
-const open = filtered.filter(ticket => ticket.status === "open").length;
-const pending = filtered.filter(ticket => ticket.status === "pending").length;
-const resolved = filtered.filter(ticket => ticket.status === "resolved").length;
-const reopened = filtered.filter(ticket => ticket.status === "reopened").length;
-const progress = filtered.filter(ticket => ticket.status === "progress").length;
-const resolvedWithTime = filtered.filter(ticket => ticket.status === "resolved" && ticket.resolutionTime > 0);
+// Summary totals describe the selected period, independent of list filters.
+const summaryTickets = ticketWorkspaceState.source;
+const total = summaryTickets.length;
+const open = summaryTickets.filter(ticket => ticket.status === "open").length;
+const pending = summaryTickets.filter(ticket => ticket.status === "pending").length;
+const resolved = summaryTickets.filter(ticket => ticket.status === "resolved").length;
+const reopened = summaryTickets.filter(ticket => ticket.status === "reopened").length;
+const progress = summaryTickets.filter(ticket => ticket.status === "progress").length;
+const resolvedWithTime = summaryTickets.filter(ticket => ticket.status === "resolved" && ticket.resolutionTime > 0);
 const avgResolution = resolvedWithTime.length ? (resolvedWithTime.reduce((sum,ticket) => sum + ticket.resolutionTime,0) / resolvedWithTime.length).toFixed(1) : "—";
-const ages = filtered.map(ticket => {
+const ages = summaryTickets.map(ticket => {
     if (!ticket.createdAt) return 0;
     const created = new Date(String(ticket.createdAt).includes("T") ? ticket.createdAt : `${String(ticket.createdAt).replace(" ","T")}Z`);
     return isNaN(created) ? 0 : Math.max(0,(Date.now()-created.getTime())/3600000);
 }).filter(Boolean);
 const averageAge = ages.length ? `${(ages.reduce((a,b)=>a+b,0)/ages.length).toFixed(1)}h` : "—";
 const oldestAge = ages.length ? `${Math.max(...ages).toFixed(1)}h` : "—";
-const slaRisk = filtered.filter(ticket => ["warning","breached","danger"].includes(ticketSlaDisplay(ticket).className)).length;
+const slaRisk = summaryTickets.filter(ticket => ["warning","breached","danger"].includes(ticketSlaDisplay(ticket).className)).length;
 const slaMet = resolved ? `${resolved}/${resolved}` : "0/0";
 const active = ticketWorkspaceState.activeView || "all";
 const configurations = [
@@ -10826,6 +10828,8 @@ document.querySelector(".ticket-compact-metrics")?.addEventListener("click", eve
 const card = event.target.closest("[data-ticket-kpi-view]");
 if (!card) return;
 const value = card.dataset.ticketKpiView;
+window.resetExpandedInboxTicketFilter?.();
+window.clearTicketColumnFilters?.();
 ticketWorkspaceState.activeView = value;
 applyTicketFilterValues(value === "all" ? {} : { status:value.slice(7) });
 const select = document.getElementById("ticketViewSelect");
@@ -19867,6 +19871,7 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
  const priorShow=showWorkspace;
  showWorkspace=function(...args){const result=priorShow(...args);render();return result;};
  window.refreshExpandedInboxSidebar=render;
+ window.resetExpandedInboxTicketFilter=()=>{active="all";window.expandedInboxSidebarPredicate=null;};
  function syncExpandedMode(){
   const expanded=window.innerWidth>720 ? document.body.classList.contains("sidebar-pinned") : document.body.classList.contains("mobile-sidebar-open");
   if(document.body.classList.contains("expanded-inbox-mode")!==expanded)document.body.classList.toggle("expanded-inbox-mode",expanded);
@@ -20384,6 +20389,13 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
 (()=>{
  const headers=document.querySelectorAll("#panel-tickets .ticket-table thead th");
  const state={};
+ window.clearTicketColumnFilters=()=>{
+  Object.keys(state).forEach(key=>delete state[key]);
+  headers.forEach(th=>{
+   th.querySelectorAll("[data-column-key]").forEach(input=>input.value="");
+   const details=th.querySelector("details");if(details){details.classList.remove("filtered");details.open=false;}
+  });
+ };
  const definitions=[
   {key:"id",label:"Ticket",search:true,placeholder:"Search ticket number"},
   {key:"created",label:"Created",dates:true},
