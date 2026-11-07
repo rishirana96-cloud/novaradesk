@@ -9906,7 +9906,7 @@ function summarizeKpiPeriod(analytics, resolution, ratings, sentiment) {
 }
 function formatKpiComparisonValue(value, format) {
     if (value == null || !Number.isFinite(Number(value))) return "—";
-    if (format === "percent") return `${Math.round(value)}%`;
+    if (format === "percent") return `${Number(value).toFixed(1)}%`;
     if (format === "decimal") return Number(value).toFixed(value < 1 ? 2 : 1);
     return Math.round(value).toLocaleString();
 }
@@ -9922,6 +9922,7 @@ function updateKpiComparisons(currentSummary, previousSummary, label) {
         }
         const current = currentSummary[config.key];
         const previous = previousSummary[config.key];
+        if (config.format === "percent" && current != null) valueNode.textContent = formatKpiComparisonValue(current, config.format);
         if (current == null || previous == null) {
             panel.classList.add("is-empty");
             return;
@@ -11178,7 +11179,7 @@ aiTrendChart =
                             boxHeight:
                                 10,
                             padding:
-                                16
+                                8
                         }
                     },
                     tooltip:
@@ -12756,7 +12757,10 @@ monochrome:["#244f3c","#426d59","#658c77","#8eae9d","#b7cbbf","#dce7e0"]
 let selectedReportPalette = (() => { const saved = window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_palette"); return !saved || saved === "novara" ? "standard" : saved; })();
 function currentReportColors(){return selectedReportPalette === "custom" ? [...document.querySelectorAll("#reportCustomColors input")].map(input=>input.value) : REPORT_PALETTES[selectedReportPalette] || REPORT_PALETTES.standard;}
 function semanticReportColor(label,fallback){const key=String(label??"").trim().toLowerCase();if(/(^|[^a-z])(resolved|positive|success|healthy|improved|retained|answered|satisfied|good)([^a-z]|$)/.test(key))return "#59a14f";if(/(^|[^a-z])(negative|failed|failure|error|escalated|breached|overdue|dissatisfied|bad)([^a-z]|$)/.test(key))return "#e15759";if(/(^|[^a-z])(pending|warning|waiting|reopened|partial|at risk)([^a-z]|$)/.test(key))return "#f28e2b";if(/(^|[^a-z])neutral([^a-z]|$)/.test(key))return "#f28e2b";return fallback;}
-function applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-tickets,#panel-ai,#panel-human,#panel-dashboards,#panel-reports"))return;const type=chart.config.type;chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>semanticReportColor((chart.data.labels||[])[point],colors[point%colors.length]));else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
+function applyAnalyticsChartPalette(){const colors=currentReportColors();Object.values(Chart.instances||{}).forEach(chart=>{const canvas=chart.canvas;if(!canvas?.closest("#panel-tickets,#panel-ai,#panel-human,#panel-dashboards,#panel-reports"))return;const type=chart.config.type;if(canvas.id==="aiTrendChart"){
+chart.data.datasets.forEach((dataset,index)=>{dataset.backgroundColor=index===0?"rgba(136,169,152,0.72)":"rgba(223,141,130,0.68)";dataset.borderColor=index===0?"#88a998":"#df8d82";});
+chart.options.animation=false;chart.update("none");return;
+}chart.data.datasets.forEach((dataset,index)=>{const color=colors[index%colors.length];if(["doughnut","pie","polarArea"].includes(type)||(type==="bar"&&chart.data.datasets.length===1))dataset.backgroundColor=(dataset.data||[]).map((_,point)=>semanticReportColor((chart.data.labels||[])[point],colors[point%colors.length]));else dataset.backgroundColor=type==="line"?`${color}22`:color;dataset.borderColor=["doughnut","pie","polarArea"].includes(type)?document.documentElement.dataset.theme==="light"?"#fff":"#101512":color;if(type==="line"){dataset.pointBackgroundColor=color;dataset.pointBorderColor=color;}});chart.update("none");});}
 function renderReportPalettePicker(){const picker=document.getElementById("reportPalettePicker");if(!picker)return;let customSaved=null;try{customSaved=JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem("novara_analytics_custom_colors")||"null");}catch{}if(Array.isArray(customSaved))document.querySelectorAll("#reportCustomColors input").forEach((input,index)=>{if(customSaved[index])input.value=customSaved[index];});picker.innerHTML=[...Object.entries(REPORT_PALETTES),["custom",["#315f4a","#d6a85f","#668da3"]]].map(([name,colors])=>`<button class="palette-option ${name===selectedReportPalette?"active":""}" data-report-palette="${name}" type="button"><span class="palette-swatches">${colors.slice(0,4).map(color=>`<i style="background:${color}"></i>`).join("")}</span>${reportLabel(name)}</button>`).join("");document.getElementById("reportCustomColors")?.classList.toggle("open",selectedReportPalette==="custom");picker.querySelectorAll("[data-report-palette]").forEach(button=>button.addEventListener("click",()=>{selectedReportPalette=button.dataset.reportPalette;window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_palette",selectedReportPalette);renderReportPalettePicker();applyAnalyticsChartPalette();scheduleCustomReport();}));}
 function formatReportValue(value) {
 if (!Number.isFinite(value)) return "0";
@@ -20557,4 +20561,7 @@ html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-list la
 html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-list input{width:13px!important;height:13px!important;flex-basis:13px!important}
 html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-footer{padding-top:10px!important;gap:7px!important}
 html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-footer button{height:29px!important;min-width:62px!important;padding:4px 12px!important;font-size:11px!important;border-radius:5px!important;line-height:1!important}
+</style>
+<style id="analytics-chart-heading-spacing">
+html body :is(#panel-ai,#panel-human) .chart-header{margin-bottom:8px!important}
 </style>
