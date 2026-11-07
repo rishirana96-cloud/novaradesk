@@ -20531,3 +20531,30 @@ html body #panel-chatbot #chatbotTabs .admin-tab:hover svg{opacity:.92!important
 .ticket-spreadsheet-filter .ticket-filter-footer .apply{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
 .ticket-spreadsheet-filter input[hidden]{display:none!important}
 </style>
+<style id="ticket-column-filter-compact-refinement">
+html body #panel-tickets .ticket-spreadsheet-filter{
+width:264px!important;max-width:calc(100vw - 24px)!important;padding:12px!important;gap:10px!important;
+border:1px solid var(--border)!important;border-radius:9px!important;
+box-shadow:0 8px 24px rgba(24,32,42,.12)!important;font-size:11px!important;line-height:1.4!important;
+top:calc(100% + 8px)!important;
+}
+html body #panel-tickets .ticket-spreadsheet-filter details>summary{
+display:flex!important;align-items:center!important;gap:7px!important;
+padding:4px 0!important;margin:0!important;font-size:11px!important;font-weight:600!important;list-style:none!important;
+}
+html body #panel-tickets .ticket-spreadsheet-filter details>summary::-webkit-details-marker{display:none!important}
+html body #panel-tickets .ticket-spreadsheet-filter details>summary::before{content:"";width:5px;height:5px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);margin-right:2px;opacity:.65}
+html body #panel-tickets .ticket-spreadsheet-filter details[open]>summary::before{transform:rotate(45deg);margin-top:-3px}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-condition{padding-bottom:7px;border-bottom:1px solid var(--border)}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-tools{margin:8px 0!important;gap:5px!important;font-size:10px!important}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-tools button{font-size:10px!important;line-height:1.4!important;text-decoration:none!important;font-weight:500!important}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-tools button:hover{text-decoration:underline!important}
+html body #panel-tickets .ticket-spreadsheet-filter input:not([type="checkbox"]),
+html body #panel-tickets .ticket-spreadsheet-filter select{height:30px!important;padding:5px 8px!important;font-size:11px!important;border-radius:5px!important}
+html body #panel-tickets .ticket-spreadsheet-filter .value-search{margin-bottom:6px!important}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-list{max-height:174px!important;gap:0!important;scrollbar-width:thin}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-list label{height:29px!important;box-sizing:border-box!important;padding:5px 6px!important;gap:8px!important;font-size:11px!important;border-radius:4px!important}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-value-list input{width:13px!important;height:13px!important;flex-basis:13px!important}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-footer{padding-top:10px!important;gap:7px!important}
+html body #panel-tickets .ticket-spreadsheet-filter .ticket-filter-footer button{height:29px!important;min-width:62px!important;padding:4px 12px!important;font-size:11px!important;border-radius:5px!important;line-height:1!important}
+</style>
