@@ -20483,3 +20483,22 @@ html body #panel-settings .settings-section.active{margin-top:0!important;paddin
 html body #panel-settings .settings-section.active>.settings-block:first-child{margin-top:0!important}
 html body #panel-settings .settings-save-bar #settingsSaveState{flex:0 0 auto}
 </style>
+
+<style id="chatbot-tabs-analytics-interaction-parity">
+html body #panel-chatbot #chatbotTabs{padding:5px 9px!important;gap:4px!important;scrollbar-width:thin!important}
+html body #panel-chatbot #chatbotTabs .admin-tab{
+position:relative!important;align-self:center!important;min-width:max-content!important;width:auto!important;
+border:1px solid transparent!important;border-radius:8px!important;
+color:#656b67!important;font-weight:500!important;background:transparent!important;
+transform:none!important;transition:background .16s ease,color .16s ease!important;
+}
+html body #panel-chatbot #chatbotTabs .admin-tab:hover:not(.active){color:#252b27!important;background:transparent!important;transform:none!important}
+html body #panel-chatbot #chatbotTabs .admin-tab.active,
+html body #panel-chatbot #chatbotTabs .admin-tab.active:hover{color:#252b27!important;font-weight:700!important;background:transparent!important;border-color:transparent!important;box-shadow:none!important;transform:none!important}
+html body #panel-chatbot #chatbotTabs .admin-tab::before,
+html body #panel-chatbot #chatbotTabs .admin-tab::after{content:none!important;display:none!important}
+html body #panel-chatbot #chatbotTabs .admin-tab svg,
+html body #panel-chatbot #chatbotTabs .admin-tab:hover svg{opacity:.92!important;transform:none!important;transition:none!important;align-self:center!important}
+@media(max-width:520px){html body #panel-chatbot #chatbotTabs .admin-tab{gap:6px!important}}
+@media(prefers-reduced-motion:reduce){html body #panel-chatbot #chatbotTabs .admin-tab{transition:none!important}}
+</style>
