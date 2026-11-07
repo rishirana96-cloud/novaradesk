@@ -20450,3 +20450,29 @@ html body :is(#panel-ai,#panel-human)>.kpi-grid .kpi-card>.kpi-comparison:not(.i
 html body :is(#panel-ai,#panel-human)>.kpi-grid .kpi-change-value{grid-column:2!important;grid-row:1!important;align-self:start!important;justify-self:end!important}
 html body :is(#panel-ai,#panel-human)>.kpi-grid .kpi-previous-group{grid-column:2!important;grid-row:2!important;align-self:center!important;justify-self:end!important;min-width:0!important;margin:0!important}
 </style>
+
+<style id="novaradesk-restrained-surfaces">
+/* Quiet surfaces; preserve geometry, brand assets and semantic status colors. */
+html[data-theme="light"] body{--desk-quiet-line:#eaecf0;--desk-neutral-selection:#eef0f3;--desk-quiet-text:#667085}
+html[data-theme="dark"] body{--desk-quiet-line:#293139;--desk-neutral-selection:#252d35;--desk-quiet-text:#a0aab6}
+html body .main :is(.kpi-card,.chart-card,.panel-card,.table-card,.admin-card,.report-builder-card,.report-preview-card,.saved-reports-card,.dashboard-widget,.customer-directory-card,.customer-profile-panel,.settings-card,.workflow-card){border-color:transparent!important;box-shadow:none!important;background-image:none!important;border-radius:10px!important}
+html body .main :is(.kpi-card,.chart-card,.panel-card,.table-card,.admin-card,.report-builder-card,.report-preview-card,.saved-reports-card,.dashboard-widget,.settings-card,.workflow-card):hover{box-shadow:none!important}
+html body .main :is(.kpi-card,.ticket-kpi-card,.chart-card,.admin-card)::before{display:none!important}
+html body .main .kpi-card::after{background:none!important;box-shadow:none!important}
+html body .toolbar{border-color:transparent!important;border-bottom-color:var(--desk-quiet-line)!important;border-radius:8px!important;box-shadow:none!important;background-image:none!important}
+html body :is(#periodSelector,.ticket-period-selector){border-color:var(--desk-quiet-line)!important;box-shadow:none!important}
+html body :is(#periodSelector,.ticket-period-selector) button.active,
+html body .toolbar .tab.active{background:var(--desk-neutral-selection)!important;color:var(--text)!important;box-shadow:none!important}
+html body .toolbar :is(.layout-control-btn,.dashboard-tab-add){border-color:var(--desk-quiet-line)!important;box-shadow:none!important}
+html body .main :is(.kpi-value,.kpi-label){color:var(--text)!important}
+html body .main :is(.chart-subtitle,.kpi-sub,.page-title p){color:var(--desk-quiet-text)!important}
+html body #appSidebar .test-inbox-nav-group+.test-inbox-nav-group{border-top-color:transparent!important}
+html body #appSidebar .authenticated-profile{border-color:transparent!important;box-shadow:none!important;background:transparent!important}
+html body #appSidebar .test-inbox-nav-link:hover{background:var(--desk-neutral-selection)!important;color:var(--text)!important}
+html[data-theme] body #appSidebar :is(.nav-item.active,.nav-subitem.active,.test-inbox-nav-link.active){background:var(--desk-neutral-selection)!important;color:var(--text)!important;box-shadow:none!important}
+html body .ticket-queue-list .ticket-queue-card{background:var(--bg-card)!important;border-color:var(--desk-quiet-line)!important;border-radius:8px!important;box-shadow:none!important}
+html body .ticket-queue-list .ticket-queue-card:hover{border-color:var(--border-strong)!important;background:var(--surface-hover)!important;box-shadow:none!important}
+html body .ticket-queue-list .ticket-queue-card.active{background:var(--desk-neutral-selection)!important;border-color:var(--text-muted)!important;box-shadow:none!important}
+html body #panel-reports :is(.report-section-heading,.report-preview-head) .report-eyebrow{color:var(--desk-quiet-text)!important}
+html body :is(.report-summary-strip,.dashboard-command-bar,.customer-profile-summary){background-image:none!important;box-shadow:none!important;border-color:var(--desk-quiet-line)!important}
+</style>
