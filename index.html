@@ -20427,7 +20427,23 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
   const summary=document.createElement("summary");summary.textContent=def.label;details.append(summary);
   const panel=document.createElement("div");panel.className="ticket-column-filter-panel ticket-spreadsheet-filter";
   panel.innerHTML='<details class="ticket-filter-condition"><summary>Filter by condition</summary><select aria-label="Filter condition"><option value="">None</option><option value="contains">Text contains</option><option value="notContains">Text does not contain</option><option value="equals">Is equal to</option><option value="notEquals">Is not equal to</option><option value="starts">Starts with</option><option value="ends">Ends with</option><option value="blank">Is empty</option><option value="notBlank">Is not empty</option></select><input class="condition-query" aria-label="Condition value" placeholder="Enter a value"></details><details class="ticket-filter-values" open><summary>Filter by values</summary><div class="ticket-filter-value-tools"><button type="button" class="select-all">Select all</button><span>·</span><button type="button" class="clear-values">Clear</button><span class="displaying"></span></div><input type="search" class="value-search" aria-label="Search filter values" placeholder="Search values…"><div class="ticket-filter-value-list"></div></details><div class="ticket-filter-footer"><button type="button" class="cancel">Cancel</button><button type="button" class="apply">OK</button></div>';
+  panel.setAttribute("popover","manual");
   details.append(panel);th.replaceChildren(details);editors.push({details});
+  function positionPanel(){
+   if(!details.open)return;
+   const rect=summary.getBoundingClientRect(),gap=8,edge=12;
+   panel.style.setProperty("max-height",Math.max(120,window.innerHeight-edge*2)+"px","important");
+   const width=panel.getBoundingClientRect().width,height=panel.getBoundingClientRect().height;
+   const left=Math.max(edge,Math.min(rect.left,window.innerWidth-width-edge));
+   const below=window.innerHeight-rect.bottom-gap-edge,above=rect.top-gap-edge;
+   const top=height<=below||below>=above?rect.bottom+gap:Math.max(edge,rect.top-gap-height);
+   panel.style.setProperty("left",left+"px","important");
+   panel.style.setProperty("top",top+"px","important");
+   panel.style.setProperty("max-height",Math.max(100,(top>=rect.bottom?window.innerHeight-top-edge:rect.top-gap-edge))+"px","important");
+  }
+  new ResizeObserver(()=>{if(details.open)positionPanel();}).observe(panel);
+  window.addEventListener("resize",()=>{details.open=false;});
+  document.addEventListener("scroll",e=>{if(details.open&&!panel.contains(e.target))details.open=false;},true);
   const condition=panel.querySelector("select"),query=panel.querySelector(".condition-query"),search=panel.querySelector(".value-search"),list=panel.querySelector(".ticket-filter-value-list");
   let all=[],draft=new Set();
   const visible=()=>all.filter(v=>v.toLowerCase().includes(search.value.toLowerCase()));
@@ -20444,11 +20460,12 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
   function syncCondition(){query.hidden=["","blank","notBlank"].includes(condition.value);}
   condition.addEventListener("change",syncCondition);
   details.addEventListener("toggle",()=>{
-   if(!details.open)return;
+   if(!details.open){if(panel.matches(":popover-open"))panel.hidePopover();return;}
    editors.forEach(e=>{if(e.details!==details)e.details.open=false;});
    const applied=state[def.key];
    all=[...new Set(ticketWorkspaceState.source.filter(t=>defs.every(d=>d===def||matches(d,t,state[d.key]))).map(t=>value(def,t)))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
    draft=new Set(applied?.values??all);condition.value=applied?.condition||"";query.value=applied?.query||"";search.value="";syncCondition();draw();
+   panel.showPopover();positionPanel();
   });
   search.addEventListener("input",draw);
   panel.querySelector(".select-all").onclick=()=>{visible().forEach(v=>draft.add(v));draw();};
@@ -20595,4 +20612,9 @@ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='
 }
 html body #panel-tickets .ticket-column-filter.filtered>summary::after,
 html body #panel-tickets .ticket-column-filter>summary:hover::after{opacity:1!important}
+</style>
+<style id="ticket-filter-unclipped-popover">
+html body #panel-tickets .ticket-spreadsheet-filter[popover]{position:fixed!important;inset:auto!important;margin:0!important;overflow-y:auto!important;overscroll-behavior:contain;z-index:10000!important}
+html body #panel-tickets .ticket-spreadsheet-filter[popover]:not(:popover-open){display:none!important}
+html body #panel-tickets .ticket-spreadsheet-filter[popover]::backdrop{background:transparent}
 </style>
