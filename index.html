@@ -20387,80 +20387,77 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
 </style>
 <script id="ticket-column-filter-behavior">
 (()=>{
- const headers=document.querySelectorAll("#panel-tickets .ticket-table thead th");
- const state={};
- window.clearTicketColumnFilters=()=>{
-  Object.keys(state).forEach(key=>delete state[key]);
-  headers.forEach(th=>{
-   th.querySelectorAll("[data-column-key]").forEach(input=>input.value="");
-   const details=th.querySelector("details");if(details){details.classList.remove("filtered");details.open=false;}
-  });
- };
- const definitions=[
-  {key:"id",label:"Ticket",search:true,placeholder:"Search ticket number"},
-  {key:"created",label:"Created",dates:true},
-  {key:"customer",label:"Customer / Query",search:true,placeholder:"Search customer or query"},
-  {key:"agent",label:"Assigned To"},
-  {key:"status",label:"Status",options:[["open","Open"],["progress","In Progress"],["pending","Pending Revert"],["resolved","Resolved"],["reopened","Reopened"]]},
-  {key:"age",label:"Age",options:[["under24","Under 24 hours"],["1to7","1–7 days"],["over7","Over 7 days"]]},
-  {key:"resolution",label:"Resolution",options:[["unresolved","Unresolved"],["under1","Resolved under 1 hour"],["1to24","Resolved in 1–24 hours"],["over24","Resolved over 24 hours"],["unset","SLA not set"]]}
+ const headers=[...document.querySelectorAll("#panel-tickets .ticket-table thead th")], state={}, editors=[];
+ const clean=v=>String(v??"").replace(/<[^>]*>/g,"").trim();
+ const defs=[
+ {key:"id",label:"Ticket",value:t=>t.id},
+ {key:"created",label:"Created",value:t=>t.createdAt?recordDateInIst(t.createdAt):""},
+ {key:"customer",label:"Customer / Query",value:t=>[t.customer,t.query].filter(Boolean).join(" · ")},
+ {key:"agent",label:"Assigned To",value:t=>t.agent},
+ {key:"status",label:"Status",value:t=>ticketStatusLabel(t.status,t.agent)},
+ {key:"age",label:"Age",value:t=>formatTicketAge(t.createdAt,t.resolvedAt)},
+ {key:"resolution",label:"Resolution",value:t=>t.status==="resolved"?(t.resolutionTime>0?t.resolutionTime.toFixed(1)+"h":"Resolved"):ticketSlaDisplay(t).label}
  ];
- function dateValue(value){if(!value)return NaN;return new Date(String(value).includes("T")?value:String(value).replace(" ","T")+"Z").getTime();}
- window.ticketColumnPredicate=t=>{
-  if(state.id&&!String(t.id).toLowerCase().includes(state.id.toLowerCase()))return false;
-  if(state.customer&&![t.customer,t.query].some(v=>String(v||"").toLowerCase().includes(state.customer.toLowerCase())))return false;
-  const created=dateValue(t.createdAt);
-  if(state.from&&!(created>=new Date(state.from+"T00:00:00").getTime()))return false;
-  if(state.to&&!(created<=new Date(state.to+"T23:59:59.999").getTime()))return false;
-  if(state.agent&&t.agent!==state.agent)return false;
-  if(state.status&&t.status!==state.status)return false;
-  const hours=((t.status==="resolved"?dateValue(t.resolvedAt):Date.now())-created)/3600000;
-  if(state.age==="under24"&&!(hours<24))return false;
-  if(state.age==="1to7"&&!(hours>=24&&hours<=168))return false;
-  if(state.age==="over7"&&!(hours>168))return false;
-  const resolution=Number(t.resolutionTime||0);
-  if(state.resolution==="unresolved"&&t.status==="resolved")return false;
-  if(state.resolution==="under1"&&!(t.status==="resolved"&&resolution>0&&resolution<1))return false;
-  if(state.resolution==="1to24"&&!(t.status==="resolved"&&resolution>=1&&resolution<=24))return false;
-  if(state.resolution==="over24"&&!(t.status==="resolved"&&resolution>24))return false;
-  if(state.resolution==="unset"&&(t.resolutionDueAt||t.firstResponseDueAt||(slaState.policies||[]).some(p=>String(p.priority).toLowerCase()===t.priority||p.priority==="normal")))return false;
-  return true;
- };
- definitions.forEach((def,index)=>{
+ const value=(d,t)=>clean(d.value(t));
+ function matches(d,t,rule){
+  if(!rule)return true;
+  const v=value(d,t), q=rule.query.toLowerCase(), lower=v.toLowerCase();
+  if(rule.values&&!rule.values.includes(v))return false;
+  switch(rule.condition){
+   case "contains":return lower.includes(q);
+   case "notContains":return !lower.includes(q);
+   case "equals":return lower===q;
+   case "notEquals":return lower!==q;
+   case "starts":return lower.startsWith(q);
+   case "ends":return lower.endsWith(q);
+   case "blank":return !v;
+   case "notBlank":return !!v;
+   default:return true;
+  }
+ }
+ window.ticketColumnPredicate=t=>defs.every(d=>matches(d,t,state[d.key]));
+ window.clearTicketColumnFilters=()=>{Object.keys(state).forEach(k=>delete state[k]);editors.forEach(e=>{e.details.classList.remove("filtered");e.details.open=false;});};
+ defs.forEach((def,index)=>{
   const th=headers[index];if(!th)return;
   const details=document.createElement("details");details.className="ticket-column-filter";
   const summary=document.createElement("summary");summary.textContent=def.label;details.append(summary);
-  const panel=document.createElement("div");panel.className="ticket-column-filter-panel";details.append(panel);
-  const keys=def.dates?["from","to"]:[def.key];
-  keys.forEach(key=>{
-   const label=document.createElement("label");label.textContent=def.dates?(key==="from"?"From date":"To date"):"Filter "+def.label;
-   const input=document.createElement(def.search||def.dates?"input":"select");
-   if(def.search){input.type="search";input.placeholder=def.placeholder;}
-   else if(def.dates)input.type="date";
-   else{
-    input.add(new Option("All",""));
-    (def.options||[]).forEach(([value,text])=>input.add(new Option(text,value)));
-    if(def.key==="agent")details.addEventListener("toggle",()=>{
-     if(!details.open)return;
-     input.replaceChildren(new Option("All",""));
-     [...new Set(ticketWorkspaceState.source.map(t=>t.agent).filter(Boolean))].sort().forEach(v=>input.add(new Option(v,v)));
-     input.value=state.agent||"";
-    });
-   }
-   input.setAttribute("aria-label",label.textContent);input.dataset.columnKey=key;
-   input.addEventListener(def.search?"input":"change",()=>{
-    state[key]=input.value;details.classList.toggle("filtered",keys.some(k=>state[k]));
-    ticketWorkspaceState.page=1;refreshTicketWorkspace();
+  const panel=document.createElement("div");panel.className="ticket-column-filter-panel ticket-spreadsheet-filter";
+  panel.innerHTML='<details class="ticket-filter-condition"><summary>Filter by condition</summary><select aria-label="Filter condition"><option value="">None</option><option value="contains">Text contains</option><option value="notContains">Text does not contain</option><option value="equals">Is equal to</option><option value="notEquals">Is not equal to</option><option value="starts">Starts with</option><option value="ends">Ends with</option><option value="blank">Is empty</option><option value="notBlank">Is not empty</option></select><input class="condition-query" aria-label="Condition value" placeholder="Enter a value"></details><details class="ticket-filter-values" open><summary>Filter by values</summary><div class="ticket-filter-value-tools"><button type="button" class="select-all">Select all</button><span>·</span><button type="button" class="clear-values">Clear</button><span class="displaying"></span></div><input type="search" class="value-search" aria-label="Search filter values" placeholder="Search values…"><div class="ticket-filter-value-list"></div></details><div class="ticket-filter-footer"><button type="button" class="cancel">Cancel</button><button type="button" class="apply">OK</button></div>';
+  details.append(panel);th.replaceChildren(details);editors.push({details});
+  const condition=panel.querySelector("select"),query=panel.querySelector(".condition-query"),search=panel.querySelector(".value-search"),list=panel.querySelector(".ticket-filter-value-list");
+  let all=[],draft=new Set();
+  const visible=()=>all.filter(v=>v.toLowerCase().includes(search.value.toLowerCase()));
+  function draw(){
+   list.replaceChildren();const values=visible();panel.querySelector(".displaying").textContent="Displaying "+values.length;
+   panel.querySelector(".select-all").textContent="Select all "+values.length;
+   values.forEach(v=>{
+    const label=document.createElement("label"),box=document.createElement("input"),text=document.createElement("span");
+    box.type="checkbox";box.checked=draft.has(v);box.addEventListener("change",()=>{if(box.checked)draft.add(v);else draft.delete(v);});
+    text.textContent=v||"(Blanks)";text.title=text.textContent;label.append(box,text);list.append(label);
    });
-   label.append(input);panel.append(label);
+   if(!values.length){const empty=document.createElement("p");empty.textContent="No matching values";list.append(empty);}
+  }
+  function syncCondition(){query.hidden=["","blank","notBlank"].includes(condition.value);}
+  condition.addEventListener("change",syncCondition);
+  details.addEventListener("toggle",()=>{
+   if(!details.open)return;
+   editors.forEach(e=>{if(e.details!==details)e.details.open=false;});
+   const applied=state[def.key];
+   all=[...new Set(ticketWorkspaceState.source.filter(t=>defs.every(d=>d===def||matches(d,t,state[d.key]))).map(t=>value(def,t)))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+   draft=new Set(applied?.values??all);condition.value=applied?.condition||"";query.value=applied?.query||"";search.value="";syncCondition();draw();
   });
-  const clear=document.createElement("button");clear.type="button";clear.textContent="Clear";
-  clear.onclick=()=>{keys.forEach(k=>delete state[k]);panel.querySelectorAll("input,select").forEach(el=>el.value="");details.classList.remove("filtered");ticketWorkspaceState.page=1;refreshTicketWorkspace();};
-  panel.append(clear);th.replaceChildren(details);
-  details.addEventListener("toggle",()=>{if(details.open)headers.forEach(h=>{const other=h.querySelector("details");if(other!==details&&other)other.open=false;});});
+  search.addEventListener("input",draw);
+  panel.querySelector(".select-all").onclick=()=>{visible().forEach(v=>draft.add(v));draw();};
+  panel.querySelector(".clear-values").onclick=()=>{visible().forEach(v=>draft.delete(v));draw();};
+  panel.querySelector(".cancel").onclick=()=>{details.open=false;};
+  panel.querySelector(".apply").onclick=()=>{
+   const values=all.every(v=>draft.has(v))?null:[...draft];
+   if(!values&&!condition.value)delete state[def.key];else state[def.key]={values,condition:condition.value,query:query.value};
+   details.classList.toggle("filtered",!!state[def.key]);details.open=false;ticketWorkspaceState.page=1;refreshTicketWorkspace();
+  };
  });
- document.addEventListener("click",event=>{if(!event.target.closest(".ticket-column-filter"))headers.forEach(h=>{const d=h.querySelector("details");if(d)d.open=false;});});
- document.addEventListener("keydown",event=>{if(event.key==="Escape")headers.forEach(h=>{const d=h.querySelector("details");if(d)d.open=false;});});
+ document.addEventListener("click",e=>{if(!e.target.closest(".ticket-column-filter"))editors.forEach(({details})=>details.open=false);});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape")editors.forEach(({details})=>details.open=false);});
 })();
 </script>
 
@@ -20513,4 +20510,24 @@ html body #panel-chatbot #chatbotTabs .admin-tab svg,
 html body #panel-chatbot #chatbotTabs .admin-tab:hover svg{opacity:.92!important;transform:none!important;transition:none!important;align-self:center!important}
 @media(max-width:520px){html body #panel-chatbot #chatbotTabs .admin-tab{gap:6px!important}}
 @media(prefers-reduced-motion:reduce){html body #panel-chatbot #chatbotTabs .admin-tab{transition:none!important}}
+</style>
+
+<style id="ticket-spreadsheet-column-filters">
+.ticket-spreadsheet-filter{width:290px;max-width:calc(100vw - 32px);padding:16px;gap:14px;box-sizing:border-box;font-size:12px}
+.ticket-spreadsheet-filter details>summary{cursor:pointer;color:var(--text);font-weight:600;padding:3px 0 9px;list-style:disclosure-closed}
+.ticket-spreadsheet-filter details[open]>summary{list-style:disclosure-open}
+.ticket-spreadsheet-filter .ticket-filter-condition select{margin:2px 0 8px}
+.ticket-spreadsheet-filter .ticket-filter-value-tools{display:flex;align-items:center;gap:5px;margin:5px 0 12px;color:var(--text-muted);font-size:11px}
+.ticket-spreadsheet-filter .ticket-filter-value-tools button{color:var(--accent-dark);text-decoration:underline;padding:0}
+.ticket-spreadsheet-filter .displaying{margin-left:auto;white-space:nowrap}
+.ticket-spreadsheet-filter .value-search{margin-bottom:8px}
+.ticket-spreadsheet-filter .ticket-filter-value-list{max-height:210px;overflow-y:auto;display:grid;gap:2px}
+.ticket-spreadsheet-filter .ticket-filter-value-list label{display:flex;align-items:center;gap:9px;padding:8px;border-radius:5px;color:var(--text);cursor:pointer;min-width:0}
+.ticket-spreadsheet-filter .ticket-filter-value-list label:hover{background:var(--surface-hover)}
+.ticket-spreadsheet-filter .ticket-filter-value-list input{width:15px;height:15px;flex:0 0 15px;margin:0;accent-color:var(--accent-dark)}
+.ticket-spreadsheet-filter .ticket-filter-value-list span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ticket-spreadsheet-filter .ticket-filter-footer{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);padding-top:14px}
+.ticket-spreadsheet-filter .ticket-filter-footer button{padding:8px 22px;border:1px solid var(--border);border-radius:7px;color:var(--text);font-weight:600}
+.ticket-spreadsheet-filter .ticket-filter-footer .apply{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
+.ticket-spreadsheet-filter input[hidden]{display:none!important}
 </style>
