@@ -19021,9 +19021,9 @@ html[data-theme="light"] #panel-chatbot .admin-tab.active:hover {
     .toolbar-right:has(#dashboardToolbarAddReport.open)::before {
         margin: 0 13px 0 1px !important;
     }
-    .toolbar-right:has(#dashboardToolbarAddReport.open) .layout-controls {
-        display: none !important;
-    }
+}
+html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout-controls {
+    display: none !important;
 }
 </style>
 
