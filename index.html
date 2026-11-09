@@ -13884,7 +13884,7 @@ dashboardCharts.clear();
 }
 function dashboardWidgetMarkup(widget, report) {
 const type = report?.mode === "kpi" ? "KPI card" : report?.mode === "pivot" ? "Pivot table" : report?.mode === "sql" ? `SQL · ${reportLabel(report.rawSql?.visual || "table")}` : report ? reportLabel(report.visual) : "Missing report";
-return `<article class="dashboard-widget" draggable="${dashboardArrangeMode ? "true" : "false"}" data-widget-id="${escapeHtml(widget.id)}" style="grid-column:span ${Math.max(3, Number(widget.colSpan) || 6)};grid-row:span ${Math.max(5, Number(widget.rowSpan) || 8)}">
+return `<article class="dashboard-widget" draggable="false" ${dashboardArrangeMode ? "data-reorderable" : ""} data-widget-id="${escapeHtml(widget.id)}" style="grid-column:span ${Math.max(3, Number(widget.colSpan) || 6)};grid-row:span ${Math.max(5, Number(widget.rowSpan) || 8)}">
     <div class="dashboard-widget-head">
         <div class="dashboard-widget-title"><strong>${escapeHtml(report?.name || "Report unavailable")}</strong><span>${escapeHtml(report ? `${report.mode === "sql" ? "Raw SQL" : reportLabel(report.dataset)} · ${type}` : "The saved report was deleted")}</span></div>
         <div class="dashboard-widget-actions">
@@ -14069,7 +14069,7 @@ const button = document.getElementById("dashboardArrangeBtn");
 panel?.classList.toggle("dashboard-arranging", dashboardArrangeMode);
 button?.classList.toggle("active", dashboardArrangeMode);
 button?.setAttribute("aria-pressed", String(dashboardArrangeMode));
-document.querySelectorAll("#customDashboardGrid .dashboard-widget").forEach(widget => widget.setAttribute("draggable", String(dashboardArrangeMode)));
+document.querySelectorAll("#customDashboardGrid .dashboard-widget").forEach(widget => widget.toggleAttribute("data-reorderable", dashboardArrangeMode));
 setDashboardStatus(dashboardArrangeMode ? "Drag or resize reports, then select Customize → Done arranging." : "Layout saved. Widget movement is locked.");
 if (button) button.lastChild.textContent = dashboardArrangeMode ? " Done arranging" : " Arrange";
 const menuLabel = document.querySelector("#dashboardCustomizeRearrange strong");
@@ -15093,7 +15093,7 @@ document.getElementById("closeAnalyticsLayoutSettings")?.addEventListener("click
 const activeCards = () => [...(document.querySelector(".view-panel.active")?.querySelectorAll(".kpi-card,.chart-card,.table-card") || [])];
 function setLayoutMode(editing) {
     document.body.classList.toggle("layout-editing", editing);
-    activeCards().forEach(card => { card.classList.add("layout-card"); card.draggable = editing; });
+    activeCards().forEach(card => { card.classList.add("layout-card"); card.toggleAttribute("data-reorderable", editing); });
     document.getElementById("customizeLayoutBtn").hidden = editing;
     ["saveLayoutBtn","cancelLayoutBtn","resetLayoutBtn"].forEach(id => { document.getElementById(id).hidden = !editing; });
 }
@@ -15191,7 +15191,8 @@ function beginCardReorder(event) {
     if (dashboard ? !dashboardArrangeMode : !document.body.classList.contains("layout-editing")) return;
     const selector = dashboard ? ".dashboard-widget" : ".layout-card";
     const card = event.target.closest(selector);
-    if (!card?.draggable || !card.closest(".view-panel.active")) return;
+    if (!card?.hasAttribute("data-reorderable") || !card.closest(".view-panel.active")) return;
+    event.preventDefault();
     const group = card.parentElement;
     const cards = [...group.children].filter(item => item.matches(selector) && !item.hidden);
     if (cards.length < 2) return;
@@ -15341,7 +15342,7 @@ function setLayoutEditing(editing) {
 const panel = activeLayoutPanel();
 if (!panel) return;
 document.body.classList.toggle("layout-editing", editing);
-panel.querySelectorAll(".layout-card").forEach(card => card.draggable = editing);
+panel.querySelectorAll(".layout-card").forEach(card => card.toggleAttribute("data-reorderable", editing));
 document.getElementById("customizeLayoutBtn").hidden = editing;
 ["saveLayoutBtn","cancelLayoutBtn","resetLayoutBtn"].forEach(id => document.getElementById(id).hidden = !editing);
 }
@@ -15358,25 +15359,20 @@ document.addEventListener("lostpointercapture", event => {
     if (event.pointerId === cardReorder?.pointer) finishCardReorder(false);
 });
 document.addEventListener("dragstart", event => {
-    if (cardReorder || event.target.closest(".layout-card[draggable='true'],.dashboard-widget[draggable='true']")) event.preventDefault();
+    if (cardReorder || event.target.closest("[data-reorderable]")) event.preventDefault();
 });
 document.addEventListener("keydown", event => {
     if (event.key === "Escape") finishCardReorder(false);
 });
 window.addEventListener("blur", () => finishCardReorder(false));
-document.getElementById("customizeLayoutBtn").addEventListener("click", () => {
-if (currentTab === "reports") {
-    document.getElementById("reportLayoutMenu")?.classList.toggle("open");
-    return;
-}
-if (["ai","human","dashboards"].includes(currentTab)) {
-    document.getElementById("analyticsLayoutSettings")?.classList.toggle("open");
-    return;
-}
-if (window.innerWidth <= 768) return;
-layoutEditSnapshot = capturePanelLayout(activeLayoutPanel());
-setLayoutEditing(true);
-});
+document.getElementById("customizeLayoutBtn").addEventListener("click", event => {
+    if (!["ai", "human", "reports"].includes(currentTab)) return;
+    event.stopImmediatePropagation();
+    document.getElementById("reportLayoutMenu")?.classList.remove("open");
+    document.getElementById("analyticsLayoutSettings")?.classList.remove("open");
+    layoutEditSnapshot = capturePanelLayout(activeLayoutPanel());
+    setLayoutEditing(true);
+}, true);
 document.getElementById("saveLayoutBtn").addEventListener("click", () => {
 const panel = activeLayoutPanel();
 window.NOVARA_LOCAL_STORAGE.setItem(`novara_layout_${panel.id}`, JSON.stringify(capturePanelLayout(panel)));
@@ -17150,18 +17146,7 @@ document.addEventListener("click",async event=>{
 });
 </script>
 
-<script id="novaradesk-rearrange-only-v1">
-/* Re-arrange enters drag ordering directly; layout presets and resizing are intentionally removed. */
-document.getElementById("customizeLayoutBtn")?.addEventListener("click",event=>{
-    if(!["ai","human","dashboards","reports"].includes(currentTab))return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    document.getElementById("reportLayoutMenu")?.classList.remove("open");
-    document.getElementById("analyticsLayoutSettings")?.classList.remove("open");
-    layoutEditSnapshot=capturePanelLayout(activeLayoutPanel());
-    setLayoutEditing(true);
-},true);
-</script>
+
 
 <style id="novaradesk-report-filter-input-width-v1">
 /* Keep the value field usable when custom select triggers replace the native selects. */
@@ -20701,8 +20686,8 @@ html body #panel-tickets .ticket-spreadsheet-filter[popover]::backdrop{backgroun
 
 
 <style id="dashboard-reorder-drop-feedback">
-.layout-editing .layout-card[draggable="true"],
-.dashboard-arranging .dashboard-widget[draggable="true"]{touch-action:none;user-select:none}
+.layout-editing .layout-card[data-reorderable],
+.dashboard-arranging .dashboard-widget[data-reorderable]{touch-action:none;user-select:none}
 .card-reorder-gap.card-reorder-gap{background:color-mix(in srgb,var(--accent) 8%,var(--bg-card))!important;border:1px dashed var(--accent)!important;box-shadow:none!important}
 .card-reorder-gap>*{visibility:hidden!important}
 .card-reorder-gap::before,.card-reorder-gap::after{content:none!important}
