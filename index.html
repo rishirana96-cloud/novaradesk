@@ -13740,6 +13740,7 @@ renderSavedReports();
 const DASHBOARD_STORAGE_KEY = "novara_custom_dashboards_v1";
 const DASHBOARD_ACTIVE_KEY = "novara_active_dashboard_v1";
 const dashboardCharts = new Map();
+const dashboardReorderSaves = new WeakMap();
 let dashboardArrangeMode = false;
 let dashboardFocusedWidgetId = null;
 function loadCustomDashboards() {
@@ -14006,22 +14007,12 @@ if (index >= 0) dashboards[index] = active;
 saveCustomDashboards(dashboards);
 }
 function bindDashboardWidgetInteractions(grid, dashboards, active) {
-grid.ondragstart = event => {
-    const widget = event.target.closest(".dashboard-widget");
-    if (!widget || !dashboardArrangeMode || event.target.closest("button,[data-widget-resize]")) {
-        event.preventDefault();
-        return;
-    }
-    startCardReorder(event, widget);
-};
-grid.ondragover = event => previewCardReorder(event, ".dashboard-widget");
-grid.ondrop = event => {
-    if (!dropCardReorder(event, ".dashboard-widget")) return;
+dashboardReorderSaves.set(grid, () => {
     const widgetsById = new Map(active.widgets.map(widget => [widget.id, widget]));
     active.widgets = [...grid.querySelectorAll(".dashboard-widget")].map(widget => widgetsById.get(widget.dataset.widgetId));
     persistDashboardWidgets(dashboards, active);
     setDashboardStatus("Dashboard order saved.");
-};
+});
 grid.querySelectorAll(".dashboard-widget").forEach(element => {
     const widgetId = element.dataset.widgetId;
     element.querySelector("[data-widget-remove]")?.addEventListener("click", () => {
@@ -15191,54 +15182,109 @@ if (!customDatePopover.contains(event.target) && event.target.id !== "customDate
 const layoutCardSelector = ".kpi-card,.chart-card,.table-card,.ticket-status-card,.report-builder-card,.report-preview-card,.saved-reports-card";
 const defaultLayouts = {};
 let layoutEditSnapshot = null;
-let draggedLayoutCard = null;
-let reorderTarget = null;
-function clearCardReorderTarget() {
-    reorderTarget?.removeAttribute("data-reorder-target");
-    reorderTarget = null;
+let cardReorder = null;
+
+function beginCardReorder(event) {
+    if (cardReorder || !event.isPrimary || event.button !== 0) return;
+    if (event.target.closest("button,a,input,textarea,select,[contenteditable],[data-widget-resize]")) return;
+    const dashboard = currentTab === "dashboards";
+    if (dashboard ? !dashboardArrangeMode : !document.body.classList.contains("layout-editing")) return;
+    const selector = dashboard ? ".dashboard-widget" : ".layout-card";
+    const card = event.target.closest(selector);
+    if (!card?.draggable || !card.closest(".view-panel.active")) return;
+    const group = card.parentElement;
+    const cards = [...group.children].filter(item => item.matches(selector) && !item.hidden);
+    if (cards.length < 2) return;
+    const bounds = group.getBoundingClientRect();
+    const rect = card.getBoundingClientRect();
+    cardReorder = {
+        card, group, cards, pointer: event.pointerId, originalNext: card.nextSibling,
+        index: cards.indexOf(card), startX: event.clientX, startY: event.clientY,
+        offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top,
+        width: rect.width, height: rect.height,
+        slots: cards.map(item => {
+            const slot = item.getBoundingClientRect();
+            return { x: slot.left - bounds.left, y: slot.top - bounds.top, width: slot.width, height: slot.height };
+        }),
+        preview: null
+    };
 }
-function clearCardReorder() {
-    clearCardReorderTarget();
-    draggedLayoutCard?.classList.remove("layout-dragging");
-    draggedLayoutCard = null;
-}
-function startCardReorder(event, card) {
-    clearCardReorder();
-    draggedLayoutCard = card;
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", card.dataset.widgetId || card.dataset.layoutId);
-    card.classList.add("layout-dragging");
-}
-function previewCardReorder(event, selector) {
-    if (!draggedLayoutCard?.isConnected) return;
-    const target = event.target.closest(selector);
-    if (!target || target === draggedLayoutCard || target.parentElement !== draggedLayoutCard.parentElement) {
-        clearCardReorderTarget();
+
+function moveCardReorder(event) {
+    const drag = cardReorder;
+    if (!drag || event.pointerId !== drag.pointer) return;
+    if (drag.card.parentElement !== drag.group || !drag.card.closest(".view-panel.active")) {
+        finishCardReorder(false);
         return;
     }
+    if (!drag.preview) {
+        if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 5) return;
+        const preview = drag.card.cloneNode(true);
+        preview.removeAttribute("id");
+        preview.querySelectorAll("[id]").forEach(node => node.removeAttribute("id"));
+        preview.removeAttribute("draggable");
+        preview.inert = true;
+        preview.setAttribute("aria-hidden", "true");
+        preview.classList.add("card-reorder-preview");
+        preview.style.width = drag.width + "px";
+        preview.style.height = drag.height + "px";
+        const canvases = [...drag.card.querySelectorAll("canvas")];
+        preview.querySelectorAll("canvas").forEach((canvas, index) => {
+            if (canvas.width && canvas.height) canvas.getContext("2d")?.drawImage(canvases[index], 0, 0);
+        });
+        document.body.append(preview);
+        drag.preview = preview;
+        drag.card.classList.add("card-reorder-gap");
+        drag.group.setPointerCapture(event.pointerId);
+    }
     event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-    const rect = target.getBoundingClientRect();
-    const horizontal = [...target.parentElement.children].some(card => {
-        if (card === target || card.hidden || !card.matches(selector)) return false;
-        const sibling = card.getBoundingClientRect();
-        return Math.abs(sibling.top - rect.top) < 2 && Math.abs(sibling.left - rect.left) > 2;
+    drag.preview.style.transform = `translate3d(${event.clientX - drag.offsetX}px,${event.clientY - drag.offsetY}px,0)`;
+    const bounds = drag.group.getBoundingClientRect();
+    const x = event.clientX - bounds.left;
+    const y = event.clientY - bounds.top;
+    // Use the starting slots so changes in card size cannot move the drop targets under the pointer.
+    const nextIndex = drag.slots.findIndex(slot =>
+        x >= slot.x + 4 && x <= slot.x + slot.width - 4 &&
+        y >= slot.y + 4 && y <= slot.y + slot.height - 4
+    );
+    if (nextIndex < 0 || nextIndex === drag.index) return;
+    const remaining = drag.cards.filter(item => item !== drag.card);
+    const reference = remaining[nextIndex] || remaining.at(-1).nextSibling;
+    const animate = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const positions = animate ? remaining.map(card => card.getBoundingClientRect()) : [];
+    drag.group.insertBefore(drag.card, reference);
+    drag.index = nextIndex;
+    if (animate) remaining.forEach((card, index) => {
+        const current = card.getBoundingClientRect();
+        const previous = positions[index];
+        if (previous.left === current.left && previous.top === current.top) return;
+        card.animate([
+            { translate: `${previous.left - current.left}px ${previous.top - current.top}px` },
+            { translate: "0 0" }
+        ], { duration: 140, easing: "ease-out" });
     });
-    const before = horizontal ? event.clientX < rect.left + rect.width / 2 : event.clientY < rect.top + rect.height / 2;
-    if (target !== reorderTarget) clearCardReorderTarget();
-    reorderTarget = target;
-    target.dataset.reorderTarget = horizontal ? (before ? "left" : "right") : (before ? "top" : "bottom");
 }
-function dropCardReorder(event, selector) {
-    previewCardReorder(event, selector);
-    if (!reorderTarget) return false;
-    const target = reorderTarget;
-    const dragged = draggedLayoutCard;
-    const reference = ["left", "top"].includes(target.dataset.reorderTarget) ? target : target.nextSibling;
-    const changed = reference !== dragged && reference !== dragged.nextSibling;
-    if (changed) target.parentElement.insertBefore(dragged, reference);
-    clearCardReorder();
-    return changed;
+
+function finishCardReorder(commit) {
+    const drag = cardReorder;
+    if (!drag) return;
+    cardReorder = null;
+    if (!drag.preview) return;
+    drag.preview.remove();
+    drag.card.classList.remove("card-reorder-gap");
+    if (drag.group.hasPointerCapture(drag.pointer)) drag.group.releasePointerCapture(drag.pointer);
+    if (drag.card.parentElement !== drag.group) return;
+    if (commit && drag.card.closest(".view-panel.active")) {
+        if (drag.card.nextSibling !== drag.originalNext) dashboardReorderSaves.get(drag.group)?.();
+    } else {
+        drag.group.insertBefore(drag.card, drag.originalNext?.parentElement === drag.group ? drag.originalNext : null);
+    }
+    if (commit) {
+        // A pointer release after dragging must not open the card's drilldown.
+        const suppressClick = event => { event.preventDefault(); event.stopImmediatePropagation(); };
+        document.addEventListener("click", suppressClick, {capture:true, once:true});
+        setTimeout(() => document.removeEventListener("click", suppressClick, true), 0);
+    }
 }
 function prepareLayoutPanel(panel) {
 let cardCounter = 0;
@@ -15300,18 +15346,24 @@ document.getElementById("customizeLayoutBtn").hidden = editing;
 ["saveLayoutBtn","cancelLayoutBtn","resetLayoutBtn"].forEach(id => document.getElementById(id).hidden = !editing);
 }
 document.querySelectorAll(".view-panel").forEach(prepareLayoutPanel);
+document.addEventListener("pointerdown", beginCardReorder);
+document.addEventListener("pointermove", moveCardReorder, {passive:false});
+document.addEventListener("pointerup", event => {
+    if (event.pointerId === cardReorder?.pointer) finishCardReorder(true);
+});
+document.addEventListener("pointercancel", event => {
+    if (event.pointerId === cardReorder?.pointer) finishCardReorder(false);
+});
+document.addEventListener("lostpointercapture", event => {
+    if (event.pointerId === cardReorder?.pointer) finishCardReorder(false);
+});
 document.addEventListener("dragstart", event => {
-    if (!document.body.classList.contains("layout-editing") || currentTab === "dashboards") return;
-    const card = event.target.closest(".layout-card[draggable='true']");
-    if (card) startCardReorder(event, card);
+    if (cardReorder || event.target.closest(".layout-card[draggable='true'],.dashboard-widget[draggable='true']")) event.preventDefault();
 });
-document.addEventListener("dragend", clearCardReorder);
-document.addEventListener("dragover", event => {
-    if (currentTab !== "dashboards" && document.body.classList.contains("layout-editing")) previewCardReorder(event, ".layout-card");
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") finishCardReorder(false);
 });
-document.addEventListener("drop", event => {
-    if (currentTab !== "dashboards" && document.body.classList.contains("layout-editing")) dropCardReorder(event, ".layout-card");
-});
+window.addEventListener("blur", () => finishCardReorder(false));
 document.getElementById("customizeLayoutBtn").addEventListener("click", () => {
 if (currentTab === "reports") {
     document.getElementById("reportLayoutMenu")?.classList.toggle("open");
@@ -20649,10 +20701,10 @@ html body #panel-tickets .ticket-spreadsheet-filter[popover]::backdrop{backgroun
 
 
 <style id="dashboard-reorder-drop-feedback">
-[data-reorder-target]{box-shadow:inset var(--reorder-marker) 0 var(--accent)!important}
-[data-reorder-target="left"]{--reorder-marker:3px 0}
-[data-reorder-target="right"]{--reorder-marker:-3px 0}
-[data-reorder-target="top"]{--reorder-marker:0 3px}
-[data-reorder-target="bottom"]{--reorder-marker:0 -3px}
-.dashboard-widget.layout-dragging,.layout-card.layout-dragging{opacity:.55}
+.layout-editing .layout-card[draggable="true"],
+.dashboard-arranging .dashboard-widget[draggable="true"]{touch-action:none;user-select:none}
+.card-reorder-gap.card-reorder-gap{background:color-mix(in srgb,var(--accent) 8%,var(--bg-card))!important;border:1px dashed var(--accent)!important;box-shadow:none!important}
+.card-reorder-gap>*{visibility:hidden!important}
+.card-reorder-gap::before,.card-reorder-gap::after{content:none!important}
+.card-reorder-preview.card-reorder-preview{position:fixed!important;inset:0 auto auto 0!important;margin:0!important;box-sizing:border-box!important;pointer-events:none!important;z-index:18000!important;box-shadow:0 10px 30px #15201b33!important;transition:none!important;will-change:transform}
 </style>
