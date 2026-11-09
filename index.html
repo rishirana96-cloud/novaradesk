@@ -3196,10 +3196,8 @@ html[data-theme="dark"] .ticket-status-option.active {
 .dashboard-widget-body { height: calc(100% - 66px); padding: 17px; }
 .dashboard-widget-table th,.dashboard-widget-table td { padding: 9px 10px; }
 .dashboard-widget-resize { display: none; }
-#panel-dashboards.dashboard-arranging .dashboard-widget { outline: 1px dashed color-mix(in srgb,var(--accent) 60%,transparent); cursor: grab; }
-#panel-dashboards.dashboard-arranging .dashboard-widget-head { cursor: grab; }
+#panel-dashboards.dashboard-arranging .dashboard-widget { outline: 1px dashed color-mix(in srgb,var(--accent) 60%,transparent); }
 #panel-dashboards.dashboard-arranging .dashboard-widget-resize { display: block; }
-#panel-dashboards.dashboard-arranging .dashboard-widget::before { content: "Drag to arrange"; position: absolute; left: 16px; bottom: 9px; z-index: 2; padding: 3px 6px; border-radius: 5px; background: color-mix(in srgb,var(--accent) 12%,var(--bg-card)); color: var(--accent); font-size: 7px; font-weight: 750; pointer-events: none; }
 .dashboard-widget-focus-backdrop { position: fixed; inset: 0; z-index: 2090; display: none; width: 100%; height: 100%; border: 0; background: rgba(5,9,7,.62); backdrop-filter: blur(4px); }
 .dashboard-widget-focus-backdrop.open { display: block; }
 .dashboard-widget.widget-focused { position: fixed; inset: 28px; z-index: 2100; width: auto !important; height: auto !important; min-width: 0; max-width: none; grid-column: auto !important; grid-row: auto !important; }
@@ -7881,7 +7879,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     </button>
                     <button id="dashboardCustomizeRearrange" type="button" role="menuitem">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M6 14v6"/></svg>
-                        <span><strong>Rearrange reports</strong><small>Drag reports into a new order</small></span>
+                        <span><strong>Resize reports</strong><small>Adjust the width and height of reports</small></span>
                     </button>
                 </div>
             </div>
@@ -13923,10 +13921,11 @@ dashboardCharts.clear();
 }
 function dashboardWidgetMarkup(widget, report) {
 const type = report?.mode === "kpi" ? "KPI card" : report?.mode === "pivot" ? "Pivot table" : report?.mode === "sql" ? `SQL · ${reportLabel(report.rawSql?.visual || "table")}` : report ? reportLabel(report.visual) : "Missing report";
-return `<article class="dashboard-widget" draggable="false" ${dashboardArrangeMode ? "data-reorderable" : ""} data-widget-id="${escapeHtml(widget.id)}" style="grid-column:span ${Math.max(3, Number(widget.colSpan) || 6)};grid-row:span ${Math.max(5, Number(widget.rowSpan) || 8)}">
+return `<article class="dashboard-widget" draggable="false" data-widget-id="${escapeHtml(widget.id)}" style="grid-column:span ${Math.max(3, Number(widget.colSpan) || 6)};grid-row:span ${Math.max(5, Number(widget.rowSpan) || 8)}">
     <div class="dashboard-widget-head">
         <div class="dashboard-widget-title"><strong>${escapeHtml(report?.name || "Report unavailable")}</strong><span>${escapeHtml(report ? `${report.mode === "sql" ? "Raw SQL" : reportLabel(report.dataset)} · ${type}` : "The saved report was deleted")}</span></div>
         <div class="dashboard-widget-actions">
+            ${cardGripMarkup(report?.name || "report")}
             <button class="dashboard-widget-action" type="button" data-widget-focus title="Focus widget" aria-label="Focus widget"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
             ${report ? `<button class="dashboard-widget-action" type="button" data-widget-edit title="Edit report" aria-label="Edit report"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4ZM13.5 6.5l4 4"/></svg></button>` : ""}
             <button class="dashboard-widget-action remove" type="button" data-widget-remove title="Remove widget" aria-label="Remove widget"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
@@ -14108,11 +14107,10 @@ const button = document.getElementById("dashboardArrangeBtn");
 panel?.classList.toggle("dashboard-arranging", dashboardArrangeMode);
 button?.classList.toggle("active", dashboardArrangeMode);
 button?.setAttribute("aria-pressed", String(dashboardArrangeMode));
-document.querySelectorAll("#customDashboardGrid .dashboard-widget").forEach(widget => widget.toggleAttribute("data-reorderable", dashboardArrangeMode));
-setDashboardStatus(dashboardArrangeMode ? "Drag or resize reports, then select Customize → Done arranging." : "Layout saved. Widget movement is locked.");
+setDashboardStatus(dashboardArrangeMode ? "Drag the resize corner, then select Customize → Done resizing." : "Report sizes saved.");
 if (button) button.lastChild.textContent = dashboardArrangeMode ? " Done arranging" : " Arrange";
 const menuLabel = document.querySelector("#dashboardCustomizeRearrange strong");
-if (menuLabel) menuLabel.textContent = dashboardArrangeMode ? "Done arranging" : "Rearrange reports";
+if (menuLabel) menuLabel.textContent = dashboardArrangeMode ? "Done resizing" : "Resize reports";
 }
 function focusDashboardWidget(widgetId) {
 closeDashboardWidgetFocus();
@@ -15221,12 +15219,13 @@ let cardReorder = null;
 
 function beginCardReorder(event) {
     if (cardReorder || !event.isPrimary || event.button !== 0) return;
-    if (event.target.closest("button,a,input,textarea,select,[contenteditable],[data-widget-resize]")) return;
+    const grip = event.target.closest("[data-card-grip]");
     const dashboard = currentTab === "dashboards";
-    if (dashboard ? !dashboardArrangeMode : !document.body.classList.contains("layout-editing")) return;
+    if (!grip && !document.body.classList.contains("layout-editing")) return;
+    if (!grip && event.target.closest("button,a,input,textarea,select,[contenteditable],[data-widget-resize]")) return;
     const selector = dashboard ? ".dashboard-widget" : ".layout-card";
     const card = event.target.closest(selector);
-    if (!card?.hasAttribute("data-reorderable") || !card.closest(".view-panel.active")) return;
+    if (!card?.closest(".view-panel.active") || (!grip && !card.hasAttribute("data-reorderable"))) return;
     event.preventDefault();
     const group = card.parentElement;
     const cards = [...group.children].filter(item => item.matches(selector) && !item.hidden);
@@ -15234,7 +15233,7 @@ function beginCardReorder(event) {
     const bounds = group.getBoundingClientRect();
     const rect = card.getBoundingClientRect();
     cardReorder = {
-        card, group, cards, pointer: event.pointerId, originalNext: card.nextSibling,
+        card, group, cards, direct: Boolean(grip), pointer: event.pointerId, originalNext: card.nextSibling,
         index: cards.indexOf(card), startX: event.clientX, startY: event.clientY,
         offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top,
         width: rect.width, height: rect.height,
@@ -15311,7 +15310,7 @@ function finishCardReorder(commit) {
     if (drag.group.hasPointerCapture(drag.pointer)) drag.group.releasePointerCapture(drag.pointer);
     if (drag.card.parentElement !== drag.group) return;
     if (commit && drag.card.closest(".view-panel.active")) {
-        if (drag.card.nextSibling !== drag.originalNext) dashboardReorderSaves.get(drag.group)?.();
+        if (drag.direct && drag.card.nextSibling !== drag.originalNext) saveDirectCardOrder(drag.card);
     } else {
         drag.group.insertBefore(drag.card, drag.originalNext?.parentElement === drag.group ? drag.originalNext : null);
     }
@@ -15322,6 +15321,38 @@ function finishCardReorder(commit) {
         setTimeout(() => document.removeEventListener("click", suppressClick, true), 0);
     }
 }
+function cardGripMarkup(name) {
+    return `<button type="button" class="card-grip" data-card-grip aria-label="Move ${escapeHtml(name)}" title="Drag to move, or use the arrow keys"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5" cy="4" r="1"/><circle cx="11" cy="4" r="1"/><circle cx="5" cy="8" r="1"/><circle cx="11" cy="8" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="11" cy="12" r="1"/></svg></button>`;
+}
+
+function saveDirectCardOrder(card) {
+    const saveDashboard = dashboardReorderSaves.get(card.parentElement);
+    if (saveDashboard) {
+        saveDashboard();
+        return;
+    }
+    const panel = card.closest(".view-panel");
+    window.NOVARA_LOCAL_STORAGE.setItem(`novara_layout_${panel.id}`, JSON.stringify(capturePanelLayout(panel)));
+}
+
+document.addEventListener("click", event => {
+    if (event.target.closest("[data-card-grip]")) event.stopPropagation();
+}, true);
+document.addEventListener("keydown", event => {
+    const grip = event.target.closest("[data-card-grip]");
+    if (!grip || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    const card = grip.closest(".dashboard-widget,.layout-card");
+    const group = card.parentElement;
+    const cards = [...group.children].filter(item => !item.hidden && item.querySelector(":scope > [data-card-grip], :scope > .dashboard-widget-head [data-card-grip]"));
+    const direction = ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 1;
+    const target = cards[cards.indexOf(card) + direction];
+    event.preventDefault();
+    if (!target) return;
+    group.insertBefore(card, direction < 0 ? target : target.nextSibling);
+    saveDirectCardOrder(card);
+    grip.focus();
+});
+
 function prepareLayoutPanel(panel) {
 let cardCounter = 0;
 const groups = [];
@@ -15330,7 +15361,16 @@ panel.querySelectorAll(layoutCardSelector).forEach(card => {
     card.dataset.layoutId = `${panel.id}-card-${cardCounter++}`;
     if (!groups.includes(card.parentElement)) groups.push(card.parentElement);
 });
-groups.forEach((group, index) => group.dataset.layoutGroup = `${panel.id}-group-${index}`);
+groups.forEach((group, index) => {
+    group.dataset.layoutGroup = `${panel.id}-group-${index}`;
+    if (panel.id !== "panel-ai" && panel.id !== "panel-human") return;
+    const cards = [...group.children].filter(card => card.classList.contains("layout-card"));
+    if (cards.length < 2) return;
+    cards.forEach(card => {
+        const name = card.querySelector(".kpi-label,.chart-title,.table-title")?.textContent.trim() || "card";
+        card.insertAdjacentHTML("beforeend", cardGripMarkup(name));
+    });
+});
 defaultLayouts[panel.id] = capturePanelLayout(panel);
 applyStoredPanelLayout(panel);
 }
@@ -20871,4 +20911,16 @@ html body #panel-tickets .ticket-spreadsheet-filter[popover]::backdrop{backgroun
 #chatbotRuleStatus:empty{display:none}
 #chatbotRuleStatus{color:var(--danger)}
 @media(max-width:650px){.chatbot-rule-fields{grid-template-columns:1fr}}
+</style>
+<style id="direct-card-reorder">
+html body:has(#panel-ai.active,#panel-human.active) .toolbar .layout-controls{display:none!important}
+.card-grip{display:inline-grid;place-items:center;flex:0 0 auto;width:26px;height:26px;padding:0;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text-muted);opacity:0;cursor:grab;touch-action:none;transition:opacity .15s ease}
+.card-grip svg{width:15px;height:15px;fill:currentColor}
+.card-grip:hover,.card-grip:focus-visible{color:var(--text);background:var(--surface-hover)}
+.card-grip:active{cursor:grabbing}
+:is(.layout-card,.dashboard-widget):is(:hover,:focus-within) .card-grip{opacity:1}
+:is(#panel-ai,#panel-human) .layout-card:has(>.card-grip){position:relative}
+:is(#panel-ai,#panel-human) .layout-card>.card-grip{position:absolute;right:8px;bottom:8px;z-index:2}
+.card-reorder-preview .card-grip{visibility:hidden}
+@media(hover:none){.card-grip{opacity:1}}
 </style>
