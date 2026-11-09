@@ -14006,31 +14006,24 @@ if (index >= 0) dashboards[index] = active;
 saveCustomDashboards(dashboards);
 }
 function bindDashboardWidgetInteractions(grid, dashboards, active) {
-let draggedId = null;
+grid.ondragstart = event => {
+    const widget = event.target.closest(".dashboard-widget");
+    if (!widget || !dashboardArrangeMode || event.target.closest("button,[data-widget-resize]")) {
+        event.preventDefault();
+        return;
+    }
+    startCardReorder(event, widget);
+};
+grid.ondragover = event => previewCardReorder(event, ".dashboard-widget");
+grid.ondrop = event => {
+    if (!dropCardReorder(event, ".dashboard-widget")) return;
+    const widgetsById = new Map(active.widgets.map(widget => [widget.id, widget]));
+    active.widgets = [...grid.querySelectorAll(".dashboard-widget")].map(widget => widgetsById.get(widget.dataset.widgetId));
+    persistDashboardWidgets(dashboards, active);
+    setDashboardStatus("Dashboard order saved.");
+};
 grid.querySelectorAll(".dashboard-widget").forEach(element => {
     const widgetId = element.dataset.widgetId;
-    element.addEventListener("dragstart", event => {
-        if (!dashboardArrangeMode) { event.preventDefault(); return; }
-        if (event.target.closest("button,[data-widget-resize]")) { event.preventDefault(); return; }
-        draggedId = widgetId; element.classList.add("dragging");
-    });
-    element.addEventListener("dragend", () => { draggedId = null; element.classList.remove("dragging"); });
-    element.addEventListener("dragover", event => {
-        if (!draggedId || draggedId === widgetId) return;
-        event.preventDefault();
-        const dragged = grid.querySelector(`[data-widget-id="${CSS.escape(draggedId)}"]`);
-        if (!dragged) return;
-        const rect = element.getBoundingClientRect();
-        const before = event.clientY < rect.top + rect.height / 2 || event.clientX < rect.left + rect.width / 2;
-        grid.insertBefore(dragged, before ? element : element.nextSibling);
-    });
-    element.addEventListener("drop", event => {
-        event.preventDefault();
-        const order = [...grid.querySelectorAll(".dashboard-widget")].map(item => item.dataset.widgetId);
-        active.widgets.sort((a,b) => order.indexOf(a.id) - order.indexOf(b.id));
-        persistDashboardWidgets(dashboards,active);
-        setDashboardStatus("Dashboard order saved.");
-    });
     element.querySelector("[data-widget-remove]")?.addEventListener("click", () => {
         active.widgets = active.widgets.filter(widget => widget.id !== widgetId);
         persistDashboardWidgets(dashboards,active); renderCustomDashboard(); setDashboardStatus("Widget removed. The saved report is unchanged.");
@@ -14086,8 +14079,10 @@ panel?.classList.toggle("dashboard-arranging", dashboardArrangeMode);
 button?.classList.toggle("active", dashboardArrangeMode);
 button?.setAttribute("aria-pressed", String(dashboardArrangeMode));
 document.querySelectorAll("#customDashboardGrid .dashboard-widget").forEach(widget => widget.setAttribute("draggable", String(dashboardArrangeMode)));
-setDashboardStatus(dashboardArrangeMode ? "Arrange mode is on. Drag or resize widgets, then select Done arranging." : "Layout saved. Widget movement is locked.");
+setDashboardStatus(dashboardArrangeMode ? "Drag or resize reports, then select Customize → Done arranging." : "Layout saved. Widget movement is locked.");
 if (button) button.lastChild.textContent = dashboardArrangeMode ? " Done arranging" : " Arrange";
+const menuLabel = document.querySelector("#dashboardCustomizeRearrange strong");
+if (menuLabel) menuLabel.textContent = dashboardArrangeMode ? "Done arranging" : "Rearrange reports";
 }
 function focusDashboardWidget(widgetId) {
 closeDashboardWidgetFocus();
@@ -15104,7 +15099,6 @@ document.getElementById("customizeLayoutBtn")?.addEventListener("click", () => {
     if (["ai","human","dashboards"].includes(currentTab)) settings?.classList.toggle("open");
 });
 document.getElementById("closeAnalyticsLayoutSettings")?.addEventListener("click", () => settings?.classList.remove("open"));
-let dragged = null;
 const activeCards = () => [...(document.querySelector(".view-panel.active")?.querySelectorAll(".kpi-card,.chart-card,.table-card") || [])];
 function setLayoutMode(editing) {
     document.body.classList.toggle("layout-editing", editing);
@@ -15113,15 +15107,6 @@ function setLayoutMode(editing) {
     ["saveLayoutBtn","cancelLayoutBtn","resetLayoutBtn"].forEach(id => { document.getElementById(id).hidden = !editing; });
 }
 document.getElementById("arrangeAnalyticsCards")?.addEventListener("click", () => { settings?.classList.remove("open"); setLayoutMode(true); });
-document.addEventListener("dragstart", event => { if (document.body.classList.contains("layout-editing")) dragged = event.target.closest(".layout-card"); });
-document.addEventListener("dragover", event => {
-    const target = event.target.closest(".layout-card");
-    if (!dragged || !target || target === dragged || target.parentElement !== dragged.parentElement) return;
-    event.preventDefault();
-    const rect = target.getBoundingClientRect();
-    target.parentElement.insertBefore(dragged, event.clientY < rect.top + rect.height / 2 ? target : target.nextSibling);
-});
-document.addEventListener("dragend", () => { dragged = null; });
 document.getElementById("saveLayoutBtn")?.addEventListener("click", () => {
     const panel = document.querySelector(".view-panel.active");
     if (panel) window.NOVARA_LOCAL_STORAGE.setItem(`novara_simple_layout_${panel.id}`, JSON.stringify(activeCards().map(card => card.id || card.dataset.layoutId || "")));
@@ -15207,6 +15192,54 @@ const layoutCardSelector = ".kpi-card,.chart-card,.table-card,.ticket-status-car
 const defaultLayouts = {};
 let layoutEditSnapshot = null;
 let draggedLayoutCard = null;
+let reorderTarget = null;
+function clearCardReorderTarget() {
+    reorderTarget?.removeAttribute("data-reorder-target");
+    reorderTarget = null;
+}
+function clearCardReorder() {
+    clearCardReorderTarget();
+    draggedLayoutCard?.classList.remove("layout-dragging");
+    draggedLayoutCard = null;
+}
+function startCardReorder(event, card) {
+    clearCardReorder();
+    draggedLayoutCard = card;
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", card.dataset.widgetId || card.dataset.layoutId);
+    card.classList.add("layout-dragging");
+}
+function previewCardReorder(event, selector) {
+    if (!draggedLayoutCard?.isConnected) return;
+    const target = event.target.closest(selector);
+    if (!target || target === draggedLayoutCard || target.parentElement !== draggedLayoutCard.parentElement) {
+        clearCardReorderTarget();
+        return;
+    }
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    const rect = target.getBoundingClientRect();
+    const horizontal = [...target.parentElement.children].some(card => {
+        if (card === target || card.hidden || !card.matches(selector)) return false;
+        const sibling = card.getBoundingClientRect();
+        return Math.abs(sibling.top - rect.top) < 2 && Math.abs(sibling.left - rect.left) > 2;
+    });
+    const before = horizontal ? event.clientX < rect.left + rect.width / 2 : event.clientY < rect.top + rect.height / 2;
+    if (target !== reorderTarget) clearCardReorderTarget();
+    reorderTarget = target;
+    target.dataset.reorderTarget = horizontal ? (before ? "left" : "right") : (before ? "top" : "bottom");
+}
+function dropCardReorder(event, selector) {
+    previewCardReorder(event, selector);
+    if (!reorderTarget) return false;
+    const target = reorderTarget;
+    const dragged = draggedLayoutCard;
+    const reference = ["left", "top"].includes(target.dataset.reorderTarget) ? target : target.nextSibling;
+    const changed = reference !== dragged && reference !== dragged.nextSibling;
+    if (changed) target.parentElement.insertBefore(dragged, reference);
+    clearCardReorder();
+    return changed;
+}
 function prepareLayoutPanel(panel) {
 let cardCounter = 0;
 const groups = [];
@@ -15268,23 +15301,16 @@ document.getElementById("customizeLayoutBtn").hidden = editing;
 }
 document.querySelectorAll(".view-panel").forEach(prepareLayoutPanel);
 document.addEventListener("dragstart", event => {
-const card = event.target.closest(".layout-card");
-if (!document.body.classList.contains("layout-editing") || !card) return;
-draggedLayoutCard = card;
-card.classList.add("layout-dragging");
+    if (!document.body.classList.contains("layout-editing") || currentTab === "dashboards") return;
+    const card = event.target.closest(".layout-card[draggable='true']");
+    if (card) startCardReorder(event, card);
 });
-document.addEventListener("dragend", () => {
-draggedLayoutCard?.classList.remove("layout-dragging");
-draggedLayoutCard = null;
-});
+document.addEventListener("dragend", clearCardReorder);
 document.addEventListener("dragover", event => {
-if (!draggedLayoutCard) return;
-const target = event.target.closest(".layout-card");
-if (!target || target === draggedLayoutCard || target.parentElement !== draggedLayoutCard.parentElement) return;
-event.preventDefault();
-const rect = target.getBoundingClientRect();
-const before = event.clientY < rect.top + rect.height / 2 || event.clientX < rect.left + rect.width / 2;
-target.parentElement.insertBefore(draggedLayoutCard, before ? target : target.nextSibling);
+    if (currentTab !== "dashboards" && document.body.classList.contains("layout-editing")) previewCardReorder(event, ".layout-card");
+});
+document.addEventListener("drop", event => {
+    if (currentTab !== "dashboards" && document.body.classList.contains("layout-editing")) dropCardReorder(event, ".layout-card");
 });
 document.getElementById("customizeLayoutBtn").addEventListener("click", () => {
 if (currentTab === "reports") {
@@ -17078,7 +17104,6 @@ document.getElementById("customizeLayoutBtn")?.addEventListener("click",event=>{
     if(!["ai","human","dashboards","reports"].includes(currentTab))return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    if(window.innerWidth<=768)return;
     document.getElementById("reportLayoutMenu")?.classList.remove("open");
     document.getElementById("analyticsLayoutSettings")?.classList.remove("open");
     layoutEditSnapshot=capturePanelLayout(activeLayoutPanel());
@@ -20622,3 +20647,12 @@ html body #panel-tickets .ticket-spreadsheet-filter[popover]::backdrop{backgroun
 
 
 
+
+<style id="dashboard-reorder-drop-feedback">
+[data-reorder-target]{box-shadow:inset var(--reorder-marker) 0 var(--accent)!important}
+[data-reorder-target="left"]{--reorder-marker:3px 0}
+[data-reorder-target="right"]{--reorder-marker:-3px 0}
+[data-reorder-target="top"]{--reorder-marker:0 3px}
+[data-reorder-target="bottom"]{--reorder-marker:0 -3px}
+.dashboard-widget.layout-dragging,.layout-card.layout-dragging{opacity:.55}
+</style>
