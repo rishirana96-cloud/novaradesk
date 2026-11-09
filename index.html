@@ -15084,37 +15084,6 @@ document.getElementById("clearCustomDate")?.addEventListener("click", () => {
 document.addEventListener("click", event => {
     if (popover && !popover.contains(event.target) && event.target.id !== "customDateBtn") popover.classList.remove("open");
 });
-const settings = document.getElementById("analyticsLayoutSettings");
-document.getElementById("customizeLayoutBtn")?.addEventListener("click", () => {
-    if (currentTab === "reports") { document.getElementById("reportLayoutMenu")?.classList.toggle("open"); return; }
-    if (["ai","human","dashboards"].includes(currentTab)) settings?.classList.toggle("open");
-});
-document.getElementById("closeAnalyticsLayoutSettings")?.addEventListener("click", () => settings?.classList.remove("open"));
-const activeCards = () => [...(document.querySelector(".view-panel.active")?.querySelectorAll(".kpi-card,.chart-card,.table-card") || [])];
-function setLayoutMode(editing) {
-    document.body.classList.toggle("layout-editing", editing);
-    activeCards().forEach(card => { card.classList.add("layout-card"); card.toggleAttribute("data-reorderable", editing); });
-    document.getElementById("customizeLayoutBtn").hidden = editing;
-    ["saveLayoutBtn","cancelLayoutBtn","resetLayoutBtn"].forEach(id => { document.getElementById(id).hidden = !editing; });
-}
-document.getElementById("arrangeAnalyticsCards")?.addEventListener("click", () => { settings?.classList.remove("open"); setLayoutMode(true); });
-document.getElementById("saveLayoutBtn")?.addEventListener("click", () => {
-    const panel = document.querySelector(".view-panel.active");
-    if (panel) window.NOVARA_LOCAL_STORAGE.setItem(`novara_simple_layout_${panel.id}`, JSON.stringify(activeCards().map(card => card.id || card.dataset.layoutId || "")));
-    setLayoutMode(false);
-});
-document.getElementById("cancelLayoutBtn")?.addEventListener("click", () => { setLayoutMode(false); updateDashboard(currentPeriod); });
-document.getElementById("resetLayoutBtn")?.addEventListener("click", () => {
-    const panel = document.querySelector(".view-panel.active");
-    if (panel) window.NOVARA_LOCAL_STORAGE.removeItem(`novara_simple_layout_${panel.id}`);
-    setLayoutMode(false); location.reload();
-});
-document.getElementById("resetAnalyticsAppearance")?.addEventListener("click", () => {
-    selectedReportPalette = "standard";
-    window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_palette", "standard");
-    window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_custom_colors");
-    renderReportPalettePicker(); applyAnalyticsChartPalette();
-});
 }
 /* =====================================================
    REFRESH
@@ -15176,6 +15145,33 @@ updateDashboard(currentPeriod);
 document.addEventListener("click", event => {
 if (!customDatePopover.contains(event.target) && event.target.id !== "customDateBtn") customDatePopover.classList.remove("open");
 });
+try {
+    await updateDashboard(
+        currentPeriod
+    );
+}
+catch (error) {
+    console.error(
+        "Refresh error:",
+        error
+    );
+}
+finally {
+    button.classList.remove(
+        "spinning"
+    );
+    isRefreshing =
+        false;
+}
+}
+document
+.getElementById(
+    "refreshBtn"
+)
+.addEventListener(
+    "click",
+    refreshDashboard
+);
 /* =====================================================
    CUSTOM DASHBOARD LAYOUT
 ====================================================== */
@@ -15407,33 +15403,6 @@ applyReportLayout(window.NOVARA_LOCAL_STORAGE.getItem("novara_reports_layout") |
 document.getElementById("closeAnalyticsLayoutSettings")?.addEventListener("click",()=>document.getElementById("analyticsLayoutSettings")?.classList.remove("open"));
 document.getElementById("arrangeAnalyticsCards")?.addEventListener("click",()=>{document.getElementById("analyticsLayoutSettings")?.classList.remove("open");if(window.innerWidth<=768)return;layoutEditSnapshot=capturePanelLayout(activeLayoutPanel());setLayoutEditing(true);});
 document.getElementById("resetAnalyticsAppearance")?.addEventListener("click",()=>{selectedReportPalette="standard";window.NOVARA_LOCAL_STORAGE.setItem("novara_analytics_palette","standard");window.NOVARA_LOCAL_STORAGE.removeItem("novara_analytics_custom_colors");renderReportPalettePicker();applyAnalyticsChartPalette();});
-try {
-    await updateDashboard(
-        currentPeriod
-    );
-}
-catch (error) {
-    console.error(
-        "Refresh error:",
-        error
-    );
-}
-finally {
-    button.classList.remove(
-        "spinning"
-    );
-    isRefreshing =
-        false;
-}
-}
-document
-.getElementById(
-    "refreshBtn"
-)
-.addEventListener(
-    "click",
-    refreshDashboard
-);
 /* =====================================================
    EXPERIMENTAL APPEARANCE CONTROLS
 ====================================================== */
