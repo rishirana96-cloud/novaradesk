@@ -4911,6 +4911,22 @@ window.NOVARA_DEMO_API = (() => {
         if (path.endsWith("/tickets")) return json(tickets);
         if (path.endsWith("/ticket-detail")) return json(detail(parsed.searchParams.get("id")));
         if (path.endsWith("/conversation")) return json({ success: true, conversation: detail(1).conversation });
+        if (path.endsWith("/admin/chatbot/draft") && method === "POST") {
+            const { prompt, changeSummary } = JSON.parse(init.body || "{}");
+            if (!prompt) return json({ error: "Instructions are required." }, 400);
+            const version = Math.max(...chatbot.versions.map(item => item.version_number), 0) + 1;
+            chatbot.draft = { ...prompt, id: version, version_number: version, status: "draft", change_summary: changeSummary };
+            chatbot.versions.unshift(chatbot.draft);
+            return json({ draftId: version, versionNumber: version, demo: true });
+        }
+        if (path.endsWith("/admin/chatbot/publish") && method === "POST") {
+            const { draftId } = JSON.parse(init.body || "{}");
+            if (!chatbot.draft || chatbot.draft.id !== Number(draftId)) return json({ error: "Draft not found." }, 404);
+            chatbot.published.status = "archived";
+            chatbot.published = Object.assign(chatbot.draft, { status: "published", published_at: iso(0) });
+            chatbot.draft = null;
+            return json({ versionNumber: chatbot.published.version_number, demo: true });
+        }
         if (path.endsWith("/admin/chatbot")) return json(chatbot);
         if (path.endsWith("/admin/knowledge/save") && method === "POST") {
             const { article } = JSON.parse(init.body || "{}");
@@ -9072,6 +9088,23 @@ ORDER BY ticket_count DESC</textarea>
                 </div>
             </div>
             <div id="chatbotTab-instructions" class="admin-tab-panel">
+                <section class="chatbot-rule-builder" aria-labelledby="chatbotRulesTitle">
+                    <header class="chatbot-rule-header">
+                        <div>
+                            <h3 id="chatbotRulesTitle">Conditional rules</h3>
+                            <p>Tell the AI what to do in specific situations. If rules conflict, the first matching rule takes priority.</p>
+                        </div>
+                        <button id="chatbotAddRule" class="admin-btn" type="button">+ Add rule</button>
+                    </header>
+                    <div class="chatbot-rule-templates" aria-label="Rule templates">
+                        <span>Start with a template</span>
+                        <button type="button" data-chatbot-rule-template="handoff">Human handoff</button>
+                        <button type="button" data-chatbot-rule-template="refund">Refund status</button>
+                        <button type="button" data-chatbot-rule-template="clarify">Missing information</button>
+                    </div>
+                    <div id="chatbotRuleList"></div>
+                    <p id="chatbotRuleStatus" class="admin-status" role="status"></p>
+                </section>
                 <div class="prompt-sections" id="promptSections">
                     <label class="prompt-section"><span class="prompt-section-head"><strong>Identity</strong><span>Who the chatbot is</span></span><textarea data-prompt-field="identity_prompt"></textarea></label>
                     <label class="prompt-section"><span class="prompt-section-head"><strong>Objective</strong><span>Primary outcome</span></span><textarea data-prompt-field="objective_prompt"></textarea></label>
@@ -9087,7 +9120,7 @@ ORDER BY ticket_count DESC</textarea>
                     <div id="customInstructionCards" class="custom-instruction-cards"></div>
                     <button id="addCustomInstruction" class="custom-instruction-add" type="button"><span aria-hidden="true">＋</span><strong>Add custom instruction</strong><small>Create a header and instruction for a specialised rule</small></button>
                 </div>
-                <div class="prompt-editor-footer"><div><strong id="promptDraftLabel">Published prompt</strong><div id="promptSaveStatus" class="admin-status">Publish changes when your instructions are ready.</div></div><div class="admin-command-actions"><button id="viewCompiledPrompt" class="admin-btn" type="button">Preview compiled prompt</button><button id="chatbotPublish" class="admin-btn primary" type="button">Publish changes</button></div></div>
+                <div class="prompt-editor-footer"><div><strong id="promptDraftLabel">Published prompt</strong><div id="promptSaveStatus" class="admin-status">Publish changes when your instructions are ready.</div></div><div class="admin-command-actions"><button id="viewCompiledPrompt" class="admin-btn" type="button">Preview compiled prompt</button><button id="chatbotSaveDraft" class="admin-btn" type="button">Save draft</button><button id="chatbotPublish" class="admin-btn primary" type="button">Publish changes</button></div></div>
             </div>
             <div id="chatbotTab-model" class="admin-tab-panel">
                 <div class="admin-grid-2">
@@ -15604,9 +15637,132 @@ const card = remove.closest("[data-custom-instruction]");
 customPromptSections = customPromptSections.filter(item => item.id !== card.dataset.customInstruction);
 renderCustomPromptSections();
 });
+
+const CONDITIONAL_RULES_HEADER = "## Conditional rules (NovaraDesk)";
+const CONDITIONAL_RULES_GUIDANCE = "Evaluate rules in order. If rules conflict, follow the first matching rule. Always follow restrictions and verified company policy.";
+const CONDITIONAL_RULES_END = "## End conditional rules";
+const conditionalRuleTemplates = {
+    handoff: {
+        condition: "The customer explicitly asks to speak to a person.",
+        action: "Start the configured human handoff and include a brief summary of the issue and checks already completed."
+    },
+    refund: {
+        condition: "The customer asks for a refund or confirmation of a refund.",
+        action: "Use the approved refund policy and verified payment status. Never say a refund has been processed without confirmation. Escalate exceptions for review."
+    },
+    clarify: {
+        condition: "A key detail is missing and the answer depends on it.",
+        action: "Ask one focused follow-up question. If the detail still cannot be verified, offer a human handoff."
+    }
+};
+let conditionalPromptRules = [];
+
+function readConditionalPromptRules(text) {
+    const lines = String(text || "").trim().split(/\r?\n/);
+    const start = lines.lastIndexOf(CONDITIONAL_RULES_HEADER);
+    if (start < 0 || lines[start + 1] !== CONDITIONAL_RULES_GUIDANCE || lines.at(-1) !== CONDITIONAL_RULES_END) {
+        return { rules: [], custom: text || "" };
+    }
+    const rules = [];
+    for (let i = start + 2; i < lines.length - 1; i += 2) {
+        const condition = lines[i].match(/^\d+\. IF (.+)$/)?.[1];
+        const action = lines[i + 1]?.match(/^   THEN (.+)$/)?.[1];
+        if (!condition || !action) return { rules: [], custom: text };
+        rules.push({ condition, action });
+    }
+    return { rules, custom: lines.slice(0, start).join("\n").trim() };
+}
+
+function compileConditionalPromptRules(rules) {
+    if (!rules.length) return "";
+    return [
+        CONDITIONAL_RULES_HEADER, CONDITIONAL_RULES_GUIDANCE,
+        ...rules.flatMap((rule, index) => [
+            (index + 1) + ". IF " + rule.condition.trim(),
+            "   THEN " + rule.action.trim().replace(/\s*\n\s*/g, " ")
+        ]),
+        CONDITIONAL_RULES_END
+    ].join("\n");
+}
+
+function renderConditionalPromptRules(focusIndex, focusField = "condition") {
+    const list = document.getElementById("chatbotRuleList");
+    list.innerHTML = conditionalPromptRules.length
+        ? conditionalPromptRules.map((rule, index) => renderConditionalPromptRule(rule, index)).join("")
+        : '<p class="chatbot-rule-empty">No conditional rules yet. Add one from scratch or start with a template.</p>';
+    list.querySelector('[data-rule-index="' + focusIndex + '"] [data-rule-field="' + focusField + '"]')?.focus();
+}
+
+function renderConditionalPromptRule(rule, index) {
+    const number = index + 1;
+    return '<fieldset class="chatbot-rule-card" data-rule-index="' + index + '">' +
+        '<legend>Rule ' + number + '</legend>' +
+        '<div class="chatbot-rule-fields">' +
+            '<label><strong>If</strong><input data-rule-field="condition" maxlength="300" placeholder="The customer asks to speak to a person" value="' + escapeHtml(rule.condition) + '"></label>' +
+            '<label><strong>Then</strong><textarea data-rule-field="action" maxlength="700" rows="2" placeholder="Start the human handoff and include a summary">' + escapeHtml(rule.action) + '</textarea></label>' +
+        '</div>' +
+        '<div class="chatbot-rule-actions">' +
+            '<button type="button" data-rule-action="up" aria-label="Move rule ' + number + ' up"' + (index === 0 ? " disabled" : "") + '>↑</button>' +
+            '<button type="button" data-rule-action="down" aria-label="Move rule ' + number + ' down"' + (index === conditionalPromptRules.length - 1 ? " disabled" : "") + '>↓</button>' +
+            '<button type="button" data-rule-action="remove" aria-label="Remove rule ' + number + '">Remove</button>' +
+        '</div></fieldset>';
+}
+
+function markConditionalRulesEdited() {
+    document.getElementById("chatbotRuleStatus").textContent = "";
+    document.getElementById("promptSaveStatus").textContent = "Unsaved instruction changes.";
+}
+
+function addConditionalPromptRule(template = { condition: "", action: "" }) {
+    conditionalPromptRules.push({ ...template });
+    renderConditionalPromptRules(conditionalPromptRules.length - 1);
+    markConditionalRulesEdited();
+}
+
+document.getElementById("chatbotAddRule").addEventListener("click", () => addConditionalPromptRule());
+document.querySelectorAll("[data-chatbot-rule-template]").forEach(button => {
+    button.addEventListener("click", () => addConditionalPromptRule(conditionalRuleTemplates[button.dataset.chatbotRuleTemplate]));
+});
+const chatbotRuleList = document.getElementById("chatbotRuleList");
+chatbotRuleList.addEventListener("input", event => {
+    const input = event.target.closest("[data-rule-field]");
+    if (!input) return;
+    const index = Number(input.closest("[data-rule-index]").dataset.ruleIndex);
+    conditionalPromptRules[index][input.dataset.ruleField] = input.value;
+    markConditionalRulesEdited();
+});
+chatbotRuleList.addEventListener("click", event => {
+    const button = event.target.closest("[data-rule-action]");
+    if (!button) return;
+    const index = Number(button.closest("[data-rule-index]").dataset.ruleIndex);
+    const [rule] = conditionalPromptRules.splice(index, 1);
+    const action = button.dataset.ruleAction;
+    if (action === "remove") {
+        renderConditionalPromptRules(Math.min(index, conditionalPromptRules.length - 1));
+        if (!conditionalPromptRules.length) document.getElementById("chatbotAddRule").focus();
+    } else {
+        const next = index + (action === "up" ? -1 : 1);
+        conditionalPromptRules.splice(next, 0, rule);
+        renderConditionalPromptRules(next);
+    }
+    markConditionalRulesEdited();
+});
+renderConditionalPromptRules();
+
+function validateConditionalPromptRules() {
+    const index = conditionalPromptRules.findIndex(rule => !rule.condition.trim() || !rule.action.trim());
+    if (index < 0) return true;
+    document.getElementById("chatbotRuleStatus").textContent = "Complete both fields in rule " + (index + 1) + ", or remove the rule.";
+    const field = conditionalPromptRules[index].condition.trim() ? "action" : "condition";
+    chatbotRuleList.querySelector('[data-rule-index="' + index + '"] [data-rule-field="' + field + '"]')?.focus();
+    return false;
+}
+
 function promptPayload() {
 syncCustomPromptSections();
-return Object.fromEntries([...document.querySelectorAll("[data-prompt-field]")].map(input => [input.dataset.promptField, input.value.trim()]));
+const prompt = Object.fromEntries([...document.querySelectorAll("[data-prompt-field]")].map(input => [input.dataset.promptField, input.value.trim()]));
+prompt.custom_instructions = [prompt.custom_instructions, compileConditionalPromptRules(conditionalPromptRules)].filter(Boolean).join("\n\n");
+return prompt;
 }
 function formatAdminDate(value) {
 if (!value) return "—";
@@ -15615,7 +15771,10 @@ return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString("en-IN
 }
 function populatePromptEditor(version) {
 document.querySelectorAll("[data-prompt-field]").forEach(input => { input.value = version?.[input.dataset.promptField] || ""; });
-renderCustomPromptSections(version?.custom_instructions || "");
+const conditional = readConditionalPromptRules(version?.custom_instructions);
+conditionalPromptRules = conditional.rules;
+renderConditionalPromptRules();
+renderCustomPromptSections(conditional.custom);
 document.getElementById("promptDraftLabel").textContent = version?.status === "draft" ? `Draft · Version ${version.version_number}` : `Published · Version ${version?.version_number || "—"}`;
 document.getElementById("promptSaveStatus").textContent = version?.status === "draft" ? "Unpublished draft loaded." : "Edit any instruction to create a new draft.";
 }
@@ -15693,6 +15852,7 @@ try {
 } finally { chatbotControlLoading = false; }
 }
 async function savePromptDraft() {
+if (!validateConditionalPromptRules()) return null;
 const status = document.getElementById("promptSaveStatus");
 status.textContent = "Saving draft…";
 try {
@@ -15705,8 +15865,12 @@ try {
 async function publishPrompt() {
 const status = document.getElementById("promptSaveStatus");
 try {
-    let draftId = chatbotControlState?.draft?.id;
-    if (!draftId) draftId = (await savePromptDraft()).draftId;
+    if (!validateConditionalPromptRules()) return;
+    const draft = chatbotControlState?.draft;
+    const prompt = promptPayload();
+    const savedDraftMatches = draft?.id && Object.entries(prompt).every(([key, value]) => (draft[key] || "").trim() === value);
+    const draftId = savedDraftMatches ? draft.id : (await savePromptDraft())?.draftId;
+    if (!draftId) return;
     status.textContent = "Publishing…";
     const result = await adminApi("/admin/chatbot/publish", { method:"POST", body:JSON.stringify({ draftId }) });
     status.textContent = `Version ${result.versionNumber} published.`;
@@ -15752,7 +15916,7 @@ document.getElementById("chatbotTestMeta").innerHTML = `<div class="test-meta-it
 thread.scrollTop = thread.scrollHeight;
 }
 document.getElementById("chatbotTabs")?.addEventListener("click", event => { const tab=event.target.closest("[data-chatbot-tab]"); if(!tab)return; document.querySelectorAll("#chatbotTabs .admin-tab").forEach(item=>{item.classList.remove("active");item.setAttribute("aria-selected","false")}); document.querySelectorAll("#panel-chatbot .admin-tab-panel").forEach(item=>item.classList.remove("active")); tab.classList.add("active"); tab.setAttribute("aria-selected","true"); document.getElementById(`chatbotTab-${tab.dataset.chatbotTab}`)?.classList.add("active"); });
-["chatbotSaveDraft","chatbotSaveDraftTop"].forEach(id=>document.getElementById(id)?.addEventListener("click",savePromptDraft));
+["chatbotSaveDraft","chatbotSaveDraftTop"].forEach(id=>document.getElementById(id)?.addEventListener("click", () => savePromptDraft().catch(() => {})));
 ["chatbotPublish","chatbotPublishTop"].forEach(id=>document.getElementById(id)?.addEventListener("click",publishPrompt));
 document.getElementById("saveModelSettings")?.addEventListener("click",saveModelSettings);
 document.getElementById("chatbotPauseBtn")?.addEventListener("click",()=>{ const select=document.getElementById("chatbotOperationalStatus"); select.value=chatbotControlState?.profile?.status==="paused"?"active":"paused"; saveModelSettings(); });
@@ -15764,7 +15928,7 @@ document.getElementById("chatbotStarterPrompts")?.addEventListener("click",event
 document.getElementById("chatbotTestInput")?.addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();sendChatbotTest();}});
 document.getElementById("chatbotTestInput")?.addEventListener("input",event=>{event.target.style.height="auto";event.target.style.height=`${Math.min(event.target.scrollHeight,130)}px`;});
 document.getElementById("chatbotTestReset")?.addEventListener("click",()=>{document.getElementById("chatbotTestThread").innerHTML='<div class="test-message ai">Hello! How can I help you today?</div>';const prompts=document.getElementById("chatbotStarterPrompts");prompts?.classList.remove("hidden");const state=chatbotControlState||{},profile=state.profile||{},published=state.published,raw=String(profile.model||"");const friendly=raw?raw.split("-").map(part=>part.toLowerCase()==="deepseek"?"DeepSeek":part.charAt(0).toUpperCase()+part.slice(1)).join(" "):"—";document.getElementById("chatbotTestMeta").innerHTML=`<div class="test-meta-item"><span>Detected intent</span><strong>Waiting for message</strong></div><div class="test-meta-item"><span>AI confidence</span><strong>—</strong></div><div class="test-meta-item"><span>Escalation</span><strong>Not evaluated</strong></div><div class="test-meta-item"><span>Response time</span><strong>—</strong></div>`;const input=document.getElementById("chatbotTestInput");input.value="";input.style.height="auto";input.focus();});
-document.getElementById("viewCompiledPrompt")?.addEventListener("click",()=>{const text=Object.entries(promptPayload()).filter(([,value])=>value).map(([key,value])=>`${key.replaceAll("_"," ").toUpperCase()}\n${value}`).join("\n\n");const modal=document.createElement("div");modal.className="data-explorer-backdrop open";modal.innerHTML=`<section class="data-explorer-dialog" style="height:min(760px,90vh)"><header class="data-explorer-head"><div><span class="report-eyebrow">Prompt preview</span><h2>Compiled system instructions</h2><p>Preview only · secrets and dynamic customer context are never included.</p></div><button class="ticket-close" type="button">✕</button></header><div style="padding:20px;overflow:auto;white-space:pre-wrap;line-height:1.65;font-size:12px">${escapeHtml(text)}</div></section>`;document.body.appendChild(modal);modal.querySelector("button").onclick=()=>modal.remove();modal.onclick=e=>{if(e.target===modal)modal.remove();};});
+document.getElementById("viewCompiledPrompt")?.addEventListener("click",()=>{if(!validateConditionalPromptRules())return;const text=Object.entries(promptPayload()).filter(([,value])=>value).map(([key,value])=>`${key.replaceAll("_"," ").toUpperCase()}\n${value}`).join("\n\n");const modal=document.createElement("div");modal.className="data-explorer-backdrop open";modal.innerHTML=`<section class="data-explorer-dialog" style="height:min(760px,90vh)"><header class="data-explorer-head"><div><span class="report-eyebrow">Prompt preview</span><h2>Compiled system instructions</h2><p>Preview only · secrets and dynamic customer context are never included.</p></div><button class="ticket-close" type="button">✕</button></header><div style="padding:20px;overflow:auto;white-space:pre-wrap;line-height:1.65;font-size:12px">${escapeHtml(text)}</div></section>`;document.body.appendChild(modal);modal.querySelector("button").onclick=()=>modal.remove();modal.onclick=e=>{if(e.target===modal)modal.remove();};});
 /* =====================================================
    KNOWLEDGE BASE MANAGER
 ====================================================== */
@@ -20684,4 +20848,27 @@ html body #panel-tickets .ticket-spreadsheet-filter[popover]::backdrop{backgroun
 <style id="ticket-filter-empty-state-action">
 #panel-tickets .ticket-empty-clear{display:block;margin:10px auto 0;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
 #panel-tickets .ticket-empty-clear:hover{background:var(--surface-hover)}
+</style>
+
+<style id="chatbot-conditional-rule-builder">
+#panel-chatbot .chatbot-rule-builder{padding:16px;margin-bottom:14px;border:1px solid var(--border);border-radius:12px;background:var(--bg-card)}
+.chatbot-rule-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.chatbot-rule-header h3{margin:0 0 4px;font-size:15px;color:var(--text)}
+.chatbot-rule-header p,.chatbot-rule-empty,.chatbot-rule-templates>span{color:var(--text-muted);font-size:11px;line-height:1.5}
+.chatbot-rule-header button{flex-shrink:0}
+.chatbot-rule-templates{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0}
+.chatbot-rule-templates button,.chatbot-rule-actions button{padding:5px 8px;border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);background:var(--surface);font:inherit;font-size:11px;cursor:pointer}
+.chatbot-rule-templates button:hover,.chatbot-rule-actions button:hover:not(:disabled){background:var(--surface-hover);color:var(--text)}
+.chatbot-rule-actions button:disabled{opacity:.45;cursor:default}
+#chatbotRuleList{display:grid;gap:8px}
+.chatbot-rule-card{min-width:0;margin:0;padding:8px 10px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+.chatbot-rule-card legend{padding:0 4px;color:var(--text-muted);font-size:10px;font-weight:650}
+.chatbot-rule-fields{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
+.chatbot-rule-fields label{display:grid;gap:4px;min-width:0;font-size:11px;color:var(--text-secondary)}
+.chatbot-rule-fields input,.chatbot-rule-fields textarea{width:100%;min-width:0;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text);font:inherit}
+.chatbot-rule-fields textarea{resize:vertical}
+.chatbot-rule-actions{display:flex;justify-content:flex-end;gap:5px;margin-top:8px}
+#chatbotRuleStatus:empty{display:none}
+#chatbotRuleStatus{color:var(--danger)}
+@media(max-width:650px){.chatbot-rule-fields{grid-template-columns:1fr}}
 </style>
