@@ -8482,6 +8482,11 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 </select>
             </label>
             <div class="ticket-toolbar-right">
+                <button id="ticketFilterToggle" class="ticket-filter-toggle" type="button" aria-expanded="false" aria-controls="ticketFilterPanel">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                    Filters
+                    <span id="ticketFilterCount" class="ticket-filter-count" hidden>0</span>
+                </button>
                 <div id="ticketPeriodSelector" class="period-selector ticket-period-selector" aria-label="Ticket date range">
                     <button type="button" data-ticket-period="7">7d</button>
                     <button type="button" data-ticket-period="14">14d</button>
@@ -8489,11 +8494,6 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     <button type="button" data-ticket-period="90">90d</button>
                     <button id="ticketCustomDateBtn" type="button">Custom</button>
                 </div>
-                <button id="ticketFilterToggle" class="ticket-filter-toggle" type="button" aria-expanded="false" aria-controls="ticketFilterPanel">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-                    Filters
-                    <span id="ticketFilterCount" class="ticket-filter-count" hidden>0</span>
-                </button>
             </div>
         </div>
         <div id="ticketCustomDatePopover" class="ticket-custom-date-popover" hidden>
@@ -10675,7 +10675,7 @@ const filters = ticketFilterValues();
 const viewSource = ticketWorkspaceState.activeView === "needs_reply" ? ticketWorkspaceState.source.filter(ticket => ticket.needsReply) : ticketWorkspaceState.source;
 const filtered = viewSource.filter(ticket => ticketMatchesFilters(ticket, filters) && (!window.expandedInboxSidebarPredicate || window.expandedInboxSidebarPredicate(ticket)) && (!window.ticketColumnPredicate || window.ticketColumnPredicate(ticket)));
 ticketWorkspaceState.filtered = filtered;
-const activeFilterCount = Object.values(filters).filter(Boolean).length;
+const activeFilterCount = Object.values(filters).filter(Boolean).length + (window.ticketColumnFilterCount?.() || 0);
 const count = document.getElementById("ticketFilterCount");
 count.textContent = activeFilterCount;
 count.hidden = !activeFilterCount;
@@ -10752,7 +10752,9 @@ function updateTicketsTable(tickets) {
 const tbody = document.getElementById("ticketsBody");
 const pagination = document.getElementById("ticketPagination");
 if (!tickets.length) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">No escalated tickets yet.</div></td></tr>`;
+    const hasTickets = ticketWorkspaceState.source.length > 0;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">${hasTickets ? 'No tickets match this view or its filters. <button class="ticket-empty-clear" type="button">Clear filters</button>' : 'No tickets in the selected date range.'}</div></td></tr>`;
+    tbody.querySelector(".ticket-empty-clear")?.addEventListener("click", () => document.getElementById("ticketClearFilters")?.click());
     if (pagination) pagination.innerHTML = "";
     return;
 }
@@ -10846,6 +10848,9 @@ event.target.click();
 });
 document.getElementById("ticketClearFilters")?.addEventListener("click", () => {
 applyTicketFilterValues({});
+window.clearTicketColumnFilters?.();
+window.resetExpandedInboxTicketFilter?.();
+ticketWorkspaceState.page = 1;
 ticketWorkspaceState.activeView = "all";
 document.getElementById("ticketViewSelect").value = "all";
 document.getElementById("ticketViewName").value = "";
@@ -15808,9 +15813,11 @@ if (returnFocus) instance.trigger.focus();
 if (activeUnifiedSelect === instance) activeUnifiedSelect = null;
 }
 function enhanceUnifiedSelect(select) {
-if (!select || select.dataset.unifiedSelectReady === "true" || select.multiple || Number(select.size) > 1 || select.closest("#ticketStatusControl")) return;
+if (!select || select.dataset.unifiedSelectReady === "true" || select.multiple || Number(select.size) > 1 || select.closest("#ticketStatusControl,[popover]")) return;
 select.dataset.unifiedSelectReady = "true";
 select.classList.add("unified-select-source");
+select.tabIndex = -1;
+select.setAttribute("aria-hidden", "true");
 const trigger = document.createElement("button");
 trigger.type = "button";
 trigger.className = "unified-select-trigger";
@@ -15871,7 +15878,15 @@ const open = () => {
 };
 trigger.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); menu.classList.contains("open") ? closeUnifiedSelect(instance) : open(); });
 trigger.addEventListener("keydown", event => {
-    if (["Enter"," ","ArrowDown","ArrowUp"].includes(event.key)) { event.preventDefault(); if (!menu.classList.contains("open")) open(); }
+    if (["Enter", " ", "ArrowDown", "ArrowUp"].includes(event.key)) {
+        event.preventDefault();
+        if (!menu.classList.contains("open")) open();
+        const options = [...menu.querySelectorAll(".unified-select-option:not(:disabled)")];
+        const selected = options.find(option => option.classList.contains("selected"));
+        const target = selected || (event.key === "ArrowUp" ? options.at(-1) : options[0]);
+        instance.keyboardIndex = options.indexOf(target);
+        target?.focus();
+    }
     if (event.key === "Escape") closeUnifiedSelect(instance, true);
 });
 menu.addEventListener("keydown", event => {
@@ -15884,7 +15899,7 @@ menu.addEventListener("keydown", event => {
         options.forEach((option,index) => option.classList.toggle("keyboard", index === instance.keyboardIndex));
         options[instance.keyboardIndex].focus();
     }
-    if (event.key === "Escape") closeUnifiedSelect(instance, true);
+    if (event.key === "Escape" || event.key === "Tab") closeUnifiedSelect(instance, true);
 });
 select.addEventListener("change", instance.sync);
 select.addEventListener("focus", () => trigger.focus());
@@ -17429,6 +17444,7 @@ sidebar.querySelectorAll(".nav-item").forEach(item=>{
     const label=item.querySelector(":scope > span")?.textContent?.trim();
     if(!label)return;
     item.dataset.sidebarTooltip=label;
+    item.setAttribute("aria-label",label);
     item.removeAttribute("title");
     item.addEventListener("pointerenter",event=>{if(event.pointerType&&event.pointerType!=="mouse")return;clearTimeout(timer);timer=setTimeout(()=>show(item),280)});
     item.addEventListener("pointerleave",hide);
@@ -20431,7 +20447,7 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
  {key:"created",label:"Created",value:t=>t.createdAt?recordDateInIst(t.createdAt):""},
  {key:"customer",label:"Customer / Query",value:t=>[t.customer,t.query].filter(Boolean).join(" · ")},
  {key:"agent",label:"Assigned To",value:t=>t.agent},
- {key:"status",label:"Status",value:t=>ticketStatusLabel(t.status,t.agent)},
+ {key:"status",label:"Status",value:t=>ticketStatusLabel(t.status)},
  {key:"age",label:"Age",value:t=>formatTicketAge(t.createdAt,t.resolvedAt)},
  {key:"resolution",label:"Resolution",value:t=>t.status==="resolved"?(t.resolutionTime>0?t.resolutionTime.toFixed(1)+"h":"Resolved"):ticketSlaDisplay(t).label}
  ];
@@ -20453,6 +20469,7 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
   }
  }
  window.ticketColumnPredicate=t=>defs.every(d=>matches(d,t,state[d.key]));
+ window.ticketColumnFilterCount=()=>Object.keys(state).length;
  window.clearTicketColumnFilters=()=>{Object.keys(state).forEach(k=>delete state[k]);editors.forEach(e=>{e.details.classList.remove("filtered");e.details.open=false;});};
  defs.forEach((def,index)=>{
   const th=headers[index];if(!th)return;
@@ -20662,4 +20679,9 @@ html body #panel-tickets .ticket-spreadsheet-filter[popover]::backdrop{backgroun
 .card-reorder-gap>*{visibility:hidden!important}
 .card-reorder-gap::before,.card-reorder-gap::after{content:none!important}
 .card-reorder-preview.card-reorder-preview{position:fixed!important;inset:0 auto auto 0!important;margin:0!important;box-sizing:border-box!important;pointer-events:none!important;z-index:18000!important;box-shadow:0 10px 30px #15201b33!important;transition:none!important;will-change:transform}
+</style>
+
+<style id="ticket-filter-empty-state-action">
+#panel-tickets .ticket-empty-clear{display:block;margin:10px auto 0;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
+#panel-tickets .ticket-empty-clear:hover{background:var(--surface-hover)}
 </style>
