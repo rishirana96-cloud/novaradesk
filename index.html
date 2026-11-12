@@ -4722,7 +4722,7 @@ body.customizer-dragging { cursor:grabbing!important;user-select:none!important;
 <script>
 window.NOVARA_GOOGLE_CLIENT_ID = "336502224847-jafsk347pho7kr929jlgf4uh10n7aveu.apps.googleusercontent.com";
 window.NOVARA_AUTH_TOKEN_KEY = "novara_google_id_token";
-// Preview is URL-scoped: it never creates an authenticated session or expires.
+// The URL selects the sample workspace. The auth bootstrap verifies access before showing it.
 window.NOVARA_DEMO_MODE = ["preview", "demo"].some(key => new URLSearchParams(window.location.search).get(key) === "1");
 // Preview settings are held only in memory; existing workspace storage stays intact.
 (function () {
@@ -4899,7 +4899,6 @@ window.NOVARA_DEMO_API = (() => {
         const parsed = new URL(url, window.location.href);
         const path = parsed.pathname;
         const method = String(init?.method || "GET").toUpperCase();
-        if (path.endsWith("/auth/me")) return json({ success: true, user: window.NOVARA_DEMO_USER });
         if (path.endsWith("/analytics")) return json(rowsForRange(analytics, parsed));
         if (path.endsWith("/conversations")) return json(conversations);
         if (path.endsWith("/intents")) return json(subjects.map((item, index) => ({ intent: item[1], count: 18 - index * 2 })));
@@ -4954,8 +4953,10 @@ window.NOVARA_DEMO_API = (() => {
     window.fetch = function (input, init) {
         const url = typeof input === "string" ? input : (input && input.url) || "";
         const isApi = url.indexOf("https://novara-cx-ai.rishi-rana96.workers.dev") === 0;
-        const isSignIn = isApi && url.indexOf("/auth/google") !== -1;
-        if (window.NOVARA_DEMO_MODE && isApi) return window.NOVARA_DEMO_API(url, init);
+        const isSignIn = isApi && url === "https://novara-cx-ai.rishi-rana96.workers.dev/auth/google";
+        const isSessionCheck = isApi && url === "https://novara-cx-ai.rishi-rana96.workers.dev/auth/me" && init?.cache === "no-store";
+        if (isSessionCheck) return nativeFetch(input, init);
+        if (window.NOVARA_DEMO_MODE && isApi && !isSignIn) return window.NOVARA_DEMO_API(url, init);
         if (!isApi || isSignIn) return nativeFetch(input, init);
         const token = window.NOVARA_LOCAL_STORAGE.getItem(window.NOVARA_AUTH_TOKEN_KEY) || window.NOVARA_SESSION_STORAGE.getItem(window.NOVARA_AUTH_TOKEN_KEY);
         if (!token) return Promise.reject(new Error("Authentication required"));
@@ -7492,6 +7493,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
 <style id="novara-preview-styles">
 .novara-preview-entry{margin-top:24px;padding-top:22px;border-top:1px solid var(--auth-line)}
 .novara-preview-button{display:flex;align-items:center;justify-content:center;gap:12px;min-height:46px;padding:0 18px;border:1px solid var(--auth-green);border-radius:999px;color:var(--auth-green);font-size:14px;font-weight:700;text-decoration:none;transition:background .15s}
+.novara-preview-button[hidden]{display:none!important}
 .novara-preview-button:hover{background:#e5f0e9}.novara-preview-button:focus-visible{outline:3px solid #6caa85;outline-offset:3px}
 .novara-preview-entry p{margin:10px 0 0;color:#68776f;font-size:12px;line-height:1.6;text-align:center}
 </style>
@@ -7520,7 +7522,6 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
     <p>Continue with the approved Google account connected to your workspace.</p>
     <div id="novaraGoogleButton"></div>
     <div class="novara-preview-entry">
-        <a class="novara-preview-button" href="?preview=1#tickets">Explore preview <span aria-hidden="true">↗</span></a>
         <p>Sample tickets and analytics. No sign-in or session timeout.</p>
     </div>
     <div class="novara-auth-status" id="novaraAuthStatus" role="status" aria-live="polite">Checking your session…</div>
@@ -7743,6 +7744,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
             </p>
         </div>
         <div class="topbar-actions">
+            <a id="novaraOwnerPreview" class="novara-preview-button" href="?preview=1#tickets" hidden>Explore preview <span aria-hidden="true">↗</span></a>
             <div class="global-search-wrap" id="globalSearchWrap">
                 <div class="global-search-shell">
                     <input id="globalSearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search tickets, session IDs, dashboards…" aria-label="Search tickets, session IDs and custom dashboards">
@@ -17027,6 +17029,8 @@ cancel.addEventListener('click',()=>finish(false));
 (function(){
 const API="https://novara-cx-ai.rishi-rana96.workers.dev";
 const tokenKey=window.NOVARA_AUTH_TOKEN_KEY;
+const previewOwner="rishi.rana1996@gmail.com";
+const canExplore=user=>String(user?.email||"").trim().toLowerCase()===previewOwner;
 const status=document.getElementById("novaraAuthStatus");
 const setStatus=message=>{if(status)status.textContent=message||""};
 function showWorkspace(user){
@@ -17040,17 +17044,31 @@ document.getElementById("sidebarUserRole").textContent=role;
 document.body.classList.add("novara-authenticated");
 }
 async function verifySession(){
-const token=window.NOVARA_LOCAL_STORAGE.getItem(tokenKey)||window.NOVARA_SESSION_STORAGE.getItem(tokenKey);
-if(!token){setStatus("");return false;}
+const token=window.localStorage.getItem(tokenKey)||window.sessionStorage.getItem(tokenKey);
+if(!token){setStatus(window.NOVARA_DEMO_MODE?"Sign in to access Explore Preview.":"");return false;}
 try{
-    const response=await fetch(API+"/auth/me");
+    const response=await fetch(API+"/auth/me",{
+        headers:{Authorization:"Bearer "+token},
+        cache:"no-store"
+    });
     const data=await response.json();
     if(!response.ok||!data.success)throw new Error(data.error||"Session rejected");
-    showWorkspace(data.user);
+    if(window.NOVARA_DEMO_MODE){
+        if(!canExplore(data.user)){
+            window.location.replace(window.location.pathname);
+            return true;
+        }
+        document.body.classList.add("novara-demo-mode");
+        showWorkspace(window.NOVARA_DEMO_USER);
+    }else{
+        document.getElementById("novaraOwnerPreview").hidden=!canExplore(data.user);
+        showWorkspace(data.user);
+    }
+    setStatus("");
     return true;
 }catch(error){
-    window.NOVARA_LOCAL_STORAGE.removeItem(tokenKey);
-    window.NOVARA_SESSION_STORAGE.removeItem(tokenKey);
+    window.localStorage.removeItem(tokenKey);
+    window.sessionStorage.removeItem(tokenKey);
     setStatus(error.message==="Your workspace access is awaiting approval."?error.message:"Your session has expired. Please sign in again.");
     return false;
 }
@@ -17066,9 +17084,9 @@ try{
         return;
     }
     if(!authResponse.ok||!data.success)throw new Error(data.error||"Access could not be verified.");
-    if(data.token)window.NOVARA_LOCAL_STORAGE.setItem(tokenKey,data.token);
-    else window.NOVARA_SESSION_STORAGE.setItem(tokenKey,response.credential);
-    if(data.token)window.NOVARA_SESSION_STORAGE.removeItem(tokenKey);
+    if(data.token)window.localStorage.setItem(tokenKey,data.token);
+    else window.sessionStorage.setItem(tokenKey,response.credential);
+    if(data.token)window.sessionStorage.removeItem(tokenKey);
     window.location.reload();
 }catch(error){setStatus(error.message||"Google sign-in could not be verified.")}
 }
@@ -17082,9 +17100,7 @@ else setStatus("Google sign-in is temporarily unavailable. Please refresh the pa
 if(window.NOVARA_DEMO_MODE){
 document.body.classList.add("novara-demo-mode");
 const previewLogout = document.getElementById("sidebarLogout");
-if(previewLogout) { previewLogout.textContent = "Exit preview"; previewLogout.title = "Return to sign in"; }
-showWorkspace(window.NOVARA_DEMO_USER);
-setStatus("");
+if(previewLogout) { previewLogout.textContent = "Exit preview"; previewLogout.title = "Return to workspace"; }
 document.getElementById("sidebarLogout")?.addEventListener("click",()=>{
     window.location.replace(window.location.pathname);
 });
@@ -17092,11 +17108,17 @@ document.getElementById("sidebarLogout")?.addEventListener("click",()=>{
 document.getElementById("sidebarLogout")?.addEventListener("click",async ()=>{
     try{await fetch(API+"/auth/logout",{method:"POST"})}catch(error){}
     try{window.google?.accounts?.id?.disableAutoSelect()}catch(error){}
-    window.NOVARA_LOCAL_STORAGE.removeItem(tokenKey);
-    window.NOVARA_SESSION_STORAGE.removeItem(tokenKey);
+    window.localStorage.removeItem(tokenKey);
+    window.sessionStorage.removeItem(tokenKey);
     window.location.replace(window.location.pathname);
 });
+}
 verifySession().then(active=>{if(!active)renderGoogle()});
+if(window.NOVARA_DEMO_MODE){
+    window.addEventListener("pageshow",event=>{if(event.persisted)window.location.reload()});
+    window.addEventListener("storage",event=>{
+        if(event.key===tokenKey||event.key===null)window.location.reload();
+    });
 }
 })();
 </script>
