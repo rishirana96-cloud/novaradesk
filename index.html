@@ -52,6 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="assets/qa.css">
 <style>
 /* =====================================================
    GLOBAL
@@ -4907,7 +4908,27 @@ window.NOVARA_DEMO_API = (() => {
         if (path.endsWith("/sentiment")) return json([{ sentiment: "positive", count: 34, avg_score: .82 }, { sentiment: "neutral", count: 14, avg_score: .5 }, { sentiment: "negative", count: 6, avg_score: .2 }]);
         if (path.endsWith("/tickets")) return json(tickets);
         if (path.endsWith("/ticket-detail")) return json(detail(parsed.searchParams.get("id")));
-        if (path.endsWith("/conversation")) return json({ success: true, conversation: detail(1).conversation });
+        if (path.endsWith("/conversation")) {
+            const session = parsed.searchParams.get("session");
+            const ticket = tickets.find(item => item.session_id === session);
+            if (ticket) return json({ success: true, conversation: detail(ticket.id).conversation });
+            const chat = conversations.find(item => item.session_id === session);
+            if (!chat) return json({ success: false, error: "Conversation not found." }, 404);
+            const intentIndex = subjects.findIndex(subject => subject[1] === chat.intent);
+            const sampleReplies = [
+                "I can explain what a pending authorization means. If both payments have settled, our billing team can review the transaction references.",
+                "Share your order number so the team can check whether the delivery address can still be updated.",
+                "Banks typically take 5–7 business days to reflect an approved refund.",
+                "You can review available plans in your account settings.",
+                "Unused items in original packaging may be returned within seven days of delivery.",
+                "Please share your order number and photos of the item and packaging so we can review."
+            ];
+            return json({ success: true, conversation: [{
+                id: chat.id, created_at: chat.created_at,
+                user_message: "I need help with " + subjects[intentIndex][0].toLowerCase() + ".",
+                bot_reply: chat.resolution_status === "escalated" ? "I’ll send this to our support team for review." : sampleReplies[intentIndex]
+            }] });
+        }
         if (path.endsWith("/admin/chatbot/draft") && method === "POST") {
             const { prompt, changeSummary } = JSON.parse(init.body || "{}");
             if (!prompt) return json({ error: "Instructions are required." }, 400);
@@ -7661,6 +7682,10 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
         <a href="#tickets" class="nav-subitem" data-ticket-nav-view="status:reopened"><svg class="nav-subicon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8a8 8 0 1 1-1 7M5 8V3M5 8h5"/></svg><span>Reopened</span></a>
     </div>
     </div>
+    <a href="#qa" class="nav-item" id="sidebarQA" data-tab="qa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V3h6v2m-6 8 2 2 4-4"/></svg>
+        <span>QA Audits</span>
+    </a>
     <!-- Customer Profiles -->
     <a href="#customers" class="nav-item" id="sidebarCustomers" data-tab="customers">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -8618,6 +8643,85 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
     <!-- =================================================
          CUSTOM DASHBOARDS
     ================================================== -->
+    <section id="panel-qa" class="view-panel">
+        <div class="qa-board" id="qaBoard">
+            <div class="qa-stats" aria-label="QA workload">
+                <div class="qa-box"><span>In review</span><strong id="qaDraftCount">0</strong></div>
+                <div class="qa-box"><span>Follow-up open</span><strong id="qaActionCount">0</strong></div>
+                <div class="qa-box"><span>Submitted audits</span><strong id="qaCompletedCount">0</strong></div>
+            </div>
+            <div class="qa-tabs" role="group" aria-label="Audit views">
+                <button type="button" data-qa-view="queue" aria-pressed="true">Review queue</button>
+                <button type="button" data-qa-view="followup" aria-pressed="false">Follow-ups</button>
+                <button type="button" data-qa-view="completed" aria-pressed="false">Completed</button>
+                <button type="button" id="qaNewAudit" class="qa-primary">New audit</button>
+            </div>
+            <p class="qa-storage" id="qaStorageNote">Audits and follow-ups are saved to this browser for your account.</p>
+            <p id="qaStatus" class="qa-status" role="status"></p>
+            <div id="qaList" class="qa-box qa-list"></div>
+            <section id="qaPicker" class="qa-box qa-picker" hidden aria-labelledby="qaPickerHeading">
+                <div class="qa-head"><h2 id="qaPickerHeading" tabindex="-1">Select a case</h2><button type="button" data-qa-close>Back to audits</button></div>
+                <div class="qa-picker-tools">
+                    <label>Scorecard
+                        <select id="qaType" data-native-select><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option></select>
+                    </label>
+                    <label>Search recent cases<input id="qaSearch" type="search" placeholder="Ticket, session, or topic"></label>
+                    <div class="qa-sampling">
+                        <button type="button" id="qaRisk" aria-pressed="false">Higher risk only</button>
+                        <button type="button" id="qaSample">Pick random case</button>
+                    </div>
+                </div>
+                <p class="qa-muted" id="qaCandidatesInfo" role="status"></p>
+                <div id="qaCandidates" class="qa-list"></div>
+            </section>
+            <section id="qaReview" hidden aria-labelledby="qaReviewHeading">
+                <div class="qa-head qa-review-head">
+                    <div><p class="qa-muted" id="qaReviewMeta"></p><h2 id="qaReviewHeading" tabindex="-1"></h2></div>
+                    <button type="button" data-qa-close>Back to audits</button>
+                </div>
+                <div class="qa-review-grid">
+                    <section class="qa-box">
+                        <div class="qa-head"><h3>Conversation</h3><button id="qaRetryTranscript" type="button" hidden>Retry</button></div>
+                        <div id="qaTranscript" class="qa-transcript" aria-live="polite"></div>
+                    </section>
+                    <form class="qa-box" id="qaForm" novalidate>
+                        <div class="qa-head"><h3>Scorecard</h3><strong id="qaScore" aria-live="polite"></strong></div>
+                        <fieldset id="qaScores"><legend class="qa-sr-only">Rate each criterion</legend><div id="qaCriteria"></div></fieldset>
+                        <fieldset id="qaFindings"><legend>Findings</legend>
+                            <label class="qa-check"><input id="qaCritical" type="checkbox"> Critical error</label>
+                            <div id="qaEvidence"></div>
+                            <label for="qaNotes">Reviewer notes</label>
+                            <textarea id="qaNotes" rows="3" maxlength="2000"></textarea>
+                        </fieldset>
+                        <fieldset id="qaAction"><legend>Follow-up</legend>
+                            <label for="qaActionType">Action</label>
+                            <select id="qaActionType" data-native-select>
+                                <option value="">No follow-up</option><option>Agent coaching</option><option>Knowledge base update</option><option>Routing change</option><option>Process fix</option>
+                            </select>
+                            <div id="qaActionFields" hidden>
+                                <div class="qa-action-fields">
+                                    <label>Owner<input id="qaOwner" maxlength="120" placeholder="Name or team"></label>
+                                    <label>Due date<input id="qaDue" type="date"></label>
+                                </div>
+                                <label for="qaNextStep">What needs to change?</label>
+                                <textarea id="qaNextStep" rows="2" maxlength="1000"></textarea>
+                            </div>
+                        </fieldset>
+                        <div class="qa-form-footer">
+                            <button id="qaSave" type="button">Save draft</button>
+                            <button id="qaSubmit" type="submit" class="qa-primary">Submit audit</button>
+                        </div>
+                        <div id="qaVerify" hidden>
+                            <label for="qaOutcome">How did you verify the fix?</label>
+                            <textarea id="qaOutcome" rows="2" maxlength="1000"></textarea>
+                            <button id="qaCompleteAction" class="qa-primary" type="button">Complete follow-up</button>
+                        </div>
+                        <p id="qaFormStatus" class="qa-status" role="status"></p>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </section>
     <section id="panel-dashboards" class="view-panel">
         <div id="dashboardEmptyState" class="custom-dashboard-empty">
             <div class="custom-dashboard-empty-icon">
@@ -9453,6 +9557,7 @@ ORDER BY ticket_count DESC</textarea>
     </div>
     <div class="ticket-head-side">
     <div class="ticket-head-controls">
+        <button id="ticketStartQA" class="qa-ticket-action" type="button" disabled>Audit</button>
         <div id="ticketStatusControl" class="ticket-status-control">
             <select id="ticketStatusSelect" class="ticket-status-select" aria-label="Ticket status"><option value="open">Open</option><option value="in_progress">In Progress</option><option value="pending">Pending</option><option value="resolved">Resolved</option><option value="reopened">Reopened</option></select>
             <button id="ticketStatusTrigger" class="ticket-status-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span id="ticketStatusTriggerLabel">Open</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
@@ -9577,6 +9682,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
+<script src="assets/qa.js"></script>
 <script>
 /* =====================================================
    STATE
@@ -9735,6 +9841,7 @@ ai: ["Analytics", "Monitor AI conversations, resolution and customer experience 
 human: ["Analytics", "Monitor human-agent escalations, outcomes and service performance."],
 dashboards: ["Analytics", "Arrange saved reports into focused, reusable operational views."],
 tickets: ["Tickets", "Manage escalated customer requests and resolutions."],
+qa: ["QA Audits", "Review AI, human, and handoff conversations and track corrective actions."],
 customers: ["Customer Profiles", "Understand every customer across support, commerce and connected channels."],
 reports: ["Report Builder", "Build, save and export focused views of your CX data."],
 chatbot: ["AI Chatbot", "Configure, test and deploy your customer-facing AI."],
@@ -9755,6 +9862,7 @@ if (analyticsWorkspace) {
     sidebarAnalytics?.classList.add("active");
     analyticsSubitems[workspace]?.classList.add("active");
 } else if (workspace === "tickets") sidebarTickets?.classList.add("active");
+else if (workspace === "qa") document.getElementById("sidebarQA").classList.add("active");
 else if (workspace === "customers") sidebarCustomers?.classList.add("active");
 else if (workspace === "reports") sidebarReports?.classList.add("active");
 else if (workspace === "chatbot") sidebarChatbot?.classList.add("active");
@@ -9774,12 +9882,12 @@ const dashboardToolbarSelector = document.getElementById("dashboardToolbarSelect
 dashboardToolbarSelector?.classList.toggle("open", workspace === "dashboards");
 dashboardToolbarSelector?.setAttribute("aria-hidden", String(workspace !== "dashboards"));
 const workspaceToolbar = document.querySelector(".toolbar");
-if (workspaceToolbar) workspaceToolbar.style.display = ["chatbot","knowledge","tickets","customers","workflows","settings"].includes(workspace) ? "none" : "flex";
+if (workspaceToolbar) workspaceToolbar.style.display = ["chatbot","knowledge","tickets","qa","customers","workflows","settings"].includes(workspace) ? "none" : "flex";
 tabSwitcher.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.tab === workspace));
 const layoutControls = document.querySelector(".layout-controls");
 if (layoutControls) layoutControls.style.display = ["ai","human","tickets","reports"].includes(workspace) ? "flex" : "none";
 document.getElementById("lastUpdated")?.style.setProperty("display", analyticsWorkspace ? "block" : "none", "important");
-document.getElementById("refreshBtn").style.display = ["chatbot","settings"].includes(workspace) ? "none" : "inline-flex";
+document.getElementById("refreshBtn").style.display = ["chatbot","settings","qa"].includes(workspace) ? "none" : "inline-flex";
 const refreshLabel = document.getElementById("refreshBtnLabel");
 if (refreshLabel) refreshLabel.textContent = analyticsWorkspace ? "Sync Now" : "Refresh";
 document.getElementById("chatbotStatusControl")?.classList.toggle("open", workspace === "chatbot");
@@ -9790,8 +9898,9 @@ if (workspace === "dashboards") renderCustomDashboard();
 if (workspace === "chatbot") loadChatbotControlCentre();
 if (workspace === "knowledge") loadKnowledgeBase();
 if (workspace === "workflows") renderWorkflowWorkspace();
+if (workspace === "qa") window.NovaraQA?.activate();
 if (refresh) window.scrollTo({ top: 0, behavior: "smooth" });
-if (refresh) updateDashboard(currentPeriod);
+if (refresh && workspace !== "qa") updateDashboard(currentPeriod);
 }
 sidebarAnalytics?.addEventListener("click", event => {
 event.preventDefault();
@@ -9839,6 +9948,7 @@ if (viewSelect) {
 document.getElementById("ticketViewSelect")?.addEventListener("change", event => {
 ticketsSubnav?.querySelectorAll("[data-ticket-nav-view]").forEach(link => link.classList.toggle("active", link.dataset.ticketNavView === event.target.value));
 });
+document.getElementById("sidebarQA").addEventListener("click", event => { event.preventDefault(); showWorkspace("qa"); });
 sidebarCustomers?.addEventListener("click", event => { event.preventDefault(); showWorkspace("customers"); });
 sidebarReports?.addEventListener("click", event => { event.preventDefault(); showWorkspace("reports"); });
 sidebarChatbot?.addEventListener("click", event => { event.preventDefault(); showWorkspace("chatbot"); });
@@ -14412,6 +14522,7 @@ function setTicketSwitchLoading(isLoading) {
 const loading = document.getElementById("ticketSwitchLoading");
 loading?.classList.toggle("open", Boolean(isLoading));
 if (!isLoading) return;
+document.getElementById("ticketStartQA").disabled = true;
 document.getElementById("ticketContext").replaceChildren();
 document.getElementById("ticketAiTranscript").replaceChildren();
 document.getElementById("ticketThread").replaceChildren();
@@ -14569,6 +14680,7 @@ try {
 }
 function renderOpenTicket(data, scrollLatest = false) {
     lastOpenTicketData = data;
+    document.getElementById("ticketStartQA").disabled = false;
     const ticket = data.ticket;
     const signature = JSON.stringify([
         ticket?.id, ticket?.status, ticket?.updated_at, ticket?.resolved_at, ticket?.first_response_at,
@@ -14937,6 +15049,12 @@ if (target?.dbId) openTicket(Number(target.dbId));
 else showWorkspace("tickets");
 });
 document.getElementById("ticketQueueSearch")?.addEventListener("input", event => { ticketQueuePage=1; renderTicketQueue(event.target.value); });
+document.getElementById("ticketStartQA").addEventListener("click", () => {
+    const ticket = lastOpenTicketData?.ticket;
+    if (String(ticket?.id) !== String(openTicketId) || window.ticketReplySending) return;
+    closeTicket();
+    window.NovaraQA?.fromTicket(ticket);
+});
 document.getElementById("ticketCopyId")?.addEventListener("click",async()=>{const value=document.getElementById("ticketDrawerTitle")?.textContent||"";try{await navigator.clipboard.writeText(value);document.getElementById("ticketCopyId").title="Copied";setTimeout(()=>document.getElementById("ticketCopyId").title="Copy ticket number",1200)}catch(_){}});
 document.getElementById("ticketStatusTrigger")?.addEventListener("click",event=>{
 event.stopPropagation();
@@ -16019,7 +16137,7 @@ if (returnFocus) instance.trigger.focus();
 if (activeUnifiedSelect === instance) activeUnifiedSelect = null;
 }
 function enhanceUnifiedSelect(select) {
-if (!select || select.dataset.unifiedSelectReady === "true" || select.multiple || Number(select.size) > 1 || select.closest("#ticketStatusControl,[popover]")) return;
+if (!select || select.dataset.unifiedSelectReady === "true" || select.multiple || Number(select.size) > 1 || select.closest("#ticketStatusControl,[popover],[data-native-select]")) return;
 select.dataset.unifiedSelectReady = "true";
 select.classList.add("unified-select-source");
 select.tabIndex = -1;
@@ -16284,7 +16402,7 @@ document.addEventListener(
         });
     });
     const requestedWorkspace = location.hash.replace("#", "").split("/")[0];
-    showWorkspace(["ai","human","dashboards","tickets","customers","reports","chatbot","knowledge","workflows","settings"].includes(requestedWorkspace) ? requestedWorkspace : "ai", false);
+    showWorkspace(["ai","human","dashboards","tickets","qa","customers","reports","chatbot","knowledge","workflows","settings"].includes(requestedWorkspace) ? requestedWorkspace : "ai", false);
     updateDashboard(currentPeriod);
 }
 );
@@ -17042,6 +17160,7 @@ document.getElementById("sidebarUserInitials").textContent=initials;
 document.getElementById("sidebarUserName").textContent=name;
 document.getElementById("sidebarUserRole").textContent=role;
 document.body.classList.add("novara-authenticated");
+window.NovaraQA?.initialize(user);
 }
 async function verifySession(){
 const token=window.localStorage.getItem(tokenKey)||window.sessionStorage.getItem(tokenKey);
@@ -20050,6 +20169,7 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
  const nav=document.createElement("nav");
  nav.className="test-inbox-navigation";nav.setAttribute("aria-label","Inbox navigation");
  const paths={
+ qa:'<rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V3h6v2m-6 8 2 2 4-4"/>',
  report:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
  knowledge:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 3H20v19H6.5A2.5 2.5 0 0 1 4 19.5v-14A2.5 2.5 0 0 1 6.5 3Z"/><path d="M8 7h8M8 11h6"/>',
  workflow:'<rect x="8" y="3" width="8" height="5" rx="1.5"/><rect x="2" y="16" width="8" height="5" rx="1.5"/><rect x="14" y="16" width="8" height="5" rx="1.5"/><path d="M12 8v4M6 16v-4h12v4"/>',
@@ -20071,7 +20191,7 @@ html[data-theme="light"] body.expanded-inbox-mode #appSidebar .test-inbox-nav-li
  const icon=name=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(paths[name]||paths.web)+'</svg>';
  const button=(id,label,glyph)=>'<button type="button" class="test-inbox-nav-link" data-inbox-filter="'+id+'">'+icon(glyph)+'<span class="test-inbox-nav-label">'+label+'</span><span class="test-inbox-nav-count"></span></button>';
  const group=(name,html)=>'<section class="test-inbox-nav-group"><h3>'+name+'</h3>'+html+'</section>';
- const appLinks=[["sidebarCustomers","Customers","customers"],["sidebarReports","Reports","report"],["sidebarChatbot","AI Chatbot","ai"],["sidebarKnowledge","Knowledge Base","knowledge"],["sidebarWorkflows","Workflows","workflow"],["sidebarSettings","Settings","settings"]];
+ const appLinks=[["sidebarQA","QA Audits","qa"],["sidebarCustomers","Customers","customers"],["sidebarReports","Reports","report"],["sidebarChatbot","AI Chatbot","ai"],["sidebarKnowledge","Knowledge Base","knowledge"],["sidebarWorkflows","Workflows","workflow"],["sidebarSettings","Settings","settings"]];
  nav.innerHTML=group("Analytics",'<button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarAiAgent">'+icon("aiAgent")+'<span class="test-inbox-nav-label">AI Agent</span></button><button type="button" class="test-inbox-nav-link" data-inbox-page="sidebarHumanAgent">'+icon("person")+'<span class="test-inbox-nav-label">Human Agent</span></button><div id="expandedAnalyticsDashboards"></div>')+
  group("Triage",button("all","All","inbox")+button("needs","Needs you","needs")+button("unresolved","Unresolved","unresolved")+button("resolved","Resolved","resolved"))+
  group("Channels",button("channels","All channels","inbox")+button("channel:website","Web widget","web")+button("channel:whatsapp","WhatsApp","whatsapp")+button("channel:instagram","Instagram","instagram")+button("channel:email","Email","email"))+
