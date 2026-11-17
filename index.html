@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-review-workspace-2">
+<link rel="stylesheet" href="assets/qa.css?v=qa-auditor-header-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8670,8 +8670,10 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                                 <button id="qaCaseCopy" class="ticket-copy-id" type="button" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button>
                             </div>
                             <div class="qa-detail-actions">
-                                <span id="qaTicketStatus" class="ticket-queue-status" hidden></span>
-                                <button id="qaHandoff" type="button" hidden>Audit handoff</button>
+                                <div class="qa-case-ownership">
+                                    <span id="qaTicketStatus" class="ticket-queue-status" hidden></span>
+                                    <span id="qaAuditedBy" class="qa-muted" hidden>Audited by: <strong id="qaAuditorName"></strong></span>
+                                </div>
                                 <button type="button" data-qa-close-detail aria-label="Close case">✕</button>
                             </div>
                             <div class="qa-ticket-meta" id="qaTicketMeta" hidden>
@@ -9734,7 +9736,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-review-workspace-2"></script>
+<script src="assets/qa.js?v=qa-auditor-header-1"></script>
 <script>
 /* =====================================================
    STATE
