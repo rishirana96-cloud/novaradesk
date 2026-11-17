@@ -212,7 +212,10 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-message header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 8px; }
 .qa-message header span { color: var(--qa-muted); font-size: 10px; }
-.qa-message-text { margin-top: 5px; white-space: pre-wrap; line-height: 1.6; }
+.qa-message-text { margin-top: 5px; line-height: 1.6; }
+.qa-board .qa-message-text > * + * { margin-top: .55em; }
+.qa-message-text :is(ul, ol) { padding-inline-start: 1.4em; margin-bottom: 0; }
+.qa-message-text a { color: var(--qa-accent); text-decoration: underline; }
 .qa-board .qa-message button { margin-top: 8px; min-height: 26px; padding: 3px 7px; font-size: 10px; }
 .qa-board .qa-message-evidence { border-color: var(--accent); }
 .qa-board .qa-message-evidence button { color: var(--qa-accent); }
