@@ -134,6 +134,8 @@ html[data-theme="dark"] .qa-board {
     gap: 7px;
     font-size: 11px;
 }
+.qa-ticket-meta > .qa-ticket-assignee { flex-basis: 100%; }
+.qa-ticket-meta > span.qa-ticket-meta-divider { border-inline-start: 0; padding-inline-start: 0; }
 .qa-ticket-meta-divider { border-inline-start: 1px solid var(--qa-border); padding-inline-start: 8px; }
 .qa-assignee-avatar {
     display: grid;
@@ -148,6 +150,7 @@ html[data-theme="dark"] .qa-board {
 }
 #qaFirstResponse, #qaSlaState { color: var(--qa-accent); }
 #qaFirstResponse.pending, #qaSlaState[data-state="breached"] { color: var(--qa-danger); }
+.qa-ticket-meta:not([hidden]) + #qaReviewMeta { display: none; }
 #qaReviewMeta { font-size: 11px; overflow-wrap: anywhere; }
 .qa-review-body { min-height: 0; overflow: auto; padding: 15px 18px 24px; }
 .qa-board .ticket-context { margin-bottom: 12px; border: 1px solid var(--qa-border); background: var(--qa-surface); }
@@ -317,6 +320,7 @@ html[data-theme="dark"] .qa-board {
     grid-column: 1 / -1;
     display: flex;
     flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 2px;
     margin-block: 0 -11px;
 }
