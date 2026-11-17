@@ -52,7 +52,8 @@
         const rated = ratings.filter(value => scoreValues.includes(value)).length;
         const critical = byId("qaCritical").checked;
         const badge = byId("qaScore");
-        badge.textContent = critical ? (score === null ? "Critical fail" : `${score}% · Critical fail`) : score === null ? "Unscored" : `${score}%`;
+        const displayScore = score === null ? "" : `${score / 10}/10`;
+        badge.textContent = [displayScore, critical && "Critical fail"].filter(Boolean).join(" · ") || "Unscored";
         badge.classList.toggle("qa-score-critical", critical);
         const progress = byId("qaRatingProgress");
         progress.max = ratings.length || 1;
