@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-workspace-polish-2">
+<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-header-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8669,12 +8669,21 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     <p id="qaEmptyDetail" class="qa-empty-detail qa-muted">Select a case to review.</p>
                     <section id="qaReview" hidden aria-labelledby="qaReviewHeading">
                         <div class="qa-head qa-review-head">
-                            <div class="qa-case-heading"><h2 id="qaReviewHeading" tabindex="-1"></h2><p class="qa-muted" id="qaReviewMeta"></p></div>
+                            <div class="qa-case-heading ticket-title-copy">
+                                <h2 id="qaReviewHeading" tabindex="-1"></h2>
+                                <button id="qaCaseCopy" class="ticket-copy-id" type="button" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button>
+                            </div>
                             <div class="qa-detail-actions">
                                 <span id="qaTicketStatus" class="ticket-queue-status" hidden></span>
                                 <button id="qaHandoff" type="button" hidden>Audit handoff</button>
                                 <button type="button" data-qa-close-detail aria-label="Close case">✕</button>
                             </div>
+                            <div class="qa-ticket-meta" id="qaTicketMeta" hidden>
+                                <span class="qa-ticket-assignee"><span class="qa-muted">Assigned to</span><span class="qa-assignee-avatar" id="qaAssigneeAvatar" aria-hidden="true"></span><strong id="qaAssignedAgent"></strong></span>
+                                <span class="qa-ticket-meta-divider"><span class="qa-muted">First Response</span> <strong id="qaFirstResponse"></strong></span>
+                                <strong class="qa-ticket-meta-divider" id="qaSlaState"></strong>
+                            </div>
+                            <p class="qa-muted" id="qaReviewMeta"></p>
                         </div>
                         <div class="qa-review-body">
                             <div id="qaTicketContext" class="ticket-context" hidden></div>
@@ -9706,7 +9715,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-score-out-of-ten-1"></script>
+<script src="assets/qa.js?v=qa-ticket-header-1"></script>
 <script>
 /* =====================================================
    STATE

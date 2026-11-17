@@ -116,13 +116,41 @@ html[data-theme="dark"] .qa-board {
 #qaReview { height: 100%; display: flex; flex-direction: column; }
 .qa-review-head {
     flex: none;
-    padding: 15px 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 13px 16px 10px;
     border-bottom: 1px solid var(--qa-border);
     background: var(--qa-surface);
 }
 .qa-case-heading { min-width: 0; }
-.qa-case-heading p { margin-top: 4px; font-size: 11px; overflow-wrap: anywhere; }
-.qa-board .qa-detail-actions button { min-height: 30px; font-size: 11px; }
+.qa-case-heading h2 { margin: 0; font-size: 22px; }
+.qa-board .qa-case-heading .ticket-copy-id { flex: none; width: 30px; min-height: 30px; padding: 0; }
+.qa-detail-actions { justify-content: flex-end; }
+.qa-board .qa-detail-actions button { min-height: 32px; font-size: 11px; }
+.qa-ticket-meta, #qaReviewMeta { grid-column: 1 / -1; }
+.qa-ticket-meta, .qa-ticket-assignee {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    font-size: 11px;
+}
+.qa-ticket-meta-divider { border-inline-start: 1px solid var(--qa-border); padding-inline-start: 8px; }
+.qa-assignee-avatar {
+    display: grid;
+    place-items: center;
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    background: var(--qa-tint);
+    color: var(--qa-accent);
+    font-size: 9px;
+    font-weight: 700;
+}
+#qaFirstResponse, #qaSlaState { color: var(--qa-accent); }
+#qaFirstResponse.pending, #qaSlaState[data-state="breached"] { color: var(--qa-danger); }
+#qaReviewMeta { font-size: 11px; overflow-wrap: anywhere; }
 .qa-review-body { min-height: 0; overflow: auto; padding: 15px 18px 24px; }
 .qa-board .ticket-context { margin-bottom: 12px; border: 1px solid var(--qa-border); background: var(--qa-surface); }
 .qa-board .ticket-context-section.case { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
