@@ -2,9 +2,7 @@
     --qa-surface: var(--surface, var(--bg-soft));
     --qa-border: var(--border);
     --qa-muted: var(--text-muted);
-    display: grid;
-    gap: 14px;
-    padding-block: 6px 28px;
+    padding-block: 6px 24px;
     color: var(--text);
     font-size: 13px;
 }
@@ -29,28 +27,22 @@
 .qa-board .qa-primary:hover:enabled { background: #1b4937; }
 .qa-box { min-width: 0; border: 1px solid var(--qa-border); border-radius: 12px; background: var(--qa-surface); padding: 16px; }
 .qa-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.qa-stats span, .qa-muted, .qa-storage, .qa-row small { color: var(--qa-muted); }
+.qa-stats span, .qa-muted, .qa-storage { color: var(--qa-muted); }
 .qa-stats strong { display: block; margin-top: 6px; font-size: 24px; }
 .qa-tabs, .qa-head, .qa-form-footer, .qa-sampling { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .qa-tabs .qa-primary { margin-inline-start: auto; }
 .qa-tabs [aria-pressed="true"], .qa-sampling [aria-pressed="true"] { border-color: var(--accent); background: var(--surface-hover, var(--bg-soft)); }
 .qa-head { justify-content: space-between; margin-bottom: 12px; }
-.qa-review-head { margin-top: 4px; }
 .qa-review-head p { margin-bottom: 4px; }
 .qa-status:empty { display: none; }
 .qa-status { line-height: 1.45; }
 .qa-list { overflow-wrap: anywhere; }
-.qa-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 10px; }
-.qa-row + .qa-row { border-top: 1px solid var(--qa-border); }
-.qa-row strong, .qa-row small { display: block; }
-.qa-row small { margin-top: 4px; }
-.qa-row button { flex: none; }
+ { margin-top: 4px; }
 .qa-picker-tools { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
 .qa-picker-tools label, .qa-board label:not(.qa-check) { display: block; font-weight: 600; }
 .qa-picker-tools label input, .qa-picker-tools label select { display: block; margin-top: 4px; width: 100%; }
-.qa-picker-tools label:nth-child(2) { flex: 1; min-width: 170px; }
-.qa-review-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 14px; align-items: start; }
-.qa-transcript { max-height: 660px; overflow: auto; display: grid; gap: 8px; }
+.qa-picker-tools > label { width: 100%; }
+.qa-transcript { display: flex; flex-direction: column; gap: 8px; }
 .qa-message { border: 1px solid var(--qa-border); border-radius: 9px; padding: 10px; background: var(--bg); }
 .qa-message > div { white-space: pre-wrap; overflow-wrap: anywhere; margin-block: 6px; line-height: 1.45; }
 .qa-message button { min-height: 28px; padding: 4px 8px; }
@@ -67,10 +59,6 @@
 .qa-evidence button { flex: none; }
 .qa-board #qaFormStatus { margin-top: 10px; }
 .qa-board .qa-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-@media (max-width: 850px) {
-    .qa-review-grid { grid-template-columns: 1fr; }
-    .qa-transcript { max-height: 390px; }
-}
 @media (max-width: 520px) {
     .qa-box { padding: 10px; }
     .qa-stats { gap: 6px; }
@@ -92,3 +80,60 @@
 .qa-ticket-action:disabled { opacity: .5; cursor: default; }
 .qa-ticket-action:hover:enabled { border-color: var(--accent); }
 .qa-message.qa-message-evidence { border-color: var(--accent); }
+
+.qa-workspace {
+    display: grid;
+    grid-template-columns: minmax(220px, 24%) minmax(0, 1fr) minmax(100px, 18%);
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 480px;
+    height: calc(100dvh - 145px);
+    border: 1px solid var(--qa-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--qa-surface);
+}
+.qa-queue-pane {
+    min-width: 0;
+    padding: 14px;
+    overflow: auto;
+    background: var(--bg-soft);
+    border-inline-end: 1px solid var(--qa-border);
+}
+.qa-stats { gap: 5px; }
+.qa-stats .qa-box { padding: 8px 6px; }
+.qa-stats span { font-size: 10px; }
+.qa-stats strong { font-size: 16px; margin-top: 3px; }
+.qa-tabs { margin-block: 12px 8px; }
+.qa-tabs button, .qa-sampling button { font-size: 11px; min-height: 30px; }
+.qa-storage, .qa-status, #qaCandidatesInfo { margin-bottom: 10px; font-size: 11px; }
+.qa-list { display: grid; gap: 7px; }
+.qa-list .ticket-queue-card { width: 100%; text-align: start; }
+.qa-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.qa-card-head .ticket-queue-status { text-transform: capitalize; }
+.qa-list .ticket-queue-card-name { top: 0; }
+.qa-detail-pane { position: relative; min-width: 0; background: var(--bg); }
+.qa-empty-pane { border-inline-start: 1px solid var(--qa-border); background: var(--qa-surface); }
+.qa-empty-detail { padding: 22px; }
+#qaReview { height: 100%; display: flex; flex-direction: column; }
+.qa-review-head { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--qa-border); background: var(--qa-surface); }
+.qa-detail-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.qa-detail-actions .ticket-queue-status { text-transform: capitalize; }
+.qa-review-body { min-height: 0; overflow: auto; padding: 16px 18px; }
+.qa-board .ticket-context { margin-bottom: 12px; border: 1px solid var(--qa-border); background: var(--qa-surface); }
+.qa-board .ticket-context-section.identity { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.qa-board .ticket-context-section.case { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.qa-board .ticket-context-section.case > :last-child { grid-column: 1 / -1; }
+.qa-conversation { background: var(--qa-surface); border: 1px solid var(--qa-border); border-radius: 12px; padding: 14px; }
+.qa-board .qa-message { margin: 0; }
+.qa-scoring .qa-conversation, .qa-board .qa-scoring #qaTicketContext { display: none; }
+.qa-message p { font-size: 10px; }
+
+@media (max-width: 1050px) {
+    .qa-workspace { grid-template-columns: minmax(195px, 27%) minmax(0, 1fr) minmax(54px, 13%); }
+}
+@media (max-width: 720px) {
+    .qa-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; height: auto; }
+    .qa-queue-pane { max-height: 320px; border-inline-end: 0; border-bottom: 1px solid var(--qa-border); }
+    .qa-review-body { max-height: 65dvh; }
+    .qa-empty-pane { min-height: 56px; border-inline-start: 0; border-top: 1px solid var(--qa-border); }
+}

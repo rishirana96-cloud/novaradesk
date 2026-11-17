@@ -8645,81 +8645,94 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
     ================================================== -->
     <section id="panel-qa" class="view-panel">
         <div class="qa-board" id="qaBoard">
-            <div class="qa-stats" aria-label="QA workload">
-                <div class="qa-box"><span>In review</span><strong id="qaDraftCount">0</strong></div>
-                <div class="qa-box"><span>Follow-up open</span><strong id="qaActionCount">0</strong></div>
-                <div class="qa-box"><span>Submitted audits</span><strong id="qaCompletedCount">0</strong></div>
-            </div>
-            <div class="qa-tabs" role="group" aria-label="Audit views">
-                <button type="button" data-qa-view="queue" aria-pressed="true">Review queue</button>
-                <button type="button" data-qa-view="followup" aria-pressed="false">Follow-ups</button>
-                <button type="button" data-qa-view="completed" aria-pressed="false">Completed</button>
-                <button type="button" id="qaNewAudit" class="qa-primary">New audit</button>
-            </div>
-            <p class="qa-storage" id="qaStorageNote">Audits and follow-ups are saved to this browser for your account.</p>
-            <p id="qaStatus" class="qa-status" role="status"></p>
-            <div id="qaList" class="qa-box qa-list"></div>
-            <section id="qaPicker" class="qa-box qa-picker" hidden aria-labelledby="qaPickerHeading">
-                <div class="qa-head"><h2 id="qaPickerHeading" tabindex="-1">Select a case</h2><button type="button" data-qa-close>Back to audits</button></div>
-                <div class="qa-picker-tools">
-                    <label>Scorecard
-                        <select id="qaType" data-native-select><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option></select>
-                    </label>
-                    <label>Search recent cases<input id="qaSearch" type="search" placeholder="Ticket, session, or topic"></label>
-                    <div class="qa-sampling">
-                        <button type="button" id="qaRisk" aria-pressed="false">Higher risk only</button>
-                        <button type="button" id="qaSample">Pick random case</button>
+            <div class="qa-workspace">
+                <section class="qa-queue-pane" aria-label="Audit queue">
+                    <div class="qa-stats" aria-label="QA workload">
+                        <div class="qa-box"><span>In review</span><strong id="qaDraftCount">0</strong></div>
+                        <div class="qa-box"><span>Follow-up open</span><strong id="qaActionCount">0</strong></div>
+                        <div class="qa-box"><span>Submitted audits</span><strong id="qaCompletedCount">0</strong></div>
                     </div>
-                </div>
-                <p class="qa-muted" id="qaCandidatesInfo" role="status"></p>
-                <div id="qaCandidates" class="qa-list"></div>
-            </section>
-            <section id="qaReview" hidden aria-labelledby="qaReviewHeading">
-                <div class="qa-head qa-review-head">
-                    <div><p class="qa-muted" id="qaReviewMeta"></p><h2 id="qaReviewHeading" tabindex="-1"></h2></div>
-                    <button type="button" data-qa-close>Back to audits</button>
-                </div>
-                <div class="qa-review-grid">
-                    <section class="qa-box">
-                        <div class="qa-head"><h3>Conversation</h3><button id="qaRetryTranscript" type="button" hidden>Retry</button></div>
-                        <div id="qaTranscript" class="qa-transcript" aria-live="polite"></div>
-                    </section>
-                    <form class="qa-box" id="qaForm" novalidate>
-                        <div class="qa-head"><h3>Scorecard</h3><strong id="qaScore" aria-live="polite"></strong></div>
-                        <fieldset id="qaScores"><legend class="qa-sr-only">Rate each criterion</legend><div id="qaCriteria"></div></fieldset>
-                        <fieldset id="qaFindings"><legend>Findings</legend>
-                            <label class="qa-check"><input id="qaCritical" type="checkbox"> Critical error</label>
-                            <div id="qaEvidence"></div>
-                            <label for="qaNotes">Reviewer notes</label>
-                            <textarea id="qaNotes" rows="3" maxlength="2000"></textarea>
-                        </fieldset>
-                        <fieldset id="qaAction"><legend>Follow-up</legend>
-                            <label for="qaActionType">Action</label>
-                            <select id="qaActionType" data-native-select>
-                                <option value="">No follow-up</option><option>Agent coaching</option><option>Knowledge base update</option><option>Routing change</option><option>Process fix</option>
-                            </select>
-                            <div id="qaActionFields" hidden>
-                                <div class="qa-action-fields">
-                                    <label>Owner<input id="qaOwner" maxlength="120" placeholder="Name or team"></label>
-                                    <label>Due date<input id="qaDue" type="date"></label>
-                                </div>
-                                <label for="qaNextStep">What needs to change?</label>
-                                <textarea id="qaNextStep" rows="2" maxlength="1000"></textarea>
+                    <div class="qa-tabs" role="group" aria-label="Audit views">
+                        <button type="button" data-qa-view="queue" aria-pressed="true">Review queue</button>
+                        <button type="button" data-qa-view="followup" aria-pressed="false">Follow-ups</button>
+                        <button type="button" data-qa-view="completed" aria-pressed="false">Completed</button>
+                        <button type="button" id="qaNewAudit" class="qa-primary">New audit</button>
+                    </div>
+                    <p class="qa-storage" id="qaStorageNote">Audits and follow-ups are saved to this browser for your account.</p>
+                    <p id="qaStatus" class="qa-status" role="status"></p>
+                    <div id="qaList" class="qa-list"></div>
+                    <section id="qaPicker" class="qa-picker" hidden aria-labelledby="qaPickerHeading">
+                        <div class="qa-head"><h2 id="qaPickerHeading" tabindex="-1">Select a case</h2><button type="button" data-qa-close>Back to audits</button></div>
+                        <div class="qa-picker-tools">
+                            <label>Scorecard
+                                <select id="qaType" data-native-select><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option></select>
+                            </label>
+                            <label>Search recent cases<input id="qaSearch" type="search" placeholder="Ticket, session, or topic"></label>
+                            <div class="qa-sampling">
+                                <button type="button" id="qaRisk" aria-pressed="false">Higher risk only</button>
+                                <button type="button" id="qaSample">Pick random case</button>
                             </div>
-                        </fieldset>
-                        <div class="qa-form-footer">
-                            <button id="qaSave" type="button">Save draft</button>
-                            <button id="qaSubmit" type="submit" class="qa-primary">Submit audit</button>
                         </div>
-                        <div id="qaVerify" hidden>
-                            <label for="qaOutcome">How did you verify the fix?</label>
-                            <textarea id="qaOutcome" rows="2" maxlength="1000"></textarea>
-                            <button id="qaCompleteAction" class="qa-primary" type="button">Complete follow-up</button>
+                        <p class="qa-muted" id="qaCandidatesInfo" role="status"></p>
+                        <div id="qaCandidates" class="qa-list"></div>
+                    </section>
+                </section>
+                <div class="qa-detail-pane">
+                    <p id="qaEmptyDetail" class="qa-empty-detail qa-muted">Select a case to review.</p>
+                    <section id="qaReview" hidden aria-labelledby="qaReviewHeading">
+                        <div class="qa-head qa-review-head">
+                            <div><p class="qa-muted" id="qaReviewMeta"></p><h2 id="qaReviewHeading" tabindex="-1"></h2></div>
+                            <div class="qa-detail-actions">
+                                <span id="qaTicketStatus" class="ticket-queue-status" hidden></span>
+                                <button id="qaToggleForm" type="button" aria-controls="qaForm" aria-expanded="false">Scorecard</button>
+                                <button type="button" data-qa-close-detail aria-label="Close case">✕</button>
+                            </div>
                         </div>
-                        <p id="qaFormStatus" class="qa-status" role="status"></p>
-                    </form>
+                        <div class="qa-review-body">
+                            <div id="qaTicketContext" class="ticket-context" hidden></div>
+                            <section class="qa-conversation">
+                                <div class="qa-head"><h3>Conversation</h3><button id="qaRetryTranscript" type="button" hidden>Retry</button></div>
+                                <div id="qaTranscript" class="qa-transcript" aria-live="polite"></div>
+                            </section>
+                            <form class="qa-box" id="qaForm" novalidate hidden>
+                                <div class="qa-head"><h3>Scorecard</h3><strong id="qaScore" aria-live="polite"></strong></div>
+                                <fieldset id="qaScores"><legend class="qa-sr-only">Rate each criterion</legend><div id="qaCriteria"></div></fieldset>
+                                <fieldset id="qaFindings"><legend>Findings</legend>
+                                    <label class="qa-check"><input id="qaCritical" type="checkbox"> Critical error</label>
+                                    <div id="qaEvidence"></div>
+                                    <label for="qaNotes">Reviewer notes</label>
+                                    <textarea id="qaNotes" rows="3" maxlength="2000"></textarea>
+                                </fieldset>
+                                <fieldset id="qaAction"><legend>Follow-up</legend>
+                                    <label for="qaActionType">Action</label>
+                                    <select id="qaActionType" data-native-select>
+                                        <option value="">No follow-up</option><option>Agent coaching</option><option>Knowledge base update</option><option>Routing change</option><option>Process fix</option>
+                                    </select>
+                                    <div id="qaActionFields" hidden>
+                                        <div class="qa-action-fields">
+                                            <label>Owner<input id="qaOwner" maxlength="120" placeholder="Name or team"></label>
+                                            <label>Due date<input id="qaDue" type="date"></label>
+                                        </div>
+                                        <label for="qaNextStep">What needs to change?</label>
+                                        <textarea id="qaNextStep" rows="2" maxlength="1000"></textarea>
+                                    </div>
+                                </fieldset>
+                                <div class="qa-form-footer">
+                                    <button id="qaSave" type="button">Save draft</button>
+                                    <button id="qaSubmit" type="submit" class="qa-primary">Submit audit</button>
+                                </div>
+                                <div id="qaVerify" hidden>
+                                    <label for="qaOutcome">How did you verify the fix?</label>
+                                    <textarea id="qaOutcome" rows="2" maxlength="1000"></textarea>
+                                    <button id="qaCompleteAction" class="qa-primary" type="button">Complete follow-up</button>
+                                </div>
+                                <p id="qaFormStatus" class="qa-status" role="status"></p>
+                            </form>
+                        </div>
+                    </section>
                 </div>
-            </section>
+                <div class="qa-empty-pane" aria-hidden="true"></div>
+            </div>
         </div>
     </section>
     <section id="panel-dashboards" class="view-panel">
