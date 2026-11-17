@@ -61,12 +61,19 @@
         byId("qaRatedCount").textContent = `${rated} of ${ratings.length} criteria rated`;
     }
 
+    function conversationTopic(item) {
+        return item.topic ? item.topic.charAt(0).toUpperCase() + item.topic.slice(1) : "";
+    }
+
+    function conversationTitle(item) {
+        return item.customer || conversationTopic(item) || "AI conversation";
+    }
+
     function conversationCard(item) {
         const key = sourceKey(item);
         const selected = state.current && sourceKey(state.current) === key;
-        const topic = item.topic ? item.topic.charAt(0).toUpperCase() + item.topic.slice(1) : "";
-        const heading = item.customer || topic || "AI conversation";
-        const summary = [item.customer ? topic : "", ...item.risk].filter(Boolean).join(" · ");
+        const heading = conversationTitle(item);
+        const summary = [item.customer ? conversationTopic(item) : "", ...item.risk].filter(Boolean).join(" · ");
         return `<button type="button" class="ticket-queue-card qa-ai-card${selected ? " active" : ""}" data-qa-candidate="${esc(key)}" aria-controls="qaReview" aria-pressed="${Boolean(selected)}" title="${esc(item.sourceId)}">
             <span class="qa-card-head"><strong>${esc(heading)}</strong><span class="qa-ai-label">AI chat</span></span>
             ${summary ? `<span class="ticket-queue-card-query">${esc(summary)}</span>` : ""}
@@ -361,7 +368,7 @@
             transcript.innerHTML = state.messages.map((message, index) => `
                 <article class="qa-message${message.who === "Customer" ? "" : " qa-message-support"}" data-qa-transcript-index="${index}">
                     <header><strong>${esc(message.who)}</strong><span>${esc(message.channel)} · ${esc(message.date ? ticketDateText(message.date) : `Message ${index + 1}`)}</span></header>
-                    <div class="qa-message-text">${esc(message.content)}</div>
+                    <div class="qa-message-text">${renderSafeMarkdown(String(message.content ?? ""))}</div>
                     ${record.status === "draft" ? `<button type="button" data-qa-message="${index}" aria-pressed="false">Use as evidence</button>` : ""}
                 </article>`).join("") || '<p class="qa-muted">There are no messages on this case.</p>';
             renderEvidence();
@@ -391,12 +398,12 @@
         byId("qaEmptyScore").hidden = true;
         byId("qaScorecardTitle").textContent = card.label;
         if (focus) showTools("scoring");
-        byId("qaReviewHeading").textContent = record.title;
+        byId("qaReviewHeading").textContent = record.type === "ai" ? conversationTitle(record) : record.title;
         byId("qaCaseCopy").dataset.copyTicketNumber = record.title;
         byId("qaCaseCopy").hidden = record.type === "ai";
         const statusLabel = { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status];
         byId("qaAuditStatus").textContent = statusLabel;
-        byId("qaReviewMeta").textContent = [card.label, statusLabel, record.reviewer].filter(Boolean).join(" · ");
+        byId("qaReviewMeta").textContent = [card.label, record.type === "ai" ? record.sourceId : statusLabel, record.reviewer].filter(Boolean).join(" · ");
         renderCriteria(state.current.criteria, record.ratings);
         ["qaScores", "qaFindings", "qaAction"].forEach(id => { byId(id).disabled = !editing; });
         byId("qaCritical").checked = Boolean(record.critical);
