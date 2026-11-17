@@ -63,11 +63,61 @@
         </button>`;
     }
 
-    function showScorecard(visible) {
-        byId("qaForm").hidden = !visible;
-        byId("qaToggleForm").setAttribute("aria-expanded", String(visible));
-        byId("qaToggleForm").textContent = visible ? "Show conversation" : "Scorecard";
-        byId("qaReview").classList.toggle("qa-scoring", visible);
+    function showTools(tab, focus = false) {
+        const settings = tab === "settings";
+        byId("qaScoringPanel").hidden = settings;
+        byId("qaSettingsPanel").hidden = !settings;
+        [byId("qaScoringTab"), byId("qaSettingsTab")].forEach((button, index) => {
+            const active = index === Number(settings);
+            button.setAttribute("aria-selected", String(active));
+            button.tabIndex = active ? 0 : -1;
+            if (active && focus) button.focus();
+        });
+    }
+
+    function configuredCriteria(type) {
+        try {
+            const saved = JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(`${state.key}:criteria:${type}`) || "null");
+            if (Array.isArray(saved) && saved.length && saved.every(item => typeof item === "string" && item.trim())) return saved;
+        } catch { /* Use defaults when settings cannot be read. */ }
+        return scorecards[type].criteria;
+    }
+
+    function loadCriteriaSettings() {
+        const type = byId("qaSettingsType").value;
+        byId("qaSettingsCriteria").value = configuredCriteria(type).join("\n");
+        byId("qaSettingsStatus").textContent = "";
+    }
+
+    function saveCriteria(event) {
+        event.preventDefault();
+        if (!state.key) return;
+        const type = byId("qaSettingsType").value;
+        const criteria = byId("qaSettingsCriteria").value.split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+        const status = byId("qaSettingsStatus");
+        if (!criteria.length || new Set(criteria.map(item => item.toLowerCase())).size !== criteria.length) {
+            status.textContent = "Enter at least one criterion and remove duplicates.";
+            return;
+        }
+        try {
+            window.NOVARA_LOCAL_STORAGE.setItem(`${state.key}:criteria:${type}`, JSON.stringify(criteria));
+            status.textContent = "Criteria saved.";
+            if (state.current?.type === type && !state.current.updated) {
+                const values = [...byId("qaCriteria").querySelectorAll("select")].map(field => field.value);
+                const ratings = new Map(state.current.criteria.map((name, index) => [name, values[index]]));
+                state.current.criteria = criteria;
+                renderCriteria(criteria, criteria.map(name => ratings.get(name)));
+                showRating();
+            }
+        } catch {
+            status.textContent = "Could not save criteria.";
+        }
+    }
+
+    function renderCriteria(criteria, ratings = []) {
+        byId("qaCriteria").innerHTML = criteria.map((name, index) => `<div class="qa-criterion">
+            <label for="qaCriterion${index}">${esc(name)}</label><select id="qaCriterion${index}" data-native-select>${options}</select></div>`).join("");
+        criteria.forEach((_, index) => { byId(`qaCriterion${index}`).value = ratings[index] || ""; });
     }
 
     function selectRow(key) {
@@ -84,6 +134,8 @@
         state.messages = [];
         state.reviewRequest++;
         byId("qaReview").hidden = true;
+        byId("qaForm").hidden = true;
+        byId("qaEmptyScore").hidden = false;
         byId("qaEmptyDetail").hidden = false;
         selectRow(null);
         return key;
@@ -98,7 +150,9 @@
         const drafts = items.filter(item => item.status === "draft");
         const actions = items.filter(item => item.status === "followup");
         const complete = items.filter(item => item.status === "complete");
-        const visible = { queue: drafts, followup: actions, completed: [...complete, ...actions] }[view];
+        const type = byId("qaType").value;
+        const visible = { queue: drafts, followup: actions, completed: [...complete, ...actions] }[view]
+            .filter(item => type === "both" || item.type === type);
         const empty = { queue: "No draft audits.", followup: "No open follow-ups.", completed: "Submitted audits will appear here." }[view];
         byId("qaList").innerHTML = [...visible].reverse().map(item => {
             const details = [scorecards[item.type].label, item.status === "draft" ? "Draft" : `${item.score}%`, item.critical ? "Critical error" : ""];
@@ -130,7 +184,7 @@
         const matches = candidates();
         byId("qaSample").disabled = matches.length === 0;
         byId("qaCandidates").innerHTML = matches.map(item =>
-            row(item, [item.topic, ...item.risk].filter(Boolean).join(" · "), "qa-candidate", item.ticketStatus)
+            row(item, [byId("qaType").value === "both" ? scorecards[item.type].label : "", item.topic, ...item.risk].filter(Boolean).join(" · "), "qa-candidate", item.ticketStatus)
         ).join("");
         return matches.length;
     }
@@ -142,30 +196,39 @@
         renderCandidates();
         byId("qaCandidatesInfo").textContent = "Loading recent cases…";
         try {
-            const data = await request(type === "ai" ? "/conversations?limit=100&period=28" : "/tickets?limit=100&period=28");
+            const types = type === "both" ? ["human", "ai"] : [type];
+            const lists = await Promise.allSettled(types.map(async source => {
+                const endpoint = source === "ai" ? "conversations" : "tickets";
+                const data = await request(`/${endpoint}?limit=100&period=28`);
+                const rows = Array.isArray(data) ? data : data?.[endpoint];
+                if (!Array.isArray(rows)) throw new Error("Unexpected case list");
+                return rows.map(item => ({ item, type: source }));
+            }));
             if (sequence !== state.sourceRequest) return;
-            const rows = Array.isArray(data) ? data : data?.[type === "ai" ? "conversations" : "tickets"];
-            if (!Array.isArray(rows)) throw new Error("Unexpected case list");
+            const available = lists.filter(result => result.status === "fulfilled");
+            if (!available.length) throw new Error("No case sources loaded");
             const items = new Map();
-            for (const item of rows) {
+            for (const { item, type } of available.flatMap(result => result.value)) {
                 const sourceId = String((type === "ai" ? item.session_id : item.id) ?? "");
-                if (!sourceId || items.has(sourceId)) continue;
-                if (type === "handoff" && !(item.session_id || item.escalation_reason)) continue;
+                const key = sourceKey({ type, sourceId });
+                if (!sourceId || items.has(key)) continue;
                 const risk = [];
                 if (item.status === "reopened") risk.push("Reopened");
                 if (item.sentiment === "negative") risk.push("Negative sentiment");
                 if (["urgent", "high"].includes(item.priority)) risk.push("High priority");
                 if (item.resolution_status === "escalated") risk.push("Escalated");
-                items.set(sourceId, {
+                items.set(key, {
                     type, sourceId, risk,
                     title: type === "ai" ? sourceId : (item.ticket_number || `NX-${sourceId.padStart(4, "0")}`),
                     topic: readable(item.customer_query || item.subject || item.intent || item.channel),
                     customer: item.customer_name,
+                    date: item.created_at || item.started_at || "",
                     ticketStatus: readable(item.status)
                 });
             }
-            state.candidates = [...items.values()].slice(0, 100);
+            state.candidates = [...items.values()].sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
             updateCandidateCount();
+            if (available.length < types.length) byId("qaCandidatesInfo").textContent += " · One case source could not load.";
             const first = candidates()[0];
             if (autoSelect && first && !state.current) startAudit(first, false);
         } catch {
@@ -234,6 +297,7 @@
         const status = byId("qaTicketStatus");
         context.hidden = !ticket;
         status.hidden = !ticket?.status;
+        byId("qaHandoff").hidden = state.current?.type !== "human" || !(ticket?.session_id || ticket?.escalation_reason);
         if (!ticket) return;
         status.textContent = readable(ticket.status);
         status.className = `ticket-queue-status ${ticketStatusClass(ticket.status)}`;
@@ -285,7 +349,7 @@
     }
 
     function openAudit(record, focus = true) {
-        state.current = record;
+        state.current = { ...record, criteria: record.criteria || scorecards[record.type].criteria };
         state.evidence = record.evidence || null;
         const editing = record.status === "draft";
         const card = scorecards[record.type];
@@ -294,12 +358,13 @@
         byId("qaEmptyDetail").hidden = true;
         byId("qaReview").querySelector(".qa-review-body").scrollTop = 0;
         selectRow(sourceKey(record));
-        showScorecard(false);
+        byId("qaForm").hidden = false;
+        byId("qaEmptyScore").hidden = true;
+        byId("qaScorecardTitle").textContent = card.label;
+        if (focus) showTools("scoring");
         byId("qaReviewHeading").textContent = record.title;
         byId("qaReviewMeta").textContent = [card.label, { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status], record.reviewer].filter(Boolean).join(" · ");
-        byId("qaCriteria").innerHTML = card.criteria.map((name, index) => `<div class="qa-criterion">
-            <label for="qaCriterion${index}">${name}</label><select id="qaCriterion${index}" data-native-select>${options}</select></div>`).join("");
-        card.criteria.forEach((_, index) => { byId(`qaCriterion${index}`).value = record.ratings?.[index] || ""; });
+        renderCriteria(state.current.criteria, record.ratings);
         ["qaScores", "qaFindings", "qaAction"].forEach(id => { byId(id).disabled = !editing; });
         byId("qaCritical").checked = Boolean(record.critical);
         byId("qaNotes").value = record.notes || "";
@@ -344,7 +409,7 @@
     function startAudit(item, focus = true) {
         if (state.current && sourceKey(state.current) === sourceKey(item)) return;
         const existing = read().find(saved => sourceKey(saved) === sourceKey(item));
-        openAudit(existing || { ...item, status: "draft", reviewer: state.reviewer }, focus);
+        openAudit(existing || { ...item, status: "draft", reviewer: state.reviewer, criteria: configuredCriteria(item.type) }, focus);
     }
 
     function completeFollowup() {
@@ -365,8 +430,11 @@
             const key = closeDetail();
             const source = [...byId("qaBoard").querySelectorAll("[data-qa-candidate], [data-qa-audit]")].find(row => (row.dataset.qaCandidate || row.dataset.qaAudit) === key);
             (source || byId("qaNewAudit")).focus();
-        } else if (button.id === "qaToggleForm") {
-            showScorecard(byId("qaForm").hidden);
+        } else if (button.id === "qaScoringTab" || button.id === "qaSettingsTab") {
+            showTools(button.id === "qaSettingsTab" ? "settings" : "scoring");
+        } else if (button.id === "qaHandoff" && state.current?.type === "human") {
+            const { sourceId, title, topic, customer } = state.current;
+            startAudit({ type: "handoff", sourceId, title, topic, customer });
         } else if (qaAudit) {
             const saved = read().find(item => sourceKey(item) === qaAudit);
             if (saved) openAudit(saved);
@@ -376,7 +444,7 @@
         } else if (qaMessage !== undefined && state.current?.status === "draft") {
             const message = state.messages[Number(qaMessage)];
             state.evidence = { key: message.key, label: [message.channel, message.who, message.date ? ticketDateText(message.date) : `Message ${Number(qaMessage) + 1}`].join(" · ") };
-            showScorecard(true);
+            showTools("scoring");
             renderEvidence();
             byId("qaNotes").focus();
         } else if (button.id === "qaRemoveEvidence") {
@@ -386,7 +454,18 @@
         }
     });
     byId("qaNewAudit").addEventListener("click", () => { if (state.key) showPicker(); });
-    byId("qaType").addEventListener("change", () => { closeDetail(); loadCandidates(); });
+    byId("qaType").addEventListener("change", () => {
+        if (state.view === "cases") { closeDetail(); loadCandidates(); }
+        else showList(state.view);
+    });
+    byId("qaSettingsForm").addEventListener("submit", saveCriteria);
+    byId("qaSettingsType").addEventListener("change", loadCriteriaSettings);
+    byId("qaScoringTab").parentElement.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const settings = event.key === "End" || (event.key !== "Home" && event.target.id === "qaScoringTab");
+        showTools(settings ? "settings" : "scoring", true);
+    });
     byId("qaSearch").addEventListener("input", updateCandidateCount);
     byId("qaRisk").addEventListener("click", event => {
         const element = event.currentTarget;
@@ -411,6 +490,7 @@
             if (!identity) return;
             state.key = `novaradesk_qa_v1:${JSON.stringify([user.workspace_id || "", identity])}`;
             state.reviewer = user.name || user.email || "Reviewer";
+            loadCriteriaSettings();
             if (currentTab === "qa") this.activate();
         },
         activate() {
