@@ -290,7 +290,6 @@
         byId("qaTicketMeta").hidden = !ticket;
         byId("qaResponseMeta").hidden = !ticket;
         status.hidden = !ticket?.status;
-        byId("qaHandoff").hidden = state.current?.type !== "human" || !(ticket?.session_id || ticket?.escalation_reason);
         if (!ticket) return;
         const details = normalizeTicket(ticket, 0);
         status.textContent = ticketStatusLabel(details.status);
@@ -403,7 +402,9 @@
         byId("qaCaseCopy").hidden = record.type === "ai";
         const statusLabel = { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status];
         byId("qaAuditStatus").textContent = statusLabel;
-        byId("qaReviewMeta").textContent = [card.label, record.type === "ai" ? record.sourceId : statusLabel, record.reviewer].filter(Boolean).join(" · ");
+        byId("qaAuditorName").textContent = record.reviewer || "";
+        byId("qaAuditedBy").hidden = !record.reviewer;
+        byId("qaReviewMeta").textContent = [card.label, record.type === "ai" ? record.sourceId : statusLabel].filter(Boolean).join(" · ");
         renderCriteria(state.current.criteria, record.ratings);
         ["qaScores", "qaFindings", "qaAction"].forEach(id => { byId(id).disabled = !editing; });
         byId("qaCritical").checked = Boolean(record.critical);
@@ -495,9 +496,6 @@
             (source || byId("qaTicketView")).focus();
         } else if (button.id === "qaScoringTab" || button.id === "qaSettingsTab") {
             showTools(button.id === "qaSettingsTab" ? "settings" : "scoring");
-        } else if (button.id === "qaHandoff" && state.current?.type === "human") {
-            const { sourceId, title, topic, customer } = state.current;
-            startAudit({ type: "handoff", sourceId, title, topic, customer });
         } else if (button.dataset.qaCandidate) {
             const item = state.candidates.find(candidate => sourceKey(candidate) === button.dataset.qaCandidate);
             if (item) startAudit(item);

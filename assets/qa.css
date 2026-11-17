@@ -129,7 +129,11 @@ html[data-theme="dark"] .qa-board {
 .qa-case-heading { min-width: 0; }
 .qa-case-heading h2 { margin: 0; font-size: 22px; }
 .qa-board .qa-case-heading .ticket-copy-id { flex: none; width: 30px; min-height: 30px; padding: 0; }
-.qa-detail-actions { justify-content: flex-end; }
+.qa-detail-actions { align-items: flex-start; justify-content: flex-end; }
+.qa-case-ownership { display: grid; justify-items: end; gap: 5px; min-width: 0; }
+.qa-board #qaTicketStatus { padding: 6px 11px; font-size: 12px; line-height: 1.35; }
+#qaAuditedBy { font-size: 10px; overflow-wrap: anywhere; text-align: end; }
+#qaAuditorName { color: var(--text); }
 .qa-board .qa-detail-actions button { min-height: 32px; font-size: 11px; }
 .qa-ticket-meta, #qaReviewMeta { grid-column: 1 / -1; }
 .qa-ticket-meta, .qa-ticket-assignee, .qa-response-meta {
