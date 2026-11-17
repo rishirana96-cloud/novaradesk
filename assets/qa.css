@@ -314,3 +314,37 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-ticket-action:disabled { opacity: .5; cursor: default; }
 .qa-ticket-action:hover:enabled { border-color: var(--accent); }
+
+.qa-channel-switch {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-block: 0 -11px;
+}
+.qa-board .qa-channel-switch button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding-inline: 10px;
+    border-color: transparent;
+    border-radius: 9px 9px 0 0;
+    background: transparent;
+    color: var(--qa-muted);
+    font-size: 11px;
+}
+.qa-board .qa-channel-switch [aria-selected="true"] {
+    border-color: var(--qa-border);
+    border-bottom-color: var(--qa-canvas);
+    background: var(--qa-canvas);
+    color: var(--text);
+    font-weight: 700;
+}
+.qa-channel-switch svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.qa-activity-panel { border: 1px solid var(--qa-border); border-radius: 12px; background: var(--qa-surface); }
+.qa-call-table { overflow: auto; }
+.qa-call-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.qa-call-table :is(th,td) { padding: 9px 10px; text-align: start; border-bottom: 1px solid var(--qa-border); }
+.qa-call-table th { white-space: nowrap; color: var(--qa-muted); }
+.qa-board .ticket-history-copy { overflow-wrap: anywhere; }

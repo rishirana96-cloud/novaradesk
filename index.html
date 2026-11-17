@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-header-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-tabs-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8684,12 +8684,25 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                                 <strong class="qa-ticket-meta-divider" id="qaSlaState"></strong>
                             </div>
                             <p class="qa-muted" id="qaReviewMeta"></p>
+                            <div id="qaChannelSwitch" class="qa-channel-switch" role="tablist" aria-label="Ticket channel">
+                                <button id="qaChannelChat" aria-controls="qa-panel-chat" class="active" type="button" role="tab" aria-selected="true" data-qa-channel="chat"><svg class="ticket-tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9H13a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat</span></button>
+                                <button id="qaChannelCall" aria-controls="qa-panel-call" tabindex="-1" type="button" role="tab" aria-selected="false" data-qa-channel="call"><svg class="ticket-tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg><span>Calls</span></button>
+                                <button id="qaChannelHistory" aria-controls="qa-panel-history" tabindex="-1" type="button" role="tab" aria-selected="false" data-qa-channel="history"><svg class="ticket-tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 11a9 9 0 1 1 2.6 7.4M3 4v7h7"/><path d="M12 7v5l3 2"/></svg><span>History</span></button>
+                            </div>
                         </div>
                         <div class="qa-review-body">
                             <div id="qaTicketContext" class="ticket-context" hidden></div>
-                            <section class="qa-conversation">
+                            <section id="qa-panel-chat" class="qa-conversation" role="tabpanel" aria-labelledby="qaChannelChat">
                                 <div class="qa-head qa-conversation-head"><h3>Conversation <span id="qaMessageCount" class="qa-muted"></span></h3><button id="qaRetryTranscript" type="button" hidden>Retry</button></div>
                                 <div id="qaTranscript" class="qa-transcript" aria-live="polite"></div>
+                            </section>
+                            <section id="qa-panel-call" class="qa-activity-panel" role="tabpanel" aria-labelledby="qaChannelCall" hidden>
+                                <div class="qa-head qa-conversation-head"><h3>Call history</h3><span id="qaCallCount" class="qa-muted"></span></div>
+                                <div class="qa-call-table"><table><thead><tr><th>Timestamp</th><th>Notes</th><th>Outcome</th><th>Agent</th><th>Type</th><th>Duration</th><th>Resolution</th><th>Recording</th></tr></thead><tbody id="qaCallRows"></tbody></table></div>
+                            </section>
+                            <section id="qa-panel-history" class="ticket-history-section" role="tabpanel" aria-labelledby="qaChannelHistory" hidden>
+                                <header class="ticket-history-head"><h3>Ticket history</h3><span id="qaHistoryCount" class="ticket-history-count"></span></header>
+                                <div id="qaHistoryTimeline" class="ticket-history-timeline"></div>
                             </section>
                         </div>
                     </section>
@@ -9715,7 +9728,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-ticket-header-1"></script>
+<script src="assets/qa.js?v=qa-ticket-tabs-1"></script>
 <script>
 /* =====================================================
    STATE
@@ -16651,19 +16664,20 @@ const callLogsStore = () => { try { const value=JSON.parse(window.NOVARA_LOCAL_S
 const saveCallLog = log => { const id=ticketId();if(!id)return;const store=callLogsStore();(store[id]||=[]).unshift(log);store[id]=store[id].slice(0,100);window.NOVARA_LOCAL_STORAGE.setItem(CALL_LOGS_KEY,JSON.stringify(store)); };
 const recordAction = (type,title,detail,actor="Novara CX Support") => { const id=ticketId();if(!id)return;const store=historyStore();(store[id]||=[]).push({id:`event-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,type,title,detail,actor,created_at:new Date().toISOString()});store[id]=store[id].slice(-120);window.NOVARA_LOCAL_STORAGE.setItem(HISTORY_KEY,JSON.stringify(store));if(drawer?.classList.contains("ticket-history-view"))renderHistoryView(); };
 const historyTime = value => { const date=new Date(value||Date.now());return Number.isNaN(date.getTime())?"—":date.toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
-const renderHistoryView = () => {
-const data=window.lastOpenTicketData || lastOpenTicketData || {},ticket=data.ticket||{},events=[];
+const renderHistory = (data, host, count) => {
+const ticket=data.ticket||{},events=[];
 if(ticket.created_at)events.push({type:"created",title:"Ticket created",detail:ticket.subject||ticket.customer_query||"Customer support request created.",actor:ticket.customer_name||"Customer",created_at:ticket.created_at});
 (data.messages||[]).forEach(message=>events.push({type:"message",title:message.sender_type==="agent"?"Reply sent":"Customer replied",detail:message.message,actor:message.sender_name||(message.sender_type==="agent"?ticket.agent_name||"Novara CX Support":ticket.customer_name||"Customer"),created_at:message.created_at}));
 (data.notes||[]).forEach(note=>events.push({type:"note",title:"Internal note added",detail:note.note,actor:note.author_name||ticket.agent_name||"Novara CX Support",created_at:note.created_at}));
 if(ticket.first_response_at)events.push({type:"response",title:"First response recorded",detail:"The first human response was sent to the customer.",actor:ticket.agent_name||"Novara CX Support",created_at:ticket.first_response_at});
 if(ticket.reopened_at)events.push({type:"status",title:"Ticket reopened",detail:"The ticket returned to the active support queue.",actor:ticket.agent_name||"Novara CX Support",created_at:ticket.reopened_at});
 if(ticket.resolved_at)events.push({type:"status",title:"Ticket resolved",detail:ticket.resolution_note||"The support request was marked as resolved.",actor:ticket.agent_name||"Novara CX Support",created_at:ticket.resolved_at});
-events.push(...(historyStore()[String(ticket.id||openTicketId)]||[]));
+events.push(...(historyStore()[String(ticket.id||"")]||[]));
 const unique=[...new Map(events.map(event=>[`${event.type}|${event.title}|${event.created_at}|${event.detail}`,event])).values()].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-const host=document.getElementById("ticketHistoryTimeline"),count=document.getElementById("ticketHistoryCount");if(count)count.textContent=`${unique.length} ${unique.length===1?"event":"events"}`;
+if(count)count.textContent=`${unique.length} ${unique.length===1?"event":"events"}`;
 if(host)host.innerHTML=unique.length?unique.map(event=>`<article class="ticket-history-event" data-event-type="${escapeHtml(event.type||"activity")}"><span class="ticket-history-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${event.type==="created"?"M12 5v14M5 12h14":event.type==="status"?"m5 12 4 4L19 6":event.type==="call"?"M7 4h3l2 5-2 2a14 14 0 0 0 4 4l2-2 5 2v3a2 2 0 0 1-2 2C11 20 4 13 4 5a2 2 0 0 1 3-1Z":event.type==="message"?"M4 5h16v11H8l-4 4Z":"M6 4h12v16H6zM9 8h6M9 12h6"}"/></svg></span><div class="ticket-history-copy"><strong>${escapeHtml(event.title)}</strong><p>${escapeHtml(event.detail||"Activity recorded.")}</p><span class="ticket-history-actor">By ${escapeHtml(event.actor||"System")}</span></div><time>${escapeHtml(historyTime(event.created_at))}</time></article>`).join(""):`<div class="empty-state">No ticket activity has been recorded yet.</div>`;
 };
+const renderHistoryView = () => renderHistory(window.lastOpenTicketData || lastOpenTicketData || {}, document.getElementById("ticketHistoryTimeline"), document.getElementById("ticketHistoryCount"));
 const localDateTimeValue = value => {
 const date = value ? new Date(String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z") : new Date();
 const safe = Number.isNaN(date.getTime()) ? new Date() : date;
@@ -16685,10 +16699,11 @@ const draftNotes = callNotesStore()[String(ticket.id || openTicketId || "")] || 
 if (timestampInput && !timestampInput.value) timestampInput.value = localDateTimeValue(new Date().toISOString());
 if (agentInput && document.activeElement !== agentInput) agentInput.value = agent;
 if (notesInput && document.activeElement !== notesInput && !notesInput.value) notesInput.value = draftNotes;
-const logs = callLogsStore()[String(ticket.id || openTicketId || "")] || [];
-const count = document.getElementById("ticketCallAttemptCount");
+renderCallLogs(String(ticket.id || openTicketId || ""), document.getElementById("ticketCallHistoryBody"), document.getElementById("ticketCallAttemptCount"));
+};
+const renderCallLogs = (id, body, count, readOnly = false) => {
+const logs = callLogsStore()[id] || [];
 if (count) count.textContent = `${logs.length} ${logs.length===1?"attempt":"attempts"}`;
-const body = document.getElementById("ticketCallHistoryBody");
 if (!body) return;
 body.innerHTML = logs.length ? logs.map(log => `<tr>
     <td>${escapeHtml(callTimestampText(log.timestamp))}</td>
@@ -16698,8 +16713,12 @@ body.innerHTML = logs.length ? logs.map(log => `<tr>
     <td>${escapeHtml(log.typeLabel)}</td>
     <td>${escapeHtml(log.duration || "—")}</td>
     <td><span class="ticket-call-resolution">${escapeHtml(log.resolution || "Logged")}</span></td>
-    <td>${log.recording ? `<button class="ticket-call-recording-download" type="button" aria-label="Recording attached" title="${escapeHtml(log.recording)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>` : "—"}</td>
+    <td>${log.recording ? (readOnly ? escapeHtml(log.recording) : `<button class="ticket-call-recording-download" type="button" aria-label="Recording attached" title="${escapeHtml(log.recording)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></button>`) : "—"}</td>
 </tr>`).join("") : '<tr><td colspan="8"><div class="empty-state">No calls have been logged for this ticket.</div></td></tr>';
+};
+window.renderQaTicketActivity = (data, targets) => {
+    renderHistory(data, targets.history, targets.historyCount);
+    renderCallLogs(String(data.ticket?.id || ""), targets.calls, targets.callCount, true);
 };
 const setChannel = channel => {
 const isCall = channel === "call";
