@@ -47,8 +47,17 @@
     }
 
     function showRating() {
-        const score = scoreOf([...byId("qaCriteria").querySelectorAll("select")].map(field => field.value));
-        byId("qaScore").textContent = score === null ? "Unscored" : `${score}%${byId("qaCritical").checked ? " · Critical fail" : ""}`;
+        const ratings = [...byId("qaCriteria").querySelectorAll("select")].map(field => field.value);
+        const score = scoreOf(ratings);
+        const rated = ratings.filter(value => scoreValues.includes(value)).length;
+        const critical = byId("qaCritical").checked;
+        const badge = byId("qaScore");
+        badge.textContent = critical ? (score === null ? "Critical fail" : `${score}% · Critical fail`) : score === null ? "Unscored" : `${score}%`;
+        badge.classList.toggle("qa-score-critical", critical);
+        const progress = byId("qaRatingProgress");
+        progress.max = ratings.length || 1;
+        progress.value = rated;
+        byId("qaRatedCount").textContent = `${rated} of ${ratings.length} criteria rated`;
     }
 
     function row(item, subtitle, event, badge) {
@@ -302,6 +311,7 @@
         state.messages = [];
         const transcript = byId("qaTranscript");
         renderTicketContext(null);
+        byId("qaMessageCount").textContent = "";
         transcript.textContent = "Loading conversation…";
         byId("qaRetryTranscript").hidden = true;
         try {
@@ -311,12 +321,14 @@
             if (data.success === false || (record.type !== "ai" && String(data.ticket?.id) !== record.sourceId)) throw new Error("Conversation unavailable");
             renderTicketContext(record.type === "ai" ? null : data.ticket);
             state.messages = transcriptRows(data, record.type);
+            const count = state.messages.length;
+            byId("qaMessageCount").textContent = count ? `${count} ${count === 1 ? "message" : "messages"}` : "";
             transcript.innerHTML = state.messages.map((message, index) => `
-                <div class="qa-message ticket-thread-message ${message.who === "Customer" ? "customer" : message.who === "Novara AI" ? "ai" : "agent"}" data-qa-transcript-index="${index}"><strong>${esc(message.who)}</strong>
-                    <p class="qa-muted">${esc(message.channel)} · ${esc(message.date ? ticketDateText(message.date) : `Message ${index + 1}`)}</p>
-                    <div>${esc(message.content)}</div>
+                <article class="qa-message${message.who === "Customer" ? "" : " qa-message-support"}" data-qa-transcript-index="${index}">
+                    <header><strong>${esc(message.who)}</strong><span>${esc(message.channel)} · ${esc(message.date ? ticketDateText(message.date) : `Message ${index + 1}`)}</span></header>
+                    <div class="qa-message-text">${esc(message.content)}</div>
                     ${record.status === "draft" ? `<button type="button" data-qa-message="${index}" aria-pressed="false">Use as evidence</button>` : ""}
-                </div>`).join("") || '<p class="qa-muted">There are no messages on this case.</p>';
+                </article>`).join("") || '<p class="qa-muted">There are no messages on this case.</p>';
             renderEvidence();
         } catch {
             if (sequence !== state.reviewRequest) return;
