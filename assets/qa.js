@@ -61,13 +61,15 @@
         byId("qaRatedCount").textContent = `${rated} of ${ratings.length} criteria rated`;
     }
 
-    function row(item, subtitle, event, badge) {
+    function conversationCard(item) {
         const key = sourceKey(item);
         const selected = state.current && sourceKey(state.current) === key;
-        return `<button type="button" class="ticket-queue-card${selected ? " active" : ""}" data-${event}="${esc(key)}" aria-controls="qaReview" aria-pressed="${Boolean(selected)}">
-            <span class="qa-card-head"><strong>${esc(item.title)}</strong>${badge ? `<span class="ticket-queue-status">${esc(badge)}</span>` : ""}</span>
-            ${item.customer ? `<span class="ticket-queue-card-name">${esc(item.customer)}</span>` : ""}
-            <span class="ticket-queue-card-query">${esc(subtitle)}</span>
+        const topic = item.topic ? item.topic.charAt(0).toUpperCase() + item.topic.slice(1) : "";
+        const heading = item.customer || topic || "AI conversation";
+        const summary = [item.customer ? topic : "", ...item.risk].filter(Boolean).join(" · ");
+        return `<button type="button" class="ticket-queue-card qa-ai-card${selected ? " active" : ""}" data-qa-candidate="${esc(key)}" aria-controls="qaReview" aria-pressed="${Boolean(selected)}" title="${esc(item.sourceId)}">
+            <span class="qa-card-head"><strong>${esc(heading)}</strong><span class="qa-ai-label">AI chat</span></span>
+            ${summary ? `<span class="ticket-queue-card-query">${esc(summary)}</span>` : ""}
         </button>`;
     }
 
@@ -170,7 +172,7 @@
                 const selected = Boolean(state.current && sourceKey(state.current) === key);
                 return renderTicketQueueCard(item.ticket, selected, `data-qa-candidate="${esc(key)}" aria-controls="qaReview" aria-pressed="${selected}"`);
             }
-            return row(item, [item.topic, ...item.risk].filter(Boolean).join(" · "), "qa-candidate", item.ticketStatus);
+            return conversationCard(item);
         }).join("");
         return matches.length;
     }
@@ -211,8 +213,7 @@
                     title: type === "ai" ? sourceId : (item.ticket_number || `NX-${sourceId.padStart(4, "0")}`),
                     topic: readable(item.customer_query || item.subject || item.intent || item.channel),
                     customer: item.customer_name,
-                    date: item.created_at || item.started_at || "",
-                    ticketStatus: readable(item.status)
+                    date: item.created_at || item.started_at || ""
                 });
             }
             state.candidates = [...items.values()].sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
@@ -296,8 +297,8 @@
         byId("qaSlaState").textContent = sla.label;
         byId("qaSlaState").dataset.state = ["SLA not set", "SLA unavailable"].includes(sla.label) ? "unset" : sla.className;
         const item = (label, value) => `<div class="ticket-context-item"><span>${label}</span>${esc(value || "—")}</div>`;
-        context.innerHTML = `
-            <div class="ticket-context-header">Ticket Information</div>
+        byId("qaTicketCustomer").textContent = ticket.customer_name || "";
+        byId("qaTicketFields").innerHTML = `
             <div class="ticket-context-section identity">
                 ${item("Customer name", ticket.customer_name)}
                 ${item("Phone number", ticket.customer_phone)}
@@ -373,7 +374,11 @@
     }
 
     function openAudit(record, focus = true) {
-        if (!state.current || sourceKey(state.current) !== sourceKey(record)) selectChannel("chat");
+        if (!state.current || sourceKey(state.current) !== sourceKey(record)) {
+            selectChannel("chat");
+            byId("qaTicketContext").open = false;
+            byId("qaScoringPanel").scrollTop = 0;
+        }
         state.current = { ...record, criteria: record.criteria || scorecards[record.type].criteria };
         state.evidence = record.evidence || null;
         const editing = record.status === "draft";
@@ -389,7 +394,9 @@
         byId("qaReviewHeading").textContent = record.title;
         byId("qaCaseCopy").dataset.copyTicketNumber = record.title;
         byId("qaCaseCopy").hidden = record.type === "ai";
-        byId("qaReviewMeta").textContent = [card.label, { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status], record.reviewer].filter(Boolean).join(" · ");
+        const statusLabel = { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status];
+        byId("qaAuditStatus").textContent = statusLabel;
+        byId("qaReviewMeta").textContent = [card.label, statusLabel, record.reviewer].filter(Boolean).join(" · ");
         renderCriteria(state.current.criteria, record.ratings);
         ["qaScores", "qaFindings", "qaAction"].forEach(id => { byId(id).disabled = !editing; });
         byId("qaCritical").checked = Boolean(record.critical);
