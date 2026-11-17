@@ -26,8 +26,8 @@
 .qa-board .qa-primary { background: #245c46; border-color: #245c46; color: #fff; }
 .qa-board .qa-primary:hover:enabled { background: #1b4937; }
 .qa-box { min-width: 0; border: 1px solid var(--qa-border); border-radius: 12px; background: var(--qa-surface); padding: 16px; }
-.qa-tabs, .qa-head, .qa-form-footer, .qa-sampling { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.qa-tabs [aria-pressed="true"], .qa-sampling [aria-pressed="true"] { border-color: var(--accent); background: var(--surface-hover, var(--bg-soft)); }
+.qa-head, .qa-form-footer, .qa-sampling { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.qa-sampling [aria-pressed="true"] { border-color: var(--accent); background: var(--surface-hover, var(--bg-soft)); }
 .qa-head { justify-content: space-between; margin-bottom: 12px; }
 .qa-review-head p { margin-bottom: 4px; }
 .qa-status:empty { display: none; }
@@ -91,14 +91,13 @@
     background: var(--bg-soft);
     border-inline-end: 1px solid var(--qa-border);
 }
-.qa-tabs { margin-block: 12px 8px; }
-.qa-tabs button, .qa-sampling button { font-size: 11px; min-height: 30px; }
+.qa-sampling button { font-size: 11px; min-height: 30px; }
 .qa-status, #qaCandidatesInfo { margin-bottom: 10px; font-size: 11px; }
 .qa-list { display: grid; gap: 7px; }
 .qa-list .ticket-queue-card { width: 100%; text-align: start; }
 .qa-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
 .qa-card-head .ticket-queue-status { text-transform: capitalize; }
-.qa-list .ticket-queue-card-name { top: 0; }
+
 .qa-detail-pane { position: relative; min-width: 0; background: var(--bg); }
 .qa-tools-pane {
     min-width: 0;
@@ -156,7 +155,9 @@
     .qa-tools-pane { border-inline-start: 0; border-top: 1px solid var(--qa-border); }
 }
 .qa-queue-title { margin-bottom: 4px; }
-#qaType { width: 100%; }
+#qaType, #qaTicketView { width: 100%; }
+.qa-agent-label { margin-block: 10px 4px; }
+.qa-picker { margin-top: 12px; }
 .qa-queue-title > span {
     color: var(--qa-muted);
     font-size: 9px;

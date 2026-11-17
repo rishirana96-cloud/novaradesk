@@ -9,13 +9,11 @@
     };
     const scoreValues = ["pass", "fail", "na"];
     const options = '<option value="">Select rating</option><option value="pass">Meets standard</option><option value="fail">Misses standard</option><option value="na">Not applicable</option>';
-    const state = { key: "", view: "cases", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null };
+    const state = { key: "", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null };
     const esc = value => escapeHtml(String(value ?? ""));
     const readable = value => String(value || "").replaceAll("_", " ");
-    const localDate = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
     const sourceKey = item => JSON.stringify([item.type, item.sourceId]);
     const formStatus = message => { byId("qaFormStatus").textContent = message; };
-    const notice = message => { byId("qaStatus").textContent = message; };
 
     function read() {
         try { return JSON.parse(window.NOVARA_LOCAL_STORAGE.getItem(state.key) || "[]"); }
@@ -121,8 +119,8 @@
     }
 
     function selectRow(key) {
-        byId("qaBoard").querySelectorAll("[data-qa-candidate], [data-qa-audit]").forEach(button => {
-            const selected = (button.dataset.qaCandidate || button.dataset.qaAudit) === key;
+        byId("qaBoard").querySelectorAll("[data-qa-candidate]").forEach(button => {
+            const selected = button.dataset.qaCandidate === key;
             button.classList.toggle("active", selected);
             button.setAttribute("aria-pressed", String(selected));
         });
@@ -141,32 +139,6 @@
         return key;
     }
 
-    function showList(view, message = "", focus = false) {
-        state.view = view;
-        state.sourceRequest++;
-        byId("qaNewAudit").setAttribute("aria-pressed", "false");
-        closeDetail();
-        const items = read();
-        const drafts = items.filter(item => item.status === "draft");
-        const actions = items.filter(item => item.status === "followup");
-        const complete = items.filter(item => item.status === "complete");
-        const type = byId("qaType").value;
-        const visible = { queue: drafts, followup: actions, completed: [...complete, ...actions] }[view]
-            .filter(item => type === "both" || item.type === type);
-        const empty = { queue: "No draft audits.", followup: "No open follow-ups.", completed: "Submitted audits will appear here." }[view];
-        byId("qaList").innerHTML = [...visible].reverse().map(item => {
-            const details = [scorecards[item.type].label, item.status === "draft" ? "Draft" : `${item.score}%`, item.critical ? "Critical error" : ""];
-            if (item.status === "followup") details.push(item.action.owner, `Due ${item.action.due}${item.action.due < localDate() ? " · Overdue" : ""}`);
-            if (item.status === "complete" && item.action) details.push("Follow-up verified");
-            return row(item, details.filter(Boolean).join(" · "), "qa-audit");
-        }).join("") || `<p class="qa-muted">${empty}</p>`;
-        byId("qaList").hidden = false;
-        byId("qaPicker").hidden = true;
-        document.querySelectorAll("[data-qa-view]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.qaView === view)));
-        notice(message);
-        if (focus) document.querySelector(`[data-qa-view="${view}"]`)?.focus();
-    }
-
     async function request(path) {
         const response = await fetch(`${API_URL}${path}`, { cache: "no-store" });
         if (!response.ok) throw new Error("Request failed");
@@ -176,16 +148,23 @@
     function candidates() {
         const query = byId("qaSearch").value.trim().toLowerCase();
         const higherRisk = byId("qaRisk").getAttribute("aria-pressed") === "true";
-        return state.candidates.filter(item => (!higherRisk || item.risk.length) &&
+        const view = byId("qaTicketView").value;
+        return state.candidates.filter(item => (view === "all" || (view === "needs_reply" ? item.needsReply : view === `status:${item.status}`)) &&
+            (!higherRisk || item.risk.length) &&
             [item.title, item.topic, item.sourceId, item.customer].some(value => String(value ?? "").toLowerCase().includes(query)));
     }
 
     function renderCandidates() {
         const matches = candidates();
         byId("qaSample").disabled = matches.length === 0;
-        byId("qaCandidates").innerHTML = matches.map(item =>
-            row(item, [byId("qaType").value === "both" ? scorecards[item.type].label : "", item.topic, ...item.risk].filter(Boolean).join(" · "), "qa-candidate", item.ticketStatus)
-        ).join("");
+        byId("qaCandidates").innerHTML = matches.map(item => {
+            if (item.ticket) {
+                const key = sourceKey(item);
+                const selected = Boolean(state.current && sourceKey(state.current) === key);
+                return renderTicketQueueCard(item.ticket, selected, `data-qa-candidate="${esc(key)}" aria-controls="qaReview" aria-pressed="${selected}"`);
+            }
+            return row(item, [item.topic, ...item.risk].filter(Boolean).join(" · "), "qa-candidate", item.ticketStatus);
+        }).join("");
         return matches.length;
     }
 
@@ -217,7 +196,10 @@
                 if (item.sentiment === "negative") risk.push("Negative sentiment");
                 if (["urgent", "high"].includes(item.priority)) risk.push("High priority");
                 if (item.resolution_status === "escalated") risk.push("Escalated");
+                const ticket = type === "human" ? normalizeTicket(item, items.size) : null;
+                const status = ticket?.status || (["resolved", "closed"].includes(String(item.resolution_status).toLowerCase()) ? "resolved" : "open");
                 items.set(key, {
+                    ticket, status, needsReply: Boolean(ticket?.needsReply),
                     type, sourceId, risk,
                     title: type === "ai" ? sourceId : (item.ticket_number || `NX-${sourceId.padStart(4, "0")}`),
                     topic: readable(item.customer_query || item.subject || item.intent || item.channel),
@@ -232,7 +214,7 @@
             const first = candidates()[0];
             if (autoSelect && first && !state.current) startAudit(first, false);
         } catch {
-            if (sequence === state.sourceRequest) byId("qaCandidatesInfo").textContent = "Could not load cases. Select Cases to retry.";
+            if (sequence === state.sourceRequest) byId("qaCandidatesInfo").textContent = "Could not load cases. Change the agent type to retry.";
         }
     }
 
@@ -242,15 +224,10 @@
     }
 
     function showPicker(autoSelect = true) {
-        state.view = "cases";
-        byId("qaNewAudit").setAttribute("aria-pressed", "true");
-        byId("qaBoard").querySelectorAll("[data-qa-view]").forEach(button => button.setAttribute("aria-pressed", "false"));
         closeDetail();
-        byId("qaList").hidden = true;
         byId("qaPicker").hidden = false;
         byId("qaSearch").value = "";
         byId("qaRisk").setAttribute("aria-pressed", "false");
-        notice("");
         loadCandidates(autoSelect);
     }
 
@@ -353,7 +330,6 @@
         state.evidence = record.evidence || null;
         const editing = record.status === "draft";
         const card = scorecards[record.type];
-        notice("");
         byId("qaReview").hidden = false;
         byId("qaEmptyDetail").hidden = true;
         byId("qaReview").querySelector(".qa-review-body").scrollTop = 0;
@@ -402,14 +378,18 @@
         const status = submit ? (action ? "followup" : "complete") : "draft";
         const saved = persist({ ...state.current, ratings, score, critical, action, status, evidence: state.evidence, notes: byId("qaNotes").value.trim(), updated: new Date().toISOString() });
         if (!saved) return;
-        if (submit) showList(action ? "followup" : "completed", action ? "Audit submitted. Follow-up added." : "Audit submitted.", true);
+        if (submit) {
+            openAudit(state.current, false);
+            formStatus(action ? "Audit submitted. Follow-up added." : "Audit submitted.");
+        }
         else formStatus("Draft saved.");
     }
 
     function startAudit(item, focus = true) {
         if (state.current && sourceKey(state.current) === sourceKey(item)) return;
         const existing = read().find(saved => sourceKey(saved) === sourceKey(item));
-        openAudit(existing || { ...item, status: "draft", reviewer: state.reviewer, criteria: configuredCriteria(item.type) }, focus);
+        const { type, sourceId, title, topic, customer } = item;
+        openAudit(existing || { type, sourceId, title, topic, customer, status: "draft", reviewer: state.reviewer, criteria: configuredCriteria(type) }, focus);
     }
 
     function completeFollowup() {
@@ -417,29 +397,28 @@
         const outcome = byId("qaOutcome").value.trim();
         if (!outcome) return formStatus("Record how you verified the fix.");
         if (persist({ ...state.current, status: "complete", updated: new Date().toISOString(), action: { ...state.current.action, outcome } })) {
-            showList("completed", "Follow-up completed.", true);
+            openAudit(state.current, false);
+            formStatus("Follow-up completed.");
         }
     }
 
     byId("qaBoard").addEventListener("click", event => {
-        const button = event.target.closest("button");
+        const copy = event.target.closest("[data-copy-ticket-number]");
+        if (copy) { copyTicketQueueNumber(copy); return; }
+        const button = event.target.closest("button, [data-qa-candidate]");
         if (!button || !state.key) return;
-        const { qaView, qaAudit, qaCandidate, qaMessage } = button.dataset;
-        if (qaView) showList(qaView, "", true);
-        else if (button.hasAttribute("data-qa-close-detail")) {
+        const { qaMessage } = button.dataset;
+        if (button.hasAttribute("data-qa-close-detail")) {
             const key = closeDetail();
-            const source = [...byId("qaBoard").querySelectorAll("[data-qa-candidate], [data-qa-audit]")].find(row => (row.dataset.qaCandidate || row.dataset.qaAudit) === key);
-            (source || byId("qaNewAudit")).focus();
+            const source = [...byId("qaBoard").querySelectorAll("[data-qa-candidate]")].find(row => row.dataset.qaCandidate === key);
+            (source || byId("qaTicketView")).focus();
         } else if (button.id === "qaScoringTab" || button.id === "qaSettingsTab") {
             showTools(button.id === "qaSettingsTab" ? "settings" : "scoring");
         } else if (button.id === "qaHandoff" && state.current?.type === "human") {
             const { sourceId, title, topic, customer } = state.current;
             startAudit({ type: "handoff", sourceId, title, topic, customer });
-        } else if (qaAudit) {
-            const saved = read().find(item => sourceKey(item) === qaAudit);
-            if (saved) openAudit(saved);
-        } else if (qaCandidate) {
-            const item = state.candidates.find(candidate => sourceKey(candidate) === qaCandidate);
+        } else if (button.dataset.qaCandidate) {
+            const item = state.candidates.find(candidate => sourceKey(candidate) === button.dataset.qaCandidate);
             if (item) startAudit(item);
         } else if (qaMessage !== undefined && state.current?.status === "draft") {
             const message = state.messages[Number(qaMessage)];
@@ -453,11 +432,19 @@
             byId("qaNotes").focus();
         }
     });
-    byId("qaNewAudit").addEventListener("click", () => { if (state.key) showPicker(); });
-    byId("qaType").addEventListener("change", () => {
-        if (state.view === "cases") { closeDetail(); loadCandidates(); }
-        else showList(state.view);
+    byId("qaCandidates").addEventListener("keydown", event => {
+        if (event.target.matches('[role="button"][data-qa-candidate]') && ["Enter", " "].includes(event.key)) {
+            event.preventDefault();
+            event.target.click();
+        }
     });
+    byId("qaTicketView").addEventListener("change", () => {
+        closeDetail();
+        updateCandidateCount();
+        const first = candidates()[0];
+        if (first) startAudit(first, false);
+    });
+    byId("qaType").addEventListener("change", () => { closeDetail(); loadCandidates(); });
     byId("qaSettingsForm").addEventListener("submit", saveCriteria);
     byId("qaSettingsType").addEventListener("change", loadCriteriaSettings);
     byId("qaScoringTab").parentElement.addEventListener("keydown", event => {
@@ -491,15 +478,17 @@
             state.key = `novaradesk_qa_v1:${JSON.stringify([user.workspace_id || "", identity])}`;
             state.reviewer = user.name || user.email || "Reviewer";
             loadCriteriaSettings();
+            byId("qaTicketView").innerHTML = standardTicketViews().map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join("");
             if (currentTab === "qa") this.activate();
         },
         activate() {
-            if (state.key && state.view === "cases" && byId("qaPicker").hidden) showPicker();
+            if (state.key && byId("qaPicker").hidden) showPicker();
         },
         fromTicket(ticket) {
             if (!state.key || !ticket?.id) return;
             showWorkspace("qa");
             byId("qaType").value = "human";
+            byId("qaTicketView").value = "all";
             showPicker(false);
             startAudit({ type: "human", sourceId: String(ticket.id), title: ticket.ticket_number || `NX-${String(ticket.id).padStart(4, "0")}`, topic: readable(ticket.subject || ticket.intent) });
         }

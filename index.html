@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-scoring-pane-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-views-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8647,16 +8647,10 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
         <div class="qa-board" id="qaBoard">
             <div class="qa-workspace">
                 <section class="qa-queue-pane" aria-label="Audit queue">
-                    <label class="qa-queue-title" for="qaType"><span>Current view</span></label>
+                    <label class="qa-queue-title" for="qaTicketView"><span>Current view</span></label>
+                    <select id="qaTicketView" data-native-select></select>
+                    <label class="qa-agent-label" for="qaType">Agent type</label>
                     <select id="qaType" data-native-select><option value="both">Both</option><option value="ai">AI agent</option><option value="human">Human agent</option></select>
-                    <div class="qa-tabs" role="group" aria-label="Audit views">
-                        <button type="button" id="qaNewAudit" aria-pressed="true">Cases</button>
-                        <button type="button" data-qa-view="queue" aria-pressed="false">Drafts</button>
-                        <button type="button" data-qa-view="followup" aria-pressed="false">Follow-ups</button>
-                        <button type="button" data-qa-view="completed" aria-pressed="false">Completed</button>
-                    </div>
-                    <p id="qaStatus" class="qa-status" role="status"></p>
-                    <div id="qaList" class="qa-list"></div>
                     <section id="qaPicker" class="qa-picker" hidden aria-label="Cases">
                         <div class="qa-picker-tools">
                             <label>Search recent cases<input id="qaSearch" type="search" placeholder="Ticket, session, or topic"></label>
@@ -8666,7 +8660,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                             </div>
                         </div>
                         <p class="qa-muted" id="qaCandidatesInfo" role="status"></p>
-                        <div id="qaCandidates" class="qa-list"></div>
+                        <div id="qaCandidates" class="qa-list ticket-queue-list"></div>
                     </section>
                 </section>
                 <div class="qa-detail-pane">
@@ -9706,7 +9700,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-scoring-pane-1"></script>
+<script src="assets/qa.js?v=qa-ticket-views-1"></script>
 <script>
 /* =====================================================
    STATE
@@ -10799,13 +10793,16 @@ Object.entries(TICKET_FILTER_IDS).forEach(([key,id]) => {
     element.value = value;
 });
 }
-function renderTicketViewOptions(selected = ticketWorkspaceState.activeView) {
-const select = document.getElementById("ticketViewSelect");
-if (!select) return;
-const defaults = [
+function standardTicketViews() {
+return [
     ["all","All Tickets"],["needs_reply","Needs reply"],["status:open","Open Tickets"],["status:pending","Pending Revert"],
     ["status:progress","In Progress"],["status:resolved","Resolved"],["status:reopened","Reopened"]
 ];
+}
+function renderTicketViewOptions(selected = ticketWorkspaceState.activeView) {
+const select = document.getElementById("ticketViewSelect");
+if (!select) return;
+const defaults = standardTicketViews();
 const saved = readSavedTicketViews();
 select.innerHTML = `<optgroup label="Standard views">${defaults.map(([value,label]) => `<option value="${value}">${label}</option>`).join("")}</optgroup>${saved.length ? `<optgroup label="Saved custom views">${saved.map(view => `<option value="saved:${escapeHtml(view.id)}">${escapeHtml(view.name)}</option>`).join("")}</optgroup>` : ""}`;
 select.value = [...select.options].some(option => option.value === selected) ? selected : "all";
@@ -14392,24 +14389,7 @@ else if(value.includes("phone")||value.includes("call")){label="Phone";path='<pa
 else if(value.includes("chat")){label="Chat";path='<path d="M20 15a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8Z"></path>'}
 return `<span class="ticket-queue-channel" title="${label}" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg></span>`;
 }
-function renderTicketQueue(searchTerm = "") {
-const list = document.getElementById("ticketQueueList");
-if (!list) return;
-const query = String(searchTerm || "").trim().toLowerCase();
-const rows = (ticketWorkspaceState.filtered || ticketWorkspaceState.source || []).filter(ticket => !query || [ticket.id,ticket.customer,ticket.query,ticket.phone].some(value => String(value || "").toLowerCase().includes(query)));
-const select = document.getElementById("ticketViewSelect");
-document.getElementById("ticketQueueTitle").textContent = select?.selectedOptions?.[0]?.textContent || "Tickets";
-const queueSelect = document.getElementById("ticketQueueViewSelect");
-if (queueSelect && select) {
-    queueSelect.innerHTML = select.innerHTML;
-    queueSelect.value = select.value;
-}
-const queueCount = document.getElementById("ticketQueueCount");
-if (queueCount) queueCount.textContent = rows.length;
-const totalPages = Math.max(1, Math.ceil(rows.length / TICKET_QUEUE_PAGE_SIZE));
-ticketQueuePage = Math.min(ticketQueuePage, totalPages);
-const visibleRows = rows.slice((ticketQueuePage - 1) * TICKET_QUEUE_PAGE_SIZE, ticketQueuePage * TICKET_QUEUE_PAGE_SIZE);
-list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
+function renderTicketQueueCard(ticket, selected, selectionAttributes) {
     const parseCardDate = value => {
         if (!value) return null;
         const date = new Date(String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z");
@@ -14434,15 +14414,9 @@ list.innerHTML = visibleRows.length ? visibleRows.map(ticket => {
     const statusLabel=ticketStatusLabel(ticket.status).replace(/^Resolved by .+$/,"Resolved");
     const ageLabel=ticket.status==="resolved"?`${age} ago`:`Waiting ${age}`;
     const unread=ticket.unreadCustomerMessages?`<span class="ticket-queue-unread" aria-label="${ticket.unreadCustomerMessages} unread messages">${ticket.unreadCustomerMessages}</span>`:"";
-    return `<div class="ticket-queue-card ${String(ticket.dbId)===String(openTicketId)?"active":""}" role="button" tabindex="0" data-queue-ticket-id="${escapeHtml(String(ticket.dbId||""))}"><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-customer"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span>${unread}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span><span class="ticket-queue-footer">${cardDates}<span class="ticket-queue-footer-status">${slaBadge}</span></span></div>`;
-}).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
-list.querySelectorAll("[data-queue-ticket-id]").forEach(card => {
-    const open = () => openTicket(Number(card.dataset.queueTicketId));
-    card.addEventListener("click", event => { if (event.target.closest("[data-copy-ticket-number]")) return; open(); });
-    card.addEventListener("keydown", event => { if (event.target.closest("[data-copy-ticket-number]")) return; if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } });
-});
-list.querySelectorAll("[data-copy-ticket-number]").forEach(button => button.addEventListener("click", async event => {
-    event.stopPropagation();
+    return `<div class="ticket-queue-card ${selected?"active":""}" role="button" tabindex="0" ${selectionAttributes}><span class="ticket-queue-card-top"><span class="ticket-queue-ticket-meta"><strong>${escapeHtml(String(ticket.id||"Ticket"))}</strong><button class="ticket-queue-copy" type="button" data-copy-ticket-number="${escapeHtml(String(ticket.id||"Ticket"))}" aria-label="Copy ticket number" title="Copy ticket number"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button></span>${ticketQueueChannelIcon(ticket.channel)}<span class="ticket-queue-status ${ticketStatusClass(ticket.status)}">${escapeHtml(statusLabel)}</span></span><span class="ticket-queue-card-middle"><span class="ticket-queue-customer"><span class="ticket-queue-card-name">${escapeHtml(ticket.customer||"Customer")}</span>${unread}</span><time>${escapeHtml(ageLabel)}</time></span><span class="ticket-queue-card-query">${escapeHtml(ticket.query||"No message preview")}</span><span class="ticket-queue-footer">${cardDates}<span class="ticket-queue-footer-status">${slaBadge}</span></span></div>`;
+}
+async function copyTicketQueueNumber(button) {
     const value=button.dataset.copyTicketNumber||"";
     try {
         if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(value);
@@ -14450,6 +14424,33 @@ list.querySelectorAll("[data-copy-ticket-number]").forEach(button => button.addE
         button.classList.add("copied"); button.title="Copied"; button.setAttribute("aria-label","Ticket number copied");
         setTimeout(()=>{button.classList.remove("copied");button.title="Copy ticket number";button.setAttribute("aria-label","Copy ticket number")},1200);
     } catch (_) {}
+}
+function renderTicketQueue(searchTerm = "") {
+const list = document.getElementById("ticketQueueList");
+if (!list) return;
+const query = String(searchTerm || "").trim().toLowerCase();
+const rows = (ticketWorkspaceState.filtered || ticketWorkspaceState.source || []).filter(ticket => !query || [ticket.id,ticket.customer,ticket.query,ticket.phone].some(value => String(value || "").toLowerCase().includes(query)));
+const select = document.getElementById("ticketViewSelect");
+document.getElementById("ticketQueueTitle").textContent = select?.selectedOptions?.[0]?.textContent || "Tickets";
+const queueSelect = document.getElementById("ticketQueueViewSelect");
+if (queueSelect && select) {
+    queueSelect.innerHTML = select.innerHTML;
+    queueSelect.value = select.value;
+}
+const queueCount = document.getElementById("ticketQueueCount");
+if (queueCount) queueCount.textContent = rows.length;
+const totalPages = Math.max(1, Math.ceil(rows.length / TICKET_QUEUE_PAGE_SIZE));
+ticketQueuePage = Math.min(ticketQueuePage, totalPages);
+const visibleRows = rows.slice((ticketQueuePage - 1) * TICKET_QUEUE_PAGE_SIZE, ticketQueuePage * TICKET_QUEUE_PAGE_SIZE);
+list.innerHTML = visibleRows.length ? visibleRows.map(ticket => renderTicketQueueCard(ticket, String(ticket.dbId) === String(openTicketId), `data-queue-ticket-id="${escapeHtml(String(ticket.dbId || ""))}"`)).join("") : `<div class="ticket-queue-empty">No tickets match this queue.</div>`;
+list.querySelectorAll("[data-queue-ticket-id]").forEach(card => {
+    const open = () => openTicket(Number(card.dataset.queueTicketId));
+    card.addEventListener("click", event => { if (event.target.closest("[data-copy-ticket-number]")) return; open(); });
+    card.addEventListener("keydown", event => { if (event.target.closest("[data-copy-ticket-number]")) return; if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } });
+});
+list.querySelectorAll("[data-copy-ticket-number]").forEach(button => button.addEventListener("click", event => {
+    event.stopPropagation();
+    copyTicketQueueNumber(button);
 }));
 const pagination = document.getElementById("ticketQueuePagination");
 if (pagination) {
@@ -20686,7 +20687,7 @@ html[data-theme="dark"] body #ticketFirstResponseState .first-response-value.pen
 <style id="ticket-card-created-due-dates">
 /* Keep each card at its full content height inside the scrolling queue. */
 html body .ticket-drawer-backdrop .ticket-queue-list{align-content:start!important;grid-auto-rows:max-content!important}
-html body .ticket-drawer-backdrop .ticket-queue-list .ticket-queue-card{flex:0 0 auto!important;box-sizing:border-box!important;min-height:min-content!important;height:auto!important;max-height:none!important;grid-template-rows:none!important;grid-auto-rows:max-content!important;align-content:start!important}
+html body :is(.ticket-drawer-backdrop, .qa-queue-pane) .ticket-queue-list .ticket-queue-card{flex:0 0 auto!important;box-sizing:border-box!important;min-height:min-content!important;height:auto!important;max-height:none!important;grid-template-rows:none!important;grid-auto-rows:max-content!important;align-content:start!important}
 
 html body .ticket-queue-card .ticket-queue-dates{display:grid;gap:4px;margin-top:7px;padding-top:8px;border-top:1px solid var(--border);color:var(--text-secondary);font-size:9px;line-height:1.4;font-weight:500}
 html body .ticket-queue-card .ticket-queue-dates>span{display:grid;grid-template-columns:48px minmax(0,1fr);gap:6px;align-items:baseline}
@@ -20712,7 +20713,7 @@ html[data-theme="dark"] body .ticket-queue-card .ticket-queue-sla.overdue{color:
 </style>
 
 <style id="ticket-card-consistent-dimensions">
-html body .ticket-drawer-backdrop .ticket-queue-list .ticket-queue-card{grid-template-rows:24px 18px 14px 48px!important;grid-auto-rows:unset!important;gap:3px!important;padding:12px 13px!important;min-width:0!important}
+html body :is(.ticket-drawer-backdrop, .qa-queue-pane) .ticket-queue-list .ticket-queue-card{grid-template-rows:24px 18px 14px 48px!important;grid-auto-rows:unset!important;gap:3px!important;padding:12px 13px!important;min-width:0!important}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-top{min-width:0;height:24px}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-middle{min-width:0;height:18px}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-card-name{display:block!important;top:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;line-height:18px!important}
@@ -20730,7 +20731,7 @@ html body .ticket-queue-list .ticket-queue-card .ticket-queue-footer-status .tic
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-customer{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;height:18px}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-customer .ticket-queue-card-name{flex:0 1 auto;min-width:0}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-customer .ticket-queue-unread{position:static!important;inset:auto!important;transform:none!important;display:grid!important;place-items:center!important;flex:0 0 auto!important;box-sizing:border-box!important;min-width:16px!important;width:auto!important;height:16px!important;padding:0 4px!important;font-size:8px!important;line-height:1!important;border-radius:999px!important}
-html body .ticket-drawer-backdrop .ticket-queue-list .ticket-queue-card{grid-template-rows:24px 18px 14px 39px!important}
+html body :is(.ticket-drawer-backdrop, .qa-queue-pane) .ticket-queue-list .ticket-queue-card{grid-template-rows:24px 18px 14px 39px!important}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-footer{height:39px!important;min-height:39px!important}
 html body .ticket-queue-list .ticket-queue-card .ticket-queue-footer-status{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-end!important;grid-template-rows:none!important;height:30px!important}
 </style>
