@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-header-bottom-row-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-review-workspace-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8691,7 +8691,10 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                             </div>
                         </div>
                         <div class="qa-review-body">
-                            <div id="qaTicketContext" class="ticket-context" hidden></div>
+                            <details id="qaTicketContext" class="qa-ticket-info" hidden>
+                                <summary><span>Ticket information</span><span id="qaTicketCustomer" class="qa-muted"></span></summary>
+                                <div id="qaTicketFields" class="ticket-context"></div>
+                            </details>
                             <section id="qa-panel-chat" class="qa-conversation" role="tabpanel" aria-labelledby="qaChannelChat">
                                 <div class="qa-head qa-conversation-head"><h3>Conversation <span id="qaMessageCount" class="qa-muted"></span></h3><button id="qaRetryTranscript" type="button" hidden>Retry</button></div>
                                 <div id="qaTranscript" class="qa-transcript" aria-live="polite"></div>
@@ -8716,7 +8719,10 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                         <p id="qaEmptyScore" class="qa-muted">Select a case to score.</p>
                         <form id="qaForm" novalidate hidden>
                             <header class="qa-score-summary">
-                                <div class="qa-head"><h3 id="qaScorecardTitle">Scorecard</h3><strong id="qaScore" aria-live="polite"></strong></div>
+                                <div class="qa-head">
+                                    <div><h3 id="qaScorecardTitle">Scorecard</h3><span id="qaAuditStatus" class="qa-muted"></span></div>
+                                    <strong id="qaScore" aria-live="polite"></strong>
+                                </div>
                                 <progress id="qaRatingProgress" aria-label="Criteria rated" max="1" value="0"></progress>
                                 <span id="qaRatedCount" class="qa-muted"></span>
                             </header>
@@ -9728,7 +9734,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-header-bottom-row-1"></script>
+<script src="assets/qa.js?v=qa-review-workspace-1"></script>
 <script>
 /* =====================================================
    STATE
