@@ -180,33 +180,39 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-tool-panel { flex: 1; min-height: 0; overflow: auto; container-type: inline-size; }
 .qa-score-summary {
+    --qa-score-track: #ffffff32;
     display: grid;
-    gap: 7px;
-    padding: 13px 14px;
-    border-block: 1px solid var(--qa-border);
-    background: var(--qa-tint);
+    gap: 9px;
+    margin: 0 12px 6px;
+    padding: 14px;
+    border-radius: 12px;
+    background: linear-gradient(125deg, #163f32, #245c46);
+    color: #fff;
 }
+.qa-score-summary .qa-head { gap: 5px 8px; }
+.qa-score-summary h3 { color: #fff; }
+.qa-score-summary .qa-muted { color: #cfe5da; }
 #qaScore {
-    padding: 4px 7px;
-    border-radius: 5px;
-    background: var(--qa-surface);
-    color: var(--qa-accent);
-    font-size: 11px;
+    padding: 2px 6px;
+    color: #fff;
+    font-size: 23px;
+    line-height: 1.25;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -.035em;
 }
-#qaScore.qa-score-critical { color: var(--qa-danger); }
+#qaScore.qa-score-critical { color: #ffc2b9; font-size: 14px; letter-spacing: 0; }
 #qaRatingProgress {
     appearance: none;
     width: 100%;
-    height: 6px;
+    height: 5px;
     border: 0;
     border-radius: 8px;
-    background: var(--qa-border);
+    background: var(--qa-score-track);
     overflow: hidden;
 }
-#qaRatingProgress::-webkit-progress-bar { background: var(--qa-border); }
-#qaRatingProgress::-webkit-progress-value { background: var(--qa-accent); border-radius: 8px; }
-#qaRatingProgress::-moz-progress-bar { background: var(--qa-accent); border-radius: 8px; }
+#qaRatingProgress::-webkit-progress-bar { background: var(--qa-score-track); }
+#qaRatingProgress::-webkit-progress-value { background: #a9dbc0; border-radius: 8px; }
+#qaRatingProgress::-moz-progress-bar { background: #a9dbc0; border-radius: 8px; }
 #qaRatedCount { font-size: 11px; }
 .qa-board fieldset { min-width: 0; margin: 12px 14px 0; padding: 0; border: 0; }
 .qa-board fieldset + fieldset { padding-top: 7px; border-top: 1px solid var(--qa-border); }
@@ -215,10 +221,11 @@ html[data-theme="dark"] .qa-board {
     display: grid;
     gap: 5px;
     align-items: center;
-    padding-block: 7px;
+    padding-block: 8px;
     overflow-wrap: anywhere;
 }
 .qa-criterion + .qa-criterion { border-top: 1px solid var(--qa-border); }
+.qa-criterion:focus-within label { color: var(--qa-accent); }
 .qa-criterion label { font-size: 12px; }
 .qa-board .qa-criterion select { width: 100%; min-height: 32px; font-size: 11px; }
 .qa-board .qa-criterion select:has(option:checked[value="pass"]) { color: var(--qa-accent); background: var(--qa-tint); }
