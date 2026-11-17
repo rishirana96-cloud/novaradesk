@@ -53,15 +53,45 @@
         byId("qaScore").textContent = score === null ? "Unscored" : `${score}%${byId("qaCritical").checked ? " · Critical fail" : ""}`;
     }
 
-    function row(title, subtitle, event, value, label) {
-        return `<div class="qa-row"><div><strong>${esc(title)}</strong><small>${esc(subtitle)}</small></div><button type="button" data-${event}="${esc(value)}">${label}</button></div>`;
+    function row(item, subtitle, event, badge) {
+        const key = sourceKey(item);
+        const selected = state.current && sourceKey(state.current) === key;
+        return `<button type="button" class="ticket-queue-card${selected ? " active" : ""}" data-${event}="${esc(key)}" aria-controls="qaReview" aria-pressed="${Boolean(selected)}">
+            <span class="qa-card-head"><strong>${esc(item.title)}</strong>${badge ? `<span class="ticket-queue-status">${esc(badge)}</span>` : ""}</span>
+            ${item.customer ? `<span class="ticket-queue-card-name">${esc(item.customer)}</span>` : ""}
+            <span class="ticket-queue-card-query">${esc(subtitle)}</span>
+        </button>`;
+    }
+
+    function showScorecard(visible) {
+        byId("qaForm").hidden = !visible;
+        byId("qaToggleForm").setAttribute("aria-expanded", String(visible));
+        byId("qaToggleForm").textContent = visible ? "Show conversation" : "Scorecard";
+        byId("qaReview").classList.toggle("qa-scoring", visible);
+    }
+
+    function selectRow(key) {
+        byId("qaBoard").querySelectorAll("[data-qa-candidate], [data-qa-audit]").forEach(button => {
+            const selected = (button.dataset.qaCandidate || button.dataset.qaAudit) === key;
+            button.classList.toggle("active", selected);
+            button.setAttribute("aria-pressed", String(selected));
+        });
+    }
+
+    function closeDetail() {
+        const key = state.current && sourceKey(state.current);
+        state.current = null;
+        state.messages = [];
+        state.reviewRequest++;
+        byId("qaReview").hidden = true;
+        byId("qaEmptyDetail").hidden = false;
+        selectRow(null);
+        return key;
     }
 
     function showList(view = state.view, message = "", focus = false) {
         state.view = view;
-        state.current = null;
-        state.messages = [];
-        state.reviewRequest++;
+        closeDetail();
         const items = read();
         const drafts = items.filter(item => item.status === "draft");
         const actions = items.filter(item => item.status === "followup");
@@ -75,11 +105,10 @@
             const details = [scorecards[item.type].label, item.status === "draft" ? "Draft" : `${item.score}%`, item.critical ? "Critical error" : ""];
             if (item.status === "followup") details.push(item.action.owner, `Due ${item.action.due}${item.action.due < localDate() ? " · Overdue" : ""}`);
             if (item.status === "complete" && item.action) details.push("Follow-up verified");
-            return row(item.title, details.filter(Boolean).join(" · "), "qa-audit", sourceKey(item), item.status === "draft" ? "Resume" : "Open");
+            return row(item, details.filter(Boolean).join(" · "), "qa-audit");
         }).join("") || `<p class="qa-muted">${empty}</p>`;
         byId("qaList").hidden = false;
         byId("qaPicker").hidden = true;
-        byId("qaReview").hidden = true;
         document.querySelectorAll("[data-qa-view]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.qaView === view)));
         notice(message);
         if (focus) document.querySelector(`[data-qa-view="${view}"]`)?.focus();
@@ -103,7 +132,7 @@
         const matches = candidates();
         byId("qaSample").disabled = matches.length === 0;
         byId("qaCandidates").innerHTML = matches.map(item =>
-            row(item.title, [item.topic, ...item.risk].filter(Boolean).join(" · "), "qa-candidate", sourceKey(item), "Review")
+            row(item, [item.topic, ...item.risk].filter(Boolean).join(" · "), "qa-candidate", item.ticketStatus)
         ).join("");
         return matches.length;
     }
@@ -131,7 +160,9 @@
                 items.set(sourceId, {
                     type, sourceId, risk,
                     title: type === "ai" ? sourceId : (item.ticket_number || `NX-${sourceId.padStart(4, "0")}`),
-                    topic: readable(item.subject || item.intent || item.channel)
+                    topic: readable(item.customer_query || item.subject || item.intent || item.channel),
+                    customer: item.customer_name,
+                    ticketStatus: readable(item.status)
                 });
             }
             state.candidates = [...items.values()].slice(0, 100);
@@ -147,10 +178,8 @@
     }
 
     function showPicker() {
-        state.reviewRequest++;
-        state.current = null;
+        closeDetail();
         byId("qaList").hidden = true;
-        byId("qaReview").hidden = true;
         byId("qaPicker").hidden = false;
         byId("qaSearch").value = "";
         byId("qaRisk").setAttribute("aria-pressed", "false");
@@ -197,11 +226,38 @@
         });
     }
 
+    function renderTicketContext(ticket) {
+        const context = byId("qaTicketContext");
+        const status = byId("qaTicketStatus");
+        context.hidden = !ticket;
+        status.hidden = !ticket?.status;
+        if (!ticket) return;
+        status.textContent = readable(ticket.status);
+        status.className = `ticket-queue-status ${ticketStatusClass(ticket.status)}`;
+        const item = (label, value) => `<div class="ticket-context-item"><span>${label}</span>${esc(value || "—")}</div>`;
+        context.innerHTML = `
+            <div class="ticket-context-header">Ticket Information</div>
+            <div class="ticket-context-section identity">
+                ${item("Customer name", ticket.customer_name)}
+                ${item("Phone number", ticket.customer_phone)}
+                ${item("Created date", ticketDatePart(ticket.created_at))}
+                ${item("Created time", ticketTimePart(ticket.created_at))}
+                ${item("First response time", formatTicketElapsed(ticket.created_at, ticket.first_response_at, "Awaiting response"))}
+                ${item("Resolution time", formatTicketElapsed(ticket.created_at, ticket.resolved_at, "In progress"))}
+            </div>
+            <div class="ticket-context-section case">
+                ${item("Original query", ticket.customer_query)}
+                ${item("Escalation reason", readable(ticket.escalation_reason))}
+                ${item("Sentiment", ticket.sentiment)}
+            </div>`;
+    }
+
     async function loadTranscript() {
         const record = state.current;
         const sequence = ++state.reviewRequest;
         state.messages = [];
         const transcript = byId("qaTranscript");
+        renderTicketContext(null);
         transcript.textContent = "Loading conversation…";
         byId("qaRetryTranscript").hidden = true;
         try {
@@ -209,9 +265,10 @@
             const data = await request(record.type === "ai" ? `/conversation?session=${encoded}` : `/ticket-detail?id=${encoded}`);
             if (sequence !== state.reviewRequest) return;
             if (data.success === false || (record.type !== "ai" && String(data.ticket?.id) !== record.sourceId)) throw new Error("Conversation unavailable");
+            renderTicketContext(record.type === "ai" ? null : data.ticket);
             state.messages = transcriptRows(data, record.type);
             transcript.innerHTML = state.messages.map((message, index) => `
-                <div class="qa-message" data-qa-transcript-index="${index}"><strong>${esc(message.who)}</strong>
+                <div class="qa-message ticket-thread-message ${message.who === "Customer" ? "customer" : message.who === "Novara AI" ? "ai" : "agent"}" data-qa-transcript-index="${index}"><strong>${esc(message.who)}</strong>
                     <p class="qa-muted">${esc(message.channel)} · ${esc(message.date ? ticketDateText(message.date) : `Message ${index + 1}`)}</p>
                     <div>${esc(message.content)}</div>
                     ${record.status === "draft" ? `<button type="button" data-qa-message="${index}" aria-pressed="false">Use as evidence</button>` : ""}
@@ -230,9 +287,11 @@
         const editing = record.status === "draft";
         const card = scorecards[record.type];
         notice("");
-        byId("qaList").hidden = true;
-        byId("qaPicker").hidden = true;
         byId("qaReview").hidden = false;
+        byId("qaEmptyDetail").hidden = true;
+        byId("qaReview").querySelector(".qa-review-body").scrollTop = 0;
+        selectRow(sourceKey(record));
+        showScorecard(false);
         byId("qaReviewHeading").textContent = record.title;
         byId("qaReviewMeta").textContent = [card.label, { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status], record.reviewer].filter(Boolean).join(" · ");
         byId("qaCriteria").innerHTML = card.criteria.map((name, index) => `<div class="qa-criterion">
@@ -298,7 +357,13 @@
         if (!button || !state.key) return;
         const { qaView, qaAudit, qaCandidate, qaMessage } = button.dataset;
         if (qaView || button.hasAttribute("data-qa-close")) showList(qaView || state.view, "", true);
-        else if (qaAudit) {
+        else if (button.hasAttribute("data-qa-close-detail")) {
+            const key = closeDetail();
+            const source = [...byId("qaBoard").querySelectorAll("[data-qa-candidate], [data-qa-audit]")].find(row => (row.dataset.qaCandidate || row.dataset.qaAudit) === key);
+            (source || byId("qaNewAudit")).focus();
+        } else if (button.id === "qaToggleForm") {
+            showScorecard(byId("qaForm").hidden);
+        } else if (qaAudit) {
             const saved = read().find(item => sourceKey(item) === qaAudit);
             if (saved) openAudit(saved);
         } else if (qaCandidate) {
@@ -307,7 +372,9 @@
         } else if (qaMessage !== undefined && state.current?.status === "draft") {
             const message = state.messages[Number(qaMessage)];
             state.evidence = { key: message.key, label: [message.channel, message.who, message.date ? ticketDateText(message.date) : `Message ${Number(qaMessage) + 1}`].join(" · ") };
+            showScorecard(true);
             renderEvidence();
+            byId("qaNotes").focus();
         } else if (button.id === "qaRemoveEvidence") {
             state.evidence = null;
             renderEvidence();
