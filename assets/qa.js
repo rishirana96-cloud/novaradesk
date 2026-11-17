@@ -280,6 +280,7 @@
         const status = byId("qaTicketStatus");
         context.hidden = !ticket;
         byId("qaTicketMeta").hidden = !ticket;
+        byId("qaResponseMeta").hidden = !ticket;
         status.hidden = !ticket?.status;
         byId("qaHandoff").hidden = state.current?.type !== "human" || !(ticket?.session_id || ticket?.escalation_reason);
         if (!ticket) return;
@@ -293,7 +294,7 @@
         response.classList.toggle("pending", !details.firstResponseAt);
         const sla = ticketSlaDisplay(details);
         byId("qaSlaState").textContent = sla.label;
-        byId("qaSlaState").dataset.state = sla.className;
+        byId("qaSlaState").dataset.state = ["SLA not set", "SLA unavailable"].includes(sla.label) ? "unset" : sla.className;
         const item = (label, value) => `<div class="ticket-context-item"><span>${label}</span>${esc(value || "—")}</div>`;
         context.innerHTML = `
             <div class="ticket-context-header">Ticket Information</div>
