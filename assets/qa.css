@@ -100,9 +100,14 @@ html[data-theme="dark"] .qa-board {
     min-height: 0;
     overflow: auto;
     align-content: start;
+    grid-auto-rows: max-content;
     padding: 1px 13px 13px;
 }
 .qa-board .qa-list .ticket-queue-card { width: 100%; text-align: start; }
+.qa-board #qaCandidates > button.ticket-queue-card {
+    grid-template-rows: auto !important;
+    grid-auto-rows: max-content !important;
+}
 .qa-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; overflow-wrap: anywhere; }
 .qa-card-head .ticket-queue-status, .qa-detail-actions .ticket-queue-status { text-transform: capitalize; }
 
@@ -190,7 +195,18 @@ html[data-theme="dark"] .qa-board {
     font-variant-numeric: tabular-nums;
 }
 #qaScore.qa-score-critical { color: var(--qa-danger); }
-#qaRatingProgress { width: 100%; height: 6px; accent-color: var(--qa-accent); }
+#qaRatingProgress {
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--qa-border);
+    overflow: hidden;
+}
+#qaRatingProgress::-webkit-progress-bar { background: var(--qa-border); }
+#qaRatingProgress::-webkit-progress-value { background: var(--qa-accent); border-radius: 8px; }
+#qaRatingProgress::-moz-progress-bar { background: var(--qa-accent); border-radius: 8px; }
 #qaRatedCount { font-size: 11px; }
 .qa-board fieldset { min-width: 0; margin: 12px 14px 0; padding: 0; border: 0; }
 .qa-board fieldset + fieldset { padding-top: 7px; border-top: 1px solid var(--qa-border); }
