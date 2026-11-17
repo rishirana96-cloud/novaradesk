@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-views-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-workspace-polish-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8647,10 +8647,12 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
         <div class="qa-board" id="qaBoard">
             <div class="qa-workspace">
                 <section class="qa-queue-pane" aria-label="Audit queue">
-                    <label class="qa-queue-title" for="qaTicketView"><span>Current view</span></label>
-                    <select id="qaTicketView" data-native-select></select>
-                    <label class="qa-agent-label" for="qaType">Agent type</label>
-                    <select id="qaType" data-native-select><option value="both">Both</option><option value="ai">AI agent</option><option value="human">Human agent</option></select>
+                    <div class="qa-queue-filters">
+                        <label for="qaTicketView">Current view</label>
+                        <select id="qaTicketView" data-native-select></select>
+                        <label for="qaType">Agent type</label>
+                        <select id="qaType" data-native-select><option value="both">Both</option><option value="ai">AI agent</option><option value="human">Human agent</option></select>
+                    </div>
                     <section id="qaPicker" class="qa-picker" hidden aria-label="Cases">
                         <div class="qa-picker-tools">
                             <label>Search recent cases<input id="qaSearch" type="search" placeholder="Ticket, session, or topic"></label>
@@ -8667,7 +8669,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     <p id="qaEmptyDetail" class="qa-empty-detail qa-muted">Select a case to review.</p>
                     <section id="qaReview" hidden aria-labelledby="qaReviewHeading">
                         <div class="qa-head qa-review-head">
-                            <div><p class="qa-muted" id="qaReviewMeta"></p><h2 id="qaReviewHeading" tabindex="-1"></h2></div>
+                            <div class="qa-case-heading"><h2 id="qaReviewHeading" tabindex="-1"></h2><p class="qa-muted" id="qaReviewMeta"></p></div>
                             <div class="qa-detail-actions">
                                 <span id="qaTicketStatus" class="ticket-queue-status" hidden></span>
                                 <button id="qaHandoff" type="button" hidden>Audit handoff</button>
@@ -8677,7 +8679,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                         <div class="qa-review-body">
                             <div id="qaTicketContext" class="ticket-context" hidden></div>
                             <section class="qa-conversation">
-                                <div class="qa-head"><h3>Conversation</h3><button id="qaRetryTranscript" type="button" hidden>Retry</button></div>
+                                <div class="qa-head qa-conversation-head"><h3>Conversation <span id="qaMessageCount" class="qa-muted"></span></h3><button id="qaRetryTranscript" type="button" hidden>Retry</button></div>
                                 <div id="qaTranscript" class="qa-transcript" aria-live="polite"></div>
                             </section>
                         </div>
@@ -8691,7 +8693,11 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     <section id="qaScoringPanel" class="qa-tool-panel" role="tabpanel" aria-labelledby="qaScoringTab">
                         <p id="qaEmptyScore" class="qa-muted">Select a case to score.</p>
                         <form id="qaForm" novalidate hidden>
-                            <div class="qa-head"><h3 id="qaScorecardTitle">Scorecard</h3><strong id="qaScore" aria-live="polite"></strong></div>
+                            <header class="qa-score-summary">
+                                <div class="qa-head"><h3 id="qaScorecardTitle">Scorecard</h3><strong id="qaScore" aria-live="polite"></strong></div>
+                                <progress id="qaRatingProgress" aria-label="Criteria rated" max="1" value="0"></progress>
+                                <span id="qaRatedCount" class="qa-muted"></span>
+                            </header>
                             <fieldset id="qaScores"><legend class="qa-sr-only">Rate each criterion</legend><div id="qaCriteria"></div></fieldset>
                             <fieldset id="qaFindings"><legend>Findings</legend>
                                 <label class="qa-check"><input id="qaCritical" type="checkbox"> Critical error</label>
@@ -8713,16 +8719,16 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                                     <textarea id="qaNextStep" rows="2" maxlength="1000"></textarea>
                                 </div>
                             </fieldset>
-                            <div class="qa-form-footer">
-                                <button id="qaSave" type="button">Save draft</button>
-                                <button id="qaSubmit" type="submit" class="qa-primary">Submit audit</button>
-                            </div>
                             <div id="qaVerify" hidden>
                                 <label for="qaOutcome">How did you verify the fix?</label>
                                 <textarea id="qaOutcome" rows="2" maxlength="1000"></textarea>
-                                <button id="qaCompleteAction" class="qa-primary" type="button">Complete follow-up</button>
                             </div>
-                            <p id="qaFormStatus" class="qa-status" role="status"></p>
+                            <div class="qa-form-footer">
+                                <button id="qaCompleteAction" class="qa-primary" type="button" hidden>Complete follow-up</button>
+                                <button id="qaSave" type="button">Save draft</button>
+                                <button id="qaSubmit" type="submit" class="qa-primary">Submit audit</button>
+                                <p id="qaFormStatus" class="qa-status" role="status"></p>
+                            </div>
                         </form>
                     </section>
                     <section id="qaSettingsPanel" class="qa-tool-panel" role="tabpanel" aria-labelledby="qaSettingsTab" hidden>
@@ -9700,7 +9706,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-ticket-views-1"></script>
+<script src="assets/qa.js?v=qa-workspace-polish-1"></script>
 <script>
 /* =====================================================
    STATE
