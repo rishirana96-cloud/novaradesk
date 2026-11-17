@@ -157,16 +157,13 @@
 
     function candidates() {
         const query = byId("qaSearch").value.trim().toLowerCase();
-        const higherRisk = byId("qaRisk").getAttribute("aria-pressed") === "true";
         const view = byId("qaTicketView").value;
         return state.candidates.filter(item => (view === "all" || (view === "needs_reply" ? item.needsReply : view === `status:${item.status}`)) &&
-            (!higherRisk || item.risk.length) &&
             [item.title, item.topic, item.sourceId, item.customer].some(value => String(value ?? "").toLowerCase().includes(query)));
     }
 
     function renderCandidates() {
         const matches = candidates();
-        byId("qaSample").disabled = matches.length === 0;
         byId("qaCandidates").innerHTML = matches.map(item => {
             if (item.ticket) {
                 const key = sourceKey(item);
@@ -237,7 +234,6 @@
         closeDetail();
         byId("qaPicker").hidden = false;
         byId("qaSearch").value = "";
-        byId("qaRisk").setAttribute("aria-pressed", "false");
         loadCandidates(autoSelect);
     }
 
@@ -524,15 +520,6 @@
         showTools(settings ? "settings" : "scoring", true);
     });
     byId("qaSearch").addEventListener("input", updateCandidateCount);
-    byId("qaRisk").addEventListener("click", event => {
-        const element = event.currentTarget;
-        element.setAttribute("aria-pressed", String(element.getAttribute("aria-pressed") !== "true"));
-        updateCandidateCount();
-    });
-    byId("qaSample").addEventListener("click", () => {
-        const available = candidates();
-        if (available.length) startAudit(available[Math.floor(Math.random() * available.length)]);
-    });
     byId("qaForm").addEventListener("submit", event => { event.preventDefault(); saveAudit(true); });
     byId("qaSave").addEventListener("click", () => saveAudit(false));
     byId("qaRetryTranscript").addEventListener("click", loadTranscript);
