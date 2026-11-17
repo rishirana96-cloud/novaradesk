@@ -283,11 +283,21 @@
         const context = byId("qaTicketContext");
         const status = byId("qaTicketStatus");
         context.hidden = !ticket;
+        byId("qaTicketMeta").hidden = !ticket;
         status.hidden = !ticket?.status;
         byId("qaHandoff").hidden = state.current?.type !== "human" || !(ticket?.session_id || ticket?.escalation_reason);
         if (!ticket) return;
-        status.textContent = readable(ticket.status);
-        status.className = `ticket-queue-status ${ticketStatusClass(ticket.status)}`;
+        const details = normalizeTicket(ticket, 0);
+        status.textContent = ticketStatusLabel(details.status);
+        status.className = `ticket-queue-status ${ticketStatusClass(details.status)}`;
+        byId("qaAssignedAgent").textContent = details.agent;
+        byId("qaAssigneeAvatar").textContent = details.agent.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
+        const response = byId("qaFirstResponse");
+        response.textContent = details.firstResponseAt ? "Complete" : "Pending";
+        response.classList.toggle("pending", !details.firstResponseAt);
+        const sla = ticketSlaDisplay(details);
+        byId("qaSlaState").textContent = sla.label;
+        byId("qaSlaState").dataset.state = sla.className;
         const item = (label, value) => `<div class="ticket-context-item"><span>${label}</span>${esc(value || "—")}</div>`;
         context.innerHTML = `
             <div class="ticket-context-header">Ticket Information</div>
@@ -352,6 +362,8 @@
         byId("qaScorecardTitle").textContent = card.label;
         if (focus) showTools("scoring");
         byId("qaReviewHeading").textContent = record.title;
+        byId("qaCaseCopy").dataset.copyTicketNumber = record.title;
+        byId("qaCaseCopy").hidden = record.type === "ai";
         byId("qaReviewMeta").textContent = [card.label, { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status], record.reviewer].filter(Boolean).join(" · ");
         renderCriteria(state.current.criteria, record.ratings);
         ["qaScores", "qaFindings", "qaAction"].forEach(id => { byId(id).disabled = !editing; });
