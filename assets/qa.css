@@ -131,7 +131,7 @@ html[data-theme="dark"] .qa-board {
 .qa-board .qa-case-heading .ticket-copy-id { flex: none; width: 30px; min-height: 30px; padding: 0; }
 .qa-detail-actions { align-items: flex-start; justify-content: flex-end; }
 .qa-case-ownership { display: grid; justify-items: end; gap: 5px; min-width: 0; }
-.qa-board #qaTicketStatus { padding: 6px 11px; font-size: 12px; line-height: 1.35; }
+.qa-board #qaTicketStatus { max-width: none; padding: 6px 11px; font-size: 12px !important; line-height: 1.35; }
 #qaAuditedBy { font-size: 10px; overflow-wrap: anywhere; text-align: end; }
 #qaAuditorName { color: var(--text); }
 .qa-board .qa-detail-actions button { min-height: 32px; font-size: 11px; }
