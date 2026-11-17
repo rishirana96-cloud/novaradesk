@@ -316,12 +316,37 @@
             </div>`;
     }
 
+    function selectChannel(channel) {
+        byId("qaChannelSwitch").querySelectorAll("[data-qa-channel]").forEach(tab => {
+            const active = tab.dataset.qaChannel === channel;
+            tab.setAttribute("aria-selected", String(active));
+            tab.tabIndex = active ? 0 : -1;
+            byId(tab.getAttribute("aria-controls")).hidden = !active;
+        });
+    }
+
+    function renderActivity(data, message) {
+        const targets = {
+            history: byId("qaHistoryTimeline"), historyCount: byId("qaHistoryCount"),
+            calls: byId("qaCallRows"), callCount: byId("qaCallCount")
+        };
+        targets.historyCount.textContent = "";
+        targets.callCount.textContent = "";
+        if (data?.ticket) {
+            window.renderQaTicketActivity?.(data, targets);
+        } else {
+            targets.history.textContent = message;
+            targets.calls.innerHTML = `<tr><td colspan="8">${esc(message)}</td></tr>`;
+        }
+    }
+
     async function loadTranscript() {
         const record = state.current;
         const sequence = ++state.reviewRequest;
         state.messages = [];
         const transcript = byId("qaTranscript");
         renderTicketContext(null);
+        renderActivity(null, "Loading case activity…");
         byId("qaMessageCount").textContent = "";
         transcript.textContent = "Loading conversation…";
         byId("qaRetryTranscript").hidden = true;
@@ -331,6 +356,7 @@
             if (sequence !== state.reviewRequest) return;
             if (data.success === false || (record.type !== "ai" && String(data.ticket?.id) !== record.sourceId)) throw new Error("Conversation unavailable");
             renderTicketContext(record.type === "ai" ? null : data.ticket);
+            renderActivity(record.type === "ai" ? null : data, "No ticket activity for this standalone AI chat.");
             state.messages = transcriptRows(data, record.type);
             const count = state.messages.length;
             byId("qaMessageCount").textContent = count ? `${count} ${count === 1 ? "message" : "messages"}` : "";
@@ -344,11 +370,13 @@
         } catch {
             if (sequence !== state.reviewRequest) return;
             transcript.textContent = "Could not load the conversation.";
+            renderActivity(null, "Could not load case activity. Retry from Chat.");
             byId("qaRetryTranscript").hidden = false;
         }
     }
 
     function openAudit(record, focus = true) {
+        if (!state.current || sourceKey(state.current) !== sourceKey(record)) selectChannel("chat");
         state.current = { ...record, criteria: record.criteria || scorecards[record.type].criteria };
         state.evidence = record.evidence || null;
         const editing = record.status === "draft";
@@ -426,6 +454,23 @@
             formStatus("Follow-up completed.");
         }
     }
+
+    const channelSwitch = byId("qaChannelSwitch");
+    channelSwitch.addEventListener("click", event => {
+        const tab = event.target.closest("[data-qa-channel]");
+        if (tab) selectChannel(tab.dataset.qaChannel);
+    });
+    channelSwitch.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        const tabs = [...channelSwitch.querySelectorAll("[data-qa-channel]")];
+        const index = tabs.indexOf(event.target);
+        if (index < 0) return;
+        event.preventDefault();
+        const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 :
+            (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+        selectChannel(tabs[next].dataset.qaChannel);
+        tabs[next].focus();
+    });
 
     byId("qaBoard").addEventListener("click", event => {
         const copy = event.target.closest("[data-copy-ticket-number]");
