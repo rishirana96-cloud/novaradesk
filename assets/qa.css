@@ -127,16 +127,14 @@ html[data-theme="dark"] .qa-board {
 .qa-detail-actions { justify-content: flex-end; }
 .qa-board .qa-detail-actions button { min-height: 32px; font-size: 11px; }
 .qa-ticket-meta, #qaReviewMeta { grid-column: 1 / -1; }
-.qa-ticket-meta, .qa-ticket-assignee {
+.qa-ticket-meta, .qa-ticket-assignee, .qa-response-meta {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 7px;
     font-size: 11px;
 }
-.qa-ticket-meta > .qa-ticket-assignee { flex-basis: 100%; }
-.qa-ticket-meta > span.qa-ticket-meta-divider { border-inline-start: 0; padding-inline-start: 0; }
-.qa-ticket-meta-divider { border-inline-start: 1px solid var(--qa-border); padding-inline-start: 8px; }
+.qa-ticket-meta-divider + .qa-ticket-meta-divider { border-inline-start: 1px solid var(--qa-border); padding-inline-start: 8px; }
 .qa-assignee-avatar {
     display: grid;
     place-items: center;
@@ -149,6 +147,7 @@ html[data-theme="dark"] .qa-board {
     font-weight: 700;
 }
 #qaFirstResponse, #qaSlaState { color: var(--qa-accent); }
+#qaSlaState[data-state="unset"] { color: var(--qa-muted); }
 #qaFirstResponse.pending, #qaSlaState[data-state="breached"] { color: var(--qa-danger); }
 .qa-ticket-meta:not([hidden]) + #qaReviewMeta { display: none; }
 #qaReviewMeta { font-size: 11px; overflow-wrap: anywhere; }
@@ -316,13 +315,22 @@ html[data-theme="dark"] .qa-board {
 .qa-ticket-action:disabled { opacity: .5; cursor: default; }
 .qa-ticket-action:hover:enabled { border-color: var(--accent); }
 
-.qa-channel-switch {
+.qa-header-bottom {
     grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-bottom: -11px;
+}
+.qa-response-meta { padding-bottom: 5px; }
+.qa-channel-switch {
+    align-self: flex-end;
+    margin-inline-start: auto;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 2px;
-    margin-block: 0 -11px;
 }
 .qa-board .qa-channel-switch button {
     display: inline-flex;
