@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-three-pane-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-case-inbox-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8647,24 +8647,18 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
         <div class="qa-board" id="qaBoard">
             <div class="qa-workspace">
                 <section class="qa-queue-pane" aria-label="Audit queue">
-                    <div class="qa-stats" aria-label="QA workload">
-                        <div class="qa-box"><span>In review</span><strong id="qaDraftCount">0</strong></div>
-                        <div class="qa-box"><span>Follow-up open</span><strong id="qaActionCount">0</strong></div>
-                        <div class="qa-box"><span>Submitted audits</span><strong id="qaCompletedCount">0</strong></div>
-                    </div>
+                    <div class="qa-queue-title"><span>Current view</span><h2>QA Audits</h2></div>
                     <div class="qa-tabs" role="group" aria-label="Audit views">
-                        <button type="button" data-qa-view="queue" aria-pressed="true">Review queue</button>
+                        <button type="button" id="qaNewAudit" aria-pressed="true">Cases</button>
+                        <button type="button" data-qa-view="queue" aria-pressed="false">Drafts</button>
                         <button type="button" data-qa-view="followup" aria-pressed="false">Follow-ups</button>
                         <button type="button" data-qa-view="completed" aria-pressed="false">Completed</button>
-                        <button type="button" id="qaNewAudit" class="qa-primary">New audit</button>
                     </div>
-                    <p class="qa-storage" id="qaStorageNote">Audits and follow-ups are saved to this browser for your account.</p>
                     <p id="qaStatus" class="qa-status" role="status"></p>
                     <div id="qaList" class="qa-list"></div>
-                    <section id="qaPicker" class="qa-picker" hidden aria-labelledby="qaPickerHeading">
-                        <div class="qa-head"><h2 id="qaPickerHeading" tabindex="-1">Select a case</h2><button type="button" data-qa-close>Back to audits</button></div>
+                    <section id="qaPicker" class="qa-picker" hidden aria-label="Cases">
                         <div class="qa-picker-tools">
-                            <label>Scorecard
+                            <label>Case type
                                 <select id="qaType" data-native-select><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option></select>
                             </label>
                             <label>Search recent cases<input id="qaSearch" type="search" placeholder="Ticket, session, or topic"></label>
@@ -9695,7 +9689,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-three-pane-1"></script>
+<script src="assets/qa.js?v=qa-case-inbox-1"></script>
 <script>
 /* =====================================================
    STATE

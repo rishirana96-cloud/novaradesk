@@ -26,11 +26,7 @@
 .qa-board .qa-primary { background: #245c46; border-color: #245c46; color: #fff; }
 .qa-board .qa-primary:hover:enabled { background: #1b4937; }
 .qa-box { min-width: 0; border: 1px solid var(--qa-border); border-radius: 12px; background: var(--qa-surface); padding: 16px; }
-.qa-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.qa-stats span, .qa-muted, .qa-storage { color: var(--qa-muted); }
-.qa-stats strong { display: block; margin-top: 6px; font-size: 24px; }
 .qa-tabs, .qa-head, .qa-form-footer, .qa-sampling { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.qa-tabs .qa-primary { margin-inline-start: auto; }
 .qa-tabs [aria-pressed="true"], .qa-sampling [aria-pressed="true"] { border-color: var(--accent); background: var(--surface-hover, var(--bg-soft)); }
 .qa-head { justify-content: space-between; margin-bottom: 12px; }
 .qa-review-head p { margin-bottom: 4px; }
@@ -61,10 +57,6 @@
 .qa-board .qa-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 520px) {
     .qa-box { padding: 10px; }
-    .qa-stats { gap: 6px; }
-    .qa-stats span { font-size: 11px; }
-    .qa-stats strong { font-size: 20px; }
-    .qa-tabs .qa-primary { margin-inline-start: 0; }
 }
 .qa-ticket-action {
     padding: 5px 10px;
@@ -99,13 +91,9 @@
     background: var(--bg-soft);
     border-inline-end: 1px solid var(--qa-border);
 }
-.qa-stats { gap: 5px; }
-.qa-stats .qa-box { padding: 8px 6px; }
-.qa-stats span { font-size: 10px; }
-.qa-stats strong { font-size: 16px; margin-top: 3px; }
 .qa-tabs { margin-block: 12px 8px; }
 .qa-tabs button, .qa-sampling button { font-size: 11px; min-height: 30px; }
-.qa-storage, .qa-status, #qaCandidatesInfo { margin-bottom: 10px; font-size: 11px; }
+.qa-status, #qaCandidatesInfo { margin-bottom: 10px; font-size: 11px; }
 .qa-list { display: grid; gap: 7px; }
 .qa-list .ticket-queue-card { width: 100%; text-align: start; }
 .qa-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
@@ -137,3 +125,13 @@
     .qa-review-body { max-height: 65dvh; }
     .qa-empty-pane { min-height: 56px; border-inline-start: 0; border-top: 1px solid var(--qa-border); }
 }
+.qa-queue-title { margin-bottom: 10px; }
+.qa-queue-title > span {
+    color: var(--qa-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.qa-queue-title h2 { font-size: 16px; }
+.qa-picker-tools > label:first-child { width: auto; }

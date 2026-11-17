@@ -9,7 +9,7 @@
     };
     const scoreValues = ["pass", "fail", "na"];
     const options = '<option value="">Select rating</option><option value="pass">Meets standard</option><option value="fail">Misses standard</option><option value="na">Not applicable</option>';
-    const state = { key: "", view: "queue", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null };
+    const state = { key: "", view: "cases", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null };
     const esc = value => escapeHtml(String(value ?? ""));
     const readable = value => String(value || "").replaceAll("_", " ");
     const localDate = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
@@ -89,18 +89,17 @@
         return key;
     }
 
-    function showList(view = state.view, message = "", focus = false) {
+    function showList(view, message = "", focus = false) {
         state.view = view;
+        state.sourceRequest++;
+        byId("qaNewAudit").setAttribute("aria-pressed", "false");
         closeDetail();
         const items = read();
         const drafts = items.filter(item => item.status === "draft");
         const actions = items.filter(item => item.status === "followup");
         const complete = items.filter(item => item.status === "complete");
-        byId("qaDraftCount").textContent = drafts.length;
-        byId("qaActionCount").textContent = actions.length;
-        byId("qaCompletedCount").textContent = complete.length + actions.length;
         const visible = { queue: drafts, followup: actions, completed: [...complete, ...actions] }[view];
-        const empty = { queue: "No audits in review. Start a new audit to select a case.", followup: "No open follow-ups.", completed: "Submitted audits will appear here." }[view];
+        const empty = { queue: "No draft audits.", followup: "No open follow-ups.", completed: "Submitted audits will appear here." }[view];
         byId("qaList").innerHTML = [...visible].reverse().map(item => {
             const details = [scorecards[item.type].label, item.status === "draft" ? "Draft" : `${item.score}%`, item.critical ? "Critical error" : ""];
             if (item.status === "followup") details.push(item.action.owner, `Due ${item.action.due}${item.action.due < localDate() ? " · Overdue" : ""}`);
@@ -123,9 +122,8 @@
     function candidates() {
         const query = byId("qaSearch").value.trim().toLowerCase();
         const higherRisk = byId("qaRisk").getAttribute("aria-pressed") === "true";
-        const saved = new Set(read().map(sourceKey));
-        return state.candidates.filter(item => !saved.has(sourceKey(item)) &&
-            (!higherRisk || item.risk.length) && [item.title, item.topic, item.sourceId].some(value => value.toLowerCase().includes(query)));
+        return state.candidates.filter(item => (!higherRisk || item.risk.length) &&
+            [item.title, item.topic, item.sourceId, item.customer].some(value => String(value ?? "").toLowerCase().includes(query)));
     }
 
     function renderCandidates() {
@@ -137,15 +135,16 @@
         return matches.length;
     }
 
-    async function loadCandidates() {
+    async function loadCandidates(autoSelect = true) {
         const sequence = ++state.sourceRequest;
         const type = byId("qaType").value;
         state.candidates = [];
         renderCandidates();
         byId("qaCandidatesInfo").textContent = "Loading recent cases…";
         try {
-            const rows = await request(type === "ai" ? "/conversations?limit=100&period=28" : "/tickets?limit=100&period=28");
+            const data = await request(type === "ai" ? "/conversations?limit=100&period=28" : "/tickets?limit=100&period=28");
             if (sequence !== state.sourceRequest) return;
+            const rows = Array.isArray(data) ? data : data?.[type === "ai" ? "conversations" : "tickets"];
             if (!Array.isArray(rows)) throw new Error("Unexpected case list");
             const items = new Map();
             for (const item of rows) {
@@ -167,8 +166,10 @@
             }
             state.candidates = [...items.values()].slice(0, 100);
             updateCandidateCount();
+            const first = candidates()[0];
+            if (autoSelect && first && !state.current) startAudit(first, false);
         } catch {
-            if (sequence === state.sourceRequest) byId("qaCandidatesInfo").textContent = "Could not load cases. Choose a scorecard or reopen New audit to retry.";
+            if (sequence === state.sourceRequest) byId("qaCandidatesInfo").textContent = "Could not load cases. Select Cases to retry.";
         }
     }
 
@@ -177,15 +178,17 @@
         byId("qaCandidatesInfo").textContent = count ? `${count} available from recent cases` : "No matching cases available.";
     }
 
-    function showPicker() {
+    function showPicker(autoSelect = true) {
+        state.view = "cases";
+        byId("qaNewAudit").setAttribute("aria-pressed", "true");
+        byId("qaBoard").querySelectorAll("[data-qa-view]").forEach(button => button.setAttribute("aria-pressed", "false"));
         closeDetail();
         byId("qaList").hidden = true;
         byId("qaPicker").hidden = false;
         byId("qaSearch").value = "";
         byId("qaRisk").setAttribute("aria-pressed", "false");
         notice("");
-        byId("qaPickerHeading").focus();
-        loadCandidates();
+        loadCandidates(autoSelect);
     }
 
     function transcriptRows(data, type) {
@@ -281,7 +284,7 @@
         }
     }
 
-    function openAudit(record) {
+    function openAudit(record, focus = true) {
         state.current = record;
         state.evidence = record.evidence || null;
         const editing = record.status === "draft";
@@ -315,7 +318,7 @@
         showRating();
         renderEvidence();
         loadTranscript();
-        byId("qaReviewHeading").focus();
+        if (focus) byId("qaReviewHeading").focus();
     }
 
     function saveAudit(submit) {
@@ -338,9 +341,10 @@
         else formStatus("Draft saved.");
     }
 
-    function startAudit(item) {
+    function startAudit(item, focus = true) {
+        if (state.current && sourceKey(state.current) === sourceKey(item)) return;
         const existing = read().find(saved => sourceKey(saved) === sourceKey(item));
-        openAudit(existing || { ...item, status: "draft", reviewer: state.reviewer });
+        openAudit(existing || { ...item, status: "draft", reviewer: state.reviewer }, focus);
     }
 
     function completeFollowup() {
@@ -356,7 +360,7 @@
         const button = event.target.closest("button");
         if (!button || !state.key) return;
         const { qaView, qaAudit, qaCandidate, qaMessage } = button.dataset;
-        if (qaView || button.hasAttribute("data-qa-close")) showList(qaView || state.view, "", true);
+        if (qaView) showList(qaView, "", true);
         else if (button.hasAttribute("data-qa-close-detail")) {
             const key = closeDetail();
             const source = [...byId("qaBoard").querySelectorAll("[data-qa-candidate], [data-qa-audit]")].find(row => (row.dataset.qaCandidate || row.dataset.qaAudit) === key);
@@ -382,7 +386,7 @@
         }
     });
     byId("qaNewAudit").addEventListener("click", () => { if (state.key) showPicker(); });
-    byId("qaType").addEventListener("change", loadCandidates);
+    byId("qaType").addEventListener("change", () => { closeDetail(); loadCandidates(); });
     byId("qaSearch").addEventListener("input", updateCandidateCount);
     byId("qaRisk").addEventListener("click", event => {
         const element = event.currentTarget;
@@ -407,15 +411,16 @@
             if (!identity) return;
             state.key = `novaradesk_qa_v1:${JSON.stringify([user.workspace_id || "", identity])}`;
             state.reviewer = user.name || user.email || "Reviewer";
-            if (window.NOVARA_DEMO_MODE) byId("qaStorageNote").textContent = "Preview audits reset when you leave or reload the preview.";
             if (currentTab === "qa") this.activate();
         },
         activate() {
-            if (state.key && !state.current && byId("qaPicker").hidden) showList();
+            if (state.key && state.view === "cases" && byId("qaPicker").hidden) showPicker();
         },
         fromTicket(ticket) {
             if (!state.key || !ticket?.id) return;
             showWorkspace("qa");
+            byId("qaType").value = "human";
+            showPicker(false);
             startAudit({ type: "human", sourceId: String(ticket.id), title: ticket.ticket_number || `NX-${String(ticket.id).padStart(4, "0")}`, topic: readable(ticket.subject || ticket.intent) });
         }
     };
