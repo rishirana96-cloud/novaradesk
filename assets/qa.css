@@ -37,7 +37,7 @@ html[data-theme="dark"] .qa-board {
 .qa-board textarea { display: block; width: 100%; margin-top: 6px; resize: vertical; }
 .qa-board :is(input, textarea, select) { max-width: 100%; }
 .qa-muted { color: var(--qa-muted); }
-.qa-head, .qa-detail-actions, .qa-form-footer, .qa-sampling {
+.qa-head, .qa-detail-actions, .qa-form-footer {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -89,8 +89,6 @@ html[data-theme="dark"] .qa-board {
 .qa-picker-tools { display: grid; gap: 8px; padding: 0 13px 10px; background: var(--qa-surface); }
 .qa-picker-tools label { display: block; color: var(--qa-muted); font-size: 11px; }
 .qa-picker-tools input { display: block; width: 100%; margin-top: 5px; }
-.qa-board .qa-sampling button { font-size: 11px; min-height: 30px; padding: 5px 8px; }
-.qa-board .qa-sampling [aria-pressed="true"] { background: var(--qa-tint); border-color: var(--accent); color: var(--qa-accent); }
 .qa-board #qaCandidatesInfo {
     padding: 9px 13px;
     border-top: 1px solid var(--qa-border);

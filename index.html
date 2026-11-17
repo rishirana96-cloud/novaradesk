@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-tabs-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-queue-controls-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8656,10 +8656,6 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     <section id="qaPicker" class="qa-picker" hidden aria-label="Cases">
                         <div class="qa-picker-tools">
                             <label>Search recent cases<input id="qaSearch" type="search" placeholder="Ticket, session, or topic"></label>
-                            <div class="qa-sampling">
-                                <button type="button" id="qaRisk" aria-pressed="false">Higher risk only</button>
-                                <button type="button" id="qaSample">Pick random case</button>
-                            </div>
                         </div>
                         <p class="qa-muted" id="qaCandidatesInfo" role="status"></p>
                         <div id="qaCandidates" class="qa-list ticket-queue-list"></div>
@@ -9728,7 +9724,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-ticket-tabs-1"></script>
+<script src="assets/qa.js?v=qa-queue-controls-1"></script>
 <script>
 /* =====================================================
    STATE
