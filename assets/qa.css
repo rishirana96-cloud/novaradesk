@@ -454,14 +454,14 @@ html[data-theme="dark"] .qa-board {
     padding: 3px;
     border: 1px solid var(--border);
     border-radius: 14px;
-    background: #f0efed;
+    background: color-mix(in srgb, var(--border) 24%, var(--bg-soft));
 }
 .qa-view-switch[hidden] { display: none; }
 .qa-view-switch button {
     border: 0;
     border-radius: 9px;
     background: transparent;
-    color: #5d5a55;
+    color: var(--text-muted);
     font: inherit;
     font-size: calc(10px * var(--ui-text-scale));
     font-weight: 700;
@@ -470,19 +470,11 @@ html[data-theme="dark"] .qa-board {
     padding: 0 8px;
     cursor: pointer;
 }
-.qa-view-switch button:hover { background: #e7e5e1; }
+.qa-view-switch button:hover { background: var(--surface-hover); }
 .qa-view-switch button[aria-selected="true"] {
-    color: #292724;
-    background: #fff;
-    box-shadow: inset 0 0 0 1px #e3e0db, 0 1px 2px rgba(47, 41, 34, .08);
-}
-html[data-theme="dark"] .qa-view-switch { background: #252422; }
-html[data-theme="dark"] .qa-view-switch button { color: #bbb7b0; }
-html[data-theme="dark"] .qa-view-switch button:hover { background: #302e2b; }
-html[data-theme="dark"] .qa-view-switch button[aria-selected="true"] {
-    color: #f1efeb;
-    background: #3b3834;
-    box-shadow: inset 0 0 0 1px #504b45, 0 1px 2px rgba(0, 0, 0, .2);
+    color: var(--text);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border), 0 1px 2px rgba(32, 40, 50, .08);
 }
 .qa-view-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
