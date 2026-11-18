@@ -9,7 +9,7 @@
     };
     const scoreValues = ["pass", "fail", "na"];
     const options = '<option value="">Select rating</option><option value="pass">Meets standard</option><option value="fail">Misses standard</option><option value="na">Not applicable</option>';
-    const state = { key: "", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null, view: "queue", historyKey: null };
+    const state = { key: "", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null, view: "history", historyKey: null };
     const esc = value => escapeHtml(String(value ?? ""));
     const readable = value => String(value || "").replaceAll("_", " ");
     const sourceKey = item => JSON.stringify([item.type, item.sourceId]);
@@ -554,7 +554,7 @@
     byId("qaCritical").addEventListener("change", showRating);
     byId("qaActionType").addEventListener("change", event => { byId("qaActionFields").hidden = !event.target.value; });
 
-    const viewTabs = [byId("qaQueueTab"), byId("qaHistoryTab")];
+    const viewTabs = [byId("qaHistoryTab"), byId("qaQueueTab")];
     const auditDate = record => record.submittedAt || record.updated;
     const auditScore = record => Number.isFinite(record.score) ? `${record.score / 10}/10` : "—";
     const auditLabel = record => record.title || record.sourceId;
@@ -683,24 +683,27 @@
         }).join("");
         byId("qaHistoryEmpty").hidden = matches.length > 0;
         byId("qaHistoryEmptyTitle").textContent = records.length ? "No matching audits" : "No submitted audits yet";
-        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from the review queue.";
+        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from Cases to Review.";
     }
 
     function showAuditView(view) {
         state.view = view;
         const history = view === "history";
         viewTabs.forEach((tab, index) => {
-            const active = Boolean(index) === history;
+            const active = (index === 0) === history;
             tab.setAttribute("aria-selected", String(active));
             tab.tabIndex = active ? 0 : -1;
         });
         byId("qaQueueView").hidden = history;
         byId("qaAuditHistoryView").hidden = !history;
-        if (!history) closeHistoryPopovers();
         if (history) renderAuditHistory();
+        else {
+            closeHistoryPopovers();
+            if (state.key && byId("qaPicker").hidden) showPicker();
+        }
     }
 
-    viewTabs.forEach((tab, index) => tab.addEventListener("click", () => showAuditView(index ? "history" : "queue")));
+    viewTabs.forEach((tab, index) => tab.addEventListener("click", () => showAuditView(index === 0 ? "history" : "queue")));
     byId("qaViewSwitch").addEventListener("keydown", event => {
         if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
@@ -839,8 +842,7 @@
             if (currentTab === "qa") this.activate();
         },
         activate() {
-            if (state.key && byId("qaPicker").hidden) showPicker();
-            if (state.view === "history") renderAuditHistory();
+            showAuditView(state.view);
         },
         deactivate: closeHistoryPopovers,
         refresh() {
@@ -849,11 +851,11 @@
         },
         fromTicket(ticket) {
             if (!state.key || !ticket?.id) return;
-            showWorkspace("qa");
-            showAuditView("queue");
             byId("qaType").value = "human";
             byId("qaTicketView").value = "all";
             showPicker(false);
+            showAuditView("queue");
+            showWorkspace("qa");
             startAudit({ type: "human", sourceId: String(ticket.id), title: ticket.ticket_number || `NX-${String(ticket.id).padStart(4, "0")}`, topic: readable(ticket.subject || ticket.intent) });
         }
     };
