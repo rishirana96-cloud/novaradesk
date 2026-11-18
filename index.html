@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-header-slate-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-action-removed-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -9715,7 +9715,6 @@ ORDER BY ticket_count DESC</textarea>
     </div>
     <div class="ticket-head-side">
     <div class="ticket-head-controls">
-        <button id="ticketStartQA" class="qa-ticket-action" type="button" disabled>Audit</button>
         <div id="ticketStatusControl" class="ticket-status-control">
             <select id="ticketStatusSelect" class="ticket-status-select" aria-label="Ticket status"><option value="open">Open</option><option value="in_progress">In Progress</option><option value="pending">Pending</option><option value="resolved">Resolved</option><option value="reopened">Reopened</option></select>
             <button id="ticketStatusTrigger" class="ticket-status-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span id="ticketStatusTriggerLabel">Open</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
@@ -9840,7 +9839,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-open-audits-1"></script>
+<script src="assets/qa.js?v=qa-ticket-action-removed-1"></script>
 <script>
 /* =====================================================
    STATE
@@ -14692,7 +14691,6 @@ function setTicketSwitchLoading(isLoading) {
 const loading = document.getElementById("ticketSwitchLoading");
 loading?.classList.toggle("open", Boolean(isLoading));
 if (!isLoading) return;
-document.getElementById("ticketStartQA").disabled = true;
 document.getElementById("ticketContext").replaceChildren();
 document.getElementById("ticketAiTranscript").replaceChildren();
 document.getElementById("ticketThread").replaceChildren();
@@ -14850,7 +14848,6 @@ try {
 }
 function renderOpenTicket(data, scrollLatest = false) {
     lastOpenTicketData = data;
-    document.getElementById("ticketStartQA").disabled = false;
     const ticket = data.ticket;
     const signature = JSON.stringify([
         ticket?.id, ticket?.status, ticket?.updated_at, ticket?.resolved_at, ticket?.first_response_at,
@@ -15219,12 +15216,6 @@ if (target?.dbId) openTicket(Number(target.dbId));
 else showWorkspace("tickets");
 });
 document.getElementById("ticketQueueSearch")?.addEventListener("input", event => { ticketQueuePage=1; renderTicketQueue(event.target.value); });
-document.getElementById("ticketStartQA").addEventListener("click", () => {
-    const ticket = lastOpenTicketData?.ticket;
-    if (String(ticket?.id) !== String(openTicketId) || window.ticketReplySending) return;
-    closeTicket();
-    window.NovaraQA?.fromTicket(ticket);
-});
 document.getElementById("ticketCopyId")?.addEventListener("click",async()=>{const value=document.getElementById("ticketDrawerTitle")?.textContent||"";try{await navigator.clipboard.writeText(value);document.getElementById("ticketCopyId").title="Copied";setTimeout(()=>document.getElementById("ticketCopyId").title="Copy ticket number",1200)}catch(_){}});
 document.getElementById("ticketStatusTrigger")?.addEventListener("click",event=>{
 event.stopPropagation();

@@ -848,15 +848,6 @@
         refresh() {
             if (state.view === "history") return renderAuditHistory();
             if (state.key) return loadCandidates(!state.current);
-        },
-        fromTicket(ticket) {
-            if (!state.key || !ticket?.id) return;
-            byId("qaType").value = "human";
-            byId("qaTicketView").value = "all";
-            showPicker(false);
-            showAuditView("queue");
-            showWorkspace("qa");
-            startAudit({ type: "human", sourceId: String(ticket.id), title: ticket.ticket_number || `NX-${String(ticket.id).padStart(4, "0")}`, topic: readable(ticket.subject || ticket.intent) });
         }
     };
 })();

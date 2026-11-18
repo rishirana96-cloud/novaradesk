@@ -385,20 +385,6 @@ html[data-theme="dark"] .qa-board {
     .qa-tools-pane { border-inline-start: 0; border-top: 1px solid var(--qa-border); }
 }
 
-.qa-ticket-action {
-    padding: 5px 10px;
-    min-height: 30px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg-card);
-    color: var(--text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-}
-.qa-ticket-action:disabled { opacity: .5; cursor: default; }
-.qa-ticket-action:hover:enabled { border-color: var(--accent); }
-
 .qa-header-bottom {
     grid-column: 1 / -1;
     display: flex;
