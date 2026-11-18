@@ -445,35 +445,50 @@ html[data-theme="dark"] .qa-board {
 .qa-board .ticket-history-copy { overflow-wrap: anywhere; }
 
 .qa-view-switch {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
     gap: 2px;
+    height: 40px;
     padding: 3px;
     border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--bg-soft);
+    border-radius: 14px;
+    background: var(--surface);
 }
 .qa-view-switch[hidden] { display: none; }
 .qa-view-switch button {
-    border: 1px solid transparent;
-    border-radius: 8px;
+    border: 0;
+    border-radius: 9px;
     background: transparent;
     color: var(--text-muted);
     font: inherit;
-    font-size: var(--desk-type-control);
-    font-weight: 600;
+    font-size: calc(10px * var(--ui-text-scale));
+    font-weight: 700;
     white-space: nowrap;
-    min-height: 34px;
-    padding: 5px 10px;
+    height: 32px;
+    padding: 0 8px;
     cursor: pointer;
 }
+.qa-view-switch button:hover { background: var(--surface-hover); }
 .qa-view-switch button[aria-selected="true"] {
-    color: var(--text);
-    background: var(--surface, var(--bg-card));
-    border-color: var(--border);
+    color: var(--accent-dark);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
+html[data-theme="dark"] .qa-view-switch button[aria-selected="true"] { color: var(--accent-light); }
 .qa-view-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+@media (min-width: 721px) {
+    .topbar-actions > .qa-view-switch:not([hidden]) + #globalSearchWrap {
+        margin-inline: 12px !important;
+    }
+}
+@media (max-width: 720px) {
+    .topbar-actions:has(> .qa-view-switch:not([hidden])) { row-gap: 8px; }
+    .topbar-actions > .qa-view-switch:not([hidden]) + #globalSearchWrap {
+        margin-inline: 8px;
+    }
+}
 #qaAuditHistoryView [hidden], #qaAuditHistoryView[hidden] { display: none !important; }
 .qa-history-table { min-width: 780px; }
 .qa-history-table tbody tr { cursor: pointer; }

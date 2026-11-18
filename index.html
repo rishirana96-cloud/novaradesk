@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-history-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-header-spacing-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -10046,6 +10046,8 @@ const layoutControls = document.querySelector(".layout-controls");
 if (layoutControls) layoutControls.style.display = ["ai","human","tickets","reports"].includes(workspace) ? "flex" : "none";
 document.getElementById("lastUpdated")?.style.setProperty("display", analyticsWorkspace ? "block" : "none", "important");
 document.getElementById("qaViewSwitch").hidden = workspace !== "qa";
+const searchField = document.getElementById("globalSearchInput");
+searchField.placeholder = workspace === "qa" ? "Search NovaraDesk…" : "Search tickets, session IDs, dashboards…";
 document.getElementById("refreshBtn").title = workspace === "qa" ? "Refresh QA audits" : "Refresh analytics";
 document.getElementById("refreshBtn").style.display = ["chatbot","settings"].includes(workspace) ? "none" : "inline-flex";
 const refreshLabel = document.getElementById("refreshBtnLabel");
