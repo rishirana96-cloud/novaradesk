@@ -17326,8 +17326,17 @@ cancel.addEventListener('click',()=>finish(false));
 (function(){
 const API="https://novara-cx-ai.rishi-rana96.workers.dev";
 const tokenKey=window.NOVARA_AUTH_TOKEN_KEY;
-const previewOwner="rishi.rana1996@gmail.com";
-const canExplore=user=>String(user?.email||"").trim().toLowerCase()===previewOwner;
+const previewEmailHashes=new Set([
+    "a186b28e2cedd7a175b0d1c92df5c41a8e691a785c20035fe8361ed8ce39e7ac",
+    "40e1fd4f300eb3be7c6ef18239bc227add075d1fd7288edbdce58b7ce3bdfe45"
+]);
+async function canExplore(user){
+    const email=String(user?.email||"").trim().toLowerCase();
+    if(!email||!window.crypto?.subtle)return false;
+    const digest=await window.crypto.subtle.digest("SHA-256",new TextEncoder().encode(email));
+    const hash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,"0")).join("");
+    return previewEmailHashes.has(hash);
+}
 const status=document.getElementById("novaraAuthStatus");
 const setStatus=message=>{if(status)status.textContent=message||""};
 function showWorkspace(user){
@@ -17352,14 +17361,14 @@ try{
     const data=await response.json();
     if(!response.ok||!data.success)throw new Error(data.error||"Session rejected");
     if(window.NOVARA_DEMO_MODE){
-        if(!canExplore(data.user)){
+        if(!(await canExplore(data.user))){
             window.location.replace(window.location.pathname);
             return true;
         }
         document.body.classList.add("novara-demo-mode");
         showWorkspace(window.NOVARA_DEMO_USER);
     }else{
-        document.getElementById("novaraOwnerPreview").hidden=!canExplore(data.user);
+        document.getElementById("novaraOwnerPreview").hidden=!(await canExplore(data.user));
         showWorkspace(data.user);
     }
     setStatus("");
