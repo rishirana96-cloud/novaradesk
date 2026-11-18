@@ -474,38 +474,31 @@ html[data-theme="dark"] .qa-board {
     border-color: var(--border);
 }
 .qa-view-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.qa-audit-history {
-    border: 1px solid var(--qa-border);
-    border-radius: 16px;
-    overflow: hidden;
-    background: var(--qa-surface);
-}
-.qa-history-toolbar {
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.qa-history-toolbar p { margin-inline-end: auto; }
-.qa-history-table-wrap { overflow-x: auto; }
-.qa-history-table { width: 100%; min-width: 690px; }
-.qa-history-table :is(th, td) { text-align: start; }
-.qa-history-table .qa-history-customer { display: block; margin-top: 4px; }
-.qa-board .qa-history-table button {
+#qaAuditHistoryView [hidden], #qaAuditHistoryView[hidden] { display: none !important; }
+.qa-history-table { min-width: 780px; }
+.qa-history-table tbody tr { cursor: pointer; }
+.qa-history-table td.query { max-width: 290px; }
+.qa-history-table td.query > span:last-child { color: var(--text-muted); }
+.qa-history-table button.ticket-id {
     background: transparent;
-    border-color: transparent;
-    padding: 2px 0;
-    min-height: 24px;
-    color: var(--qa-accent);
-    text-align: start;
-    overflow-wrap: anywhere;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
 }
-.qa-history-table button:hover { text-decoration: underline; }
+.qa-history-table button.ticket-id:hover { text-decoration: underline; }
+.qa-history-table .ticket-column-filter-panel:popover-open {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    width: 240px;
+    display: block;
+}
+.qa-audit-history .ticket-kpi-card { font-family: inherit; text-align: start; }
+.qa-audit-history .qa-muted { color: var(--text-muted); }
 .qa-history-chip {
     display: inline-block;
-    background: var(--qa-tint);
-    color: var(--qa-accent);
+    background: var(--bg-soft);
+    color: var(--accent-dark);
     border-radius: 6px;
     padding: 3px 7px;
     white-space: nowrap;
@@ -516,7 +509,8 @@ html[data-theme="dark"] .qa-board {
     text-align: center;
 }
 .qa-history-empty p { margin-top: 4px; }
-.qa-history-detail { display: grid; gap: 12px; padding: 16px; justify-items: start; }
+.qa-history-detail { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; display: grid; gap: 12px; padding: 16px; justify-items: start; }
+.qa-history-detail :is(h2, h3, p) { margin: 0; }
 #qaHistoryDetailBody { display: grid; gap: 8px; width: min(100%, 700px); }
 #qaHistoryDetailBody h3 { margin-top: 8px; }
 #qaHistoryDetailBody dl { margin: 0; }
@@ -525,7 +519,7 @@ html[data-theme="dark"] .qa-board {
     justify-content: space-between;
     gap: 12px;
     padding-block: 8px;
-    border-bottom: 1px solid var(--qa-border);
+    border-bottom: 1px solid var(--border);
 }
 #qaHistoryDetailBody dd { margin: 0; }
 .qa-history-note { white-space: pre-wrap; overflow-wrap: anywhere; }

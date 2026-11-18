@@ -560,8 +560,65 @@
     const auditLabel = record => record.title || record.sourceId;
     const followupLabel = record => record.status === "followup" ? "Open" : record.action ? "Completed" : "No follow-up";
 
+    const demoAudits = window.NOVARA_DEMO_MODE ? [
+        [0, "human", "Meera Joshi", "Duplicate payment", "Anika Rao", 4, "open"],
+        [1, "ai", "Aarav Shah", "Order tracking", "Kabir Sen", 5],
+        [2, "human", "Ishaan Verma", "Delivery address change", "Anika Rao", 5],
+        [3, "handoff", "Diya Patel", "Refund escalation", "Kabir Sen", 3, "completed"],
+        [4, "ai", "Sana Gupta", "Return eligibility", "Kabir Sen", 4, "open"],
+        [5, "human", "Veer Nair", "Damaged item", "Anika Rao", 4],
+        [6, "human", "Aditi Singh", "Subscription upgrade", "Anika Rao", 5],
+        [8, "ai", "Nikhil Rao", "Invoice copy", "Kabir Sen", 5],
+        [10, "human", "Tara Bose", "Replacement delivery", "Anika Rao", 3, "open"],
+        [12, "ai", "Riya Das", "Warranty coverage", "Kabir Sen", 4],
+        [18, "human", "Neil Sethi", "Payment method update", "Anika Rao", 5],
+        [35, "ai", "Ana Kapoor", "Cancellation window", "Kabir Sen", 4]
+    ].map(([age, type, customer, topic, reviewer, passed, followup], index) => {
+        const sourceId = `sample-audit-${index + 1}`;
+        return {
+            sourceId, title: type === "ai" ? `AI-DEMO-${101 + index}` : `NX-DEMO-${101 + index}`,
+            type, customer, topic, reviewer,
+            submittedAt: new Date(Date.now() - age * 86400000).toISOString(),
+            status: followup === "open" ? "followup" : "complete",
+            score: passed * 20, criteria: scorecards[type].criteria,
+            ratings: scorecards[type].criteria.map((_, index) => index < passed ? "pass" : "fail"),
+            notes: passed === 5 ? "The response met every criterion on the scorecard." : "Review the criteria marked as missing the standard.",
+            action: followup ? {
+                type: "Process fix", owner: "QA team", next: "Review the missed criteria and update the response checklist.",
+                outcome: followup === "completed" ? "Verified the updated checklist against a sample conversation." : ""
+            } : null
+        };
+    }) : [];
+
     function submittedAudits() {
-        return (state.key ? read() : []).filter(record => ["complete", "followup"].includes(record.status));
+        return [...demoAudits, ...(state.key ? read() : []).filter(record => ["complete", "followup"].includes(record.status))];
+    }
+
+    let historyPeriod = 14;
+    let historyRange = null;
+    const historyView = byId("qaHistoryViewSelect");
+    const historyColumns = [...byId("qaAuditHistoryView").querySelectorAll("[data-qa-history-column]")];
+    const followupKey = record => record.status === "followup" ? "open" : record.action ? "completed" : "none";
+    const matchesView = (record, view) => view === "all" || record.type === view || followupKey(record) === view;
+
+    function historyColumnValues(record) {
+        return [auditLabel(record), ticketDateText(auditDate(record)), [record.customer, record.topic].filter(Boolean).join(" · "),
+            record.reviewer, scorecards[record.type]?.label, followupLabel(record), auditScore(record)];
+    }
+
+    function renderHistoryMetrics(records) {
+        const scored = records.filter(record => Number.isFinite(record.score));
+        byId("qaAuditHistoryView").querySelectorAll("[data-qa-history-value]").forEach(metric => {
+            const key = metric.dataset.qaHistoryValue;
+            metric.textContent = key === "average"
+                ? (scored.length ? `${(scored.reduce((total, record) => total + record.score, 0) / scored.length / 10).toFixed(1)}/10` : "—")
+                : records.filter(record => matchesView(record, key)).length;
+        });
+        byId("qaAuditHistoryView").querySelectorAll("[data-qa-history-metric]").forEach(metric => {
+            const active = historyView.value === metric.dataset.qaHistoryMetric;
+            metric.classList.toggle("active", active);
+            metric.setAttribute("aria-pressed", String(active));
+        });
     }
 
     function renderAuditDetail(record) {
@@ -594,19 +651,39 @@
         byId("qaHistoryDetail").hidden = true;
         const type = byId("qaHistoryType").value;
         const query = byId("qaHistorySearch").value.trim().toLowerCase();
-        const matches = records.filter(record => (!type || record.type === type) &&
-            [auditLabel(record), record.sourceId, record.customer, record.topic, record.reviewer].some(value => String(value ?? "").toLowerCase().includes(query))
-        ).sort((a, b) => (Date.parse(auditDate(b)) || 0) - (Date.parse(auditDate(a)) || 0));
-        byId("qaHistoryCountLabel").textContent = `${matches.length} submitted ${matches.length === 1 ? "audit" : "audits"}`;
-        byId("qaAuditRows").innerHTML = matches.map(record => `
-            <tr><td><button type="button" data-qa-history-key="${esc(sourceKey(record))}">${esc(auditLabel(record))}</button>
-                ${record.customer ? `<span class="qa-history-customer qa-muted">${esc(record.customer)}</span>` : ""}</td>
-                <td>${esc(ticketDateText(auditDate(record)))}</td><td>${esc(scorecards[record.type]?.label || "—")}</td>
-                <td>${esc(record.reviewer || "—")}</td><td><strong class="qa-history-chip">${auditScore(record)}</strong></td>
-                <td>${followupLabel(record)}</td></tr>`).join("");
+        const filters = historyColumns.map(input => input.value.trim().toLowerCase());
+        const filterCount = Number(Boolean(type)) + Number(Boolean(query)) + filters.filter(Boolean).length;
+        byId("qaHistoryFilterCount").hidden = !filterCount;
+        byId("qaHistoryFilterCount").textContent = filterCount;
+        historyColumns.forEach((input, index) => input.closest("details").classList.toggle("filtered", Boolean(filters[index])));
+        const start = recordDateInIst(new Date(Date.now() - (historyPeriod - 1) * 86400000));
+        const periodRecords = records.filter(record => {
+            const date = recordDateInIst(auditDate(record));
+            const terms = [auditLabel(record), record.sourceId, record.customer, record.topic, record.reviewer];
+            return (!date || (historyRange ? date >= historyRange.start && date <= historyRange.end : date >= start)) &&
+                (!type || record.type === type) &&
+                terms.some(value => String(value ?? "").toLowerCase().includes(query)) &&
+                historyColumnValues(record).every((value, index) => String(value ?? "").toLowerCase().includes(filters[index]));
+        });
+        renderHistoryMetrics(periodRecords);
+        const matches = periodRecords.filter(record => matchesView(record, historyView.value))
+            .sort((a, b) => (Date.parse(auditDate(b)) || 0) - (Date.parse(auditDate(a)) || 0));
+        byId("qaAuditRows").innerHTML = matches.map(record => {
+            const followup = followupKey(record);
+            const topic = record.topic || "—";
+            const shortTopic = topic.length > 52 ? `${topic.slice(0, 52)}…` : topic;
+            return `
+                <tr><td><button type="button" class="ticket-id" data-qa-history-key="${esc(sourceKey(record))}">${esc(auditLabel(record))}</button></td>
+                <td>${formatTicketDate(auditDate(record))}</td>
+                <td class="query" title="${esc(topic)}"><span class="ticket-customer">${esc(record.customer || "—")}</span><br><span>${esc(shortTopic)}</span></td>
+                <td><span class="ticket-assignee">${esc(record.reviewer || "—")}</span></td>
+                <td><span class="ticket-age">${esc(scorecards[record.type]?.label || "—")}</span></td>
+                <td><span class="ticket-badge ${followup === "open" ? "open" : followup === "completed" ? "resolved" : ""}">${followupLabel(record)}</span></td>
+                <td><span class="sla-badge met">${auditScore(record)}</span></td></tr>`;
+        }).join("");
         byId("qaHistoryEmpty").hidden = matches.length > 0;
         byId("qaHistoryEmptyTitle").textContent = records.length ? "No matching audits" : "No submitted audits yet";
-        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different search or agent type." : "Audits appear here after you submit them from the review queue.";
+        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from the review queue.";
     }
 
     function showAuditView(view) {
@@ -619,6 +696,7 @@
         });
         byId("qaQueueView").hidden = history;
         byId("qaAuditHistoryView").hidden = !history;
+        if (!history) closeHistoryPopovers();
         if (history) renderAuditHistory();
     }
 
@@ -630,10 +708,113 @@
         viewTabs[next].click();
         viewTabs[next].focus();
     });
+    const historyFilterToggle = byId("qaHistoryFilterToggle");
+    const historyDatePopover = byId("qaHistoryCustomDatePopover");
+    const customDateButton = byId("qaHistoryCustomDateBtn");
+    const historyPeriodButtons = [...byId("qaHistoryPeriodSelector").querySelectorAll("[data-qa-history-period]")];
+    function updateHistoryPeriod() {
+        historyDatePopover.hidden = true;
+        historyPeriodButtons.forEach(button => {
+            const active = !historyRange && Number(button.dataset.qaHistoryPeriod) === historyPeriod;
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", String(active));
+        });
+        customDateButton.classList.toggle("active", Boolean(historyRange));
+        customDateButton.setAttribute("aria-expanded", "false");
+        renderAuditHistory();
+    }
+
+    historyView.addEventListener("change", renderAuditHistory);
+    byId("qaAuditHistoryView").querySelectorAll("[data-qa-history-metric]").forEach(metric => metric.addEventListener("click", () => {
+        historyView.value = metric.dataset.qaHistoryMetric;
+        historyView.dispatchEvent(new Event("change", { bubbles: true }));
+    }));
+    historyFilterToggle.addEventListener("click", () => {
+        const panel = byId("qaHistoryFilterPanel");
+        panel.hidden = !panel.hidden;
+        historyFilterToggle.setAttribute("aria-expanded", String(!panel.hidden));
+    });
+    byId("qaHistoryClearFilters").addEventListener("click", () => {
+        byId("qaHistorySearch").value = "";
+        byId("qaHistoryType").value = "";
+        byId("qaHistoryType").dispatchEvent(new Event("change", { bubbles: true }));
+        historyColumns.forEach(input => { input.value = ""; });
+        renderAuditHistory();
+    });
+    historyColumns.forEach(input => {
+        input.addEventListener("input", renderAuditHistory);
+        const details = input.closest("details");
+        const panel = input.parentElement;
+        panel.setAttribute("popover", "manual");
+        details.addEventListener("toggle", () => {
+            if (!details.open) {
+                panel.hidePopover();
+                return;
+            }
+            historyColumns.forEach(other => { if (other !== input) other.closest("details").open = false; });
+            const box = details.getBoundingClientRect();
+            panel.style.top = `${box.bottom + 6}px`;
+            panel.style.left = `${Math.max(8, Math.min(box.left, innerWidth - 248))}px`;
+            panel.showPopover();
+            input.focus();
+        });
+        document.addEventListener("click", event => {
+            if (details.open && !details.contains(event.target)) details.open = false;
+        });
+        details.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                details.open = false;
+                details.querySelector("summary").focus();
+            }
+        });
+    });
+    function closeHistoryPopovers() {
+        historyColumns.forEach(input => { input.closest("details").open = false; });
+        historyDatePopover.hidden = true;
+        customDateButton.setAttribute("aria-expanded", "false");
+    }
+
+    document.addEventListener("click", event => {
+        if (!customDateButton.contains(event.target) && !historyDatePopover.contains(event.target)) {
+            historyDatePopover.hidden = true;
+            customDateButton.setAttribute("aria-expanded", "false");
+        }
+    });
+    historyPeriodButtons.forEach(button => button.addEventListener("click", () => {
+        historyPeriod = Number(button.dataset.qaHistoryPeriod);
+        historyRange = null;
+        updateHistoryPeriod();
+    }));
+    customDateButton.addEventListener("click", () => {
+        historyDatePopover.hidden = !historyDatePopover.hidden;
+        if (!historyDatePopover.hidden) {
+            const box = customDateButton.getBoundingClientRect();
+            historyDatePopover.style.top = `${box.bottom + 8}px`;
+            historyDatePopover.style.left = `${Math.max(12, box.right - historyDatePopover.offsetWidth)}px`;
+        }
+        customDateButton.setAttribute("aria-expanded", String(!historyDatePopover.hidden));
+        byId("qaHistoryCustomDateStart").value = historyRange?.start || "";
+        byId("qaHistoryCustomDateEnd").value = historyRange?.end || "";
+        byId("qaHistoryCustomDateError").textContent = "";
+    });
+    byId("qaHistoryApplyCustomDate").addEventListener("click", () => {
+        const start = byId("qaHistoryCustomDateStart").value;
+        const end = byId("qaHistoryCustomDateEnd").value;
+        if (!start || !end || start > end || end > recordDateInIst(new Date())) {
+            byId("qaHistoryCustomDateError").textContent = "Choose a valid date range ending today or earlier.";
+            return;
+        }
+        historyRange = { start, end };
+        updateHistoryPeriod();
+    });
+    byId("qaHistoryClearCustomDate").addEventListener("click", () => {
+        historyRange = null;
+        updateHistoryPeriod();
+    });
     byId("qaHistorySearch").addEventListener("input", renderAuditHistory);
     byId("qaHistoryType").addEventListener("change", renderAuditHistory);
     byId("qaAuditRows").addEventListener("click", event => {
-        const row = event.target.closest("[data-qa-history-key]");
+        const row = event.target.closest("tr")?.querySelector("[data-qa-history-key]");
         if (!row) return;
         state.historyKey = row.dataset.qaHistoryKey;
         renderAuditHistory();
@@ -644,7 +825,7 @@
         state.historyKey = null;
         renderAuditHistory();
         const row = [...byId("qaAuditRows").querySelectorAll("button")].find(button => button.dataset.qaHistoryKey === key);
-        (row || byId("qaHistorySearch")).focus();
+        (row || historyFilterToggle).focus();
     });
 
     window.NovaraQA = {
@@ -661,6 +842,7 @@
             if (state.key && byId("qaPicker").hidden) showPicker();
             if (state.view === "history") renderAuditHistory();
         },
+        deactivate: closeHistoryPopovers,
         refresh() {
             if (state.view === "history") return renderAuditHistory();
             if (state.key) return loadCandidates(!state.current);

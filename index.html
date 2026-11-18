@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-audit-history-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-ticket-history-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -6415,7 +6415,7 @@ html[data-theme="light"] .global-search-shell,html[data-theme="light"] .global-s
 
 <style id="novaradesk-ticket-compact-metrics-v1">
 /* Keep operational counts visible without pushing the ticket queue below the fold. */
-#panel-tickets .table-header{
+:is(#panel-tickets,#qaAuditHistoryView) .table-header{
     min-height:84px;
     padding:0;
     gap:0;
@@ -8778,18 +8778,92 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     </section>
                 </aside>
             </div>
-            <section id="qaAuditHistoryView" class="qa-audit-history" role="tabpanel" aria-labelledby="qaHistoryTab" hidden>
-                <div id="qaHistoryList">
-                    <div class="qa-history-toolbar">
-                        <p id="qaHistoryCountLabel" class="qa-muted" role="status"></p>
-                        <input id="qaHistorySearch" type="search" placeholder="Search audits" aria-label="Search audits" autocomplete="off">
-                        <select id="qaHistoryType" data-native-select aria-label="Filter audits by agent type">
-                            <option value="">All agent types</option><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option>
+        </div>
+        <section id="qaAuditHistoryView" class="qa-audit-history" role="tabpanel" aria-labelledby="qaHistoryTab" hidden>
+            <div id="qaHistoryList">
+                <div class="ticket-workspace-toolbar">
+                    <label class="ticket-view-control">
+                        <span>Audit view</span>
+                        <select id="qaHistoryViewSelect" aria-label="Select audit view">
+                            <option value="all">All Audits</option>
+                            <option value="open">Open follow-up</option>
+                            <option value="human">Human agent</option>
+                            <option value="ai">AI agent</option>
+                            <option value="completed">Completed follow-up</option>
                         </select>
+                    </label>
+                    <div class="ticket-toolbar-right">
+                        <button id="qaHistoryFilterToggle" class="ticket-filter-toggle" type="button" aria-expanded="false" aria-controls="qaHistoryFilterPanel">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                            Filters
+                            <span id="qaHistoryFilterCount" class="ticket-filter-count" hidden>0</span>
+                        </button>
+                        <div id="qaHistoryPeriodSelector" class="period-selector ticket-period-selector" aria-label="Audit date range">
+                            <button type="button" data-qa-history-period="7">7d</button>
+                            <button type="button" data-qa-history-period="14" class="active">14d</button>
+                            <button type="button" data-qa-history-period="28">28d</button>
+                            <button type="button" data-qa-history-period="90">90d</button>
+                            <button id="qaHistoryCustomDateBtn" type="button">Custom</button>
+                        </div>
                     </div>
-                    <div class="qa-history-table-wrap">
+                </div>
+                <div id="qaHistoryCustomDatePopover" class="ticket-custom-date-popover" hidden>
+                    <label>From<input id="qaHistoryCustomDateStart" type="date"></label>
+                    <label>To<input id="qaHistoryCustomDateEnd" type="date"></label>
+                    <div id="qaHistoryCustomDateError" class="custom-date-error"></div>
+                    <div class="custom-date-actions">
+                        <button id="qaHistoryClearCustomDate" type="button">Clear</button>
+                        <button id="qaHistoryApplyCustomDate" class="primary" type="button">Apply</button>
+                    </div>
+                </div>
+                <section id="qaHistoryFilterPanel" class="ticket-filter-panel" aria-label="Audit filters" hidden>
+                    <div class="ticket-filter-panel-head">
+                        <div><h2>Filters</h2><p>Narrow audit history. Results update instantly.</p></div>
+                        <button id="qaHistoryClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
+                    </div>
+                    <div class="ticket-filter-core">
+                        <label><span>Search audits</span><input id="qaHistorySearch" type="search" placeholder="Ticket, customer, or reviewer" autocomplete="off"></label>
+                        <label><span>Agent type</span><select id="qaHistoryType"><option value="">All agent types</option><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option></select></label>
+                    </div>
+                </section>
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="ticket-compact-metrics" aria-label="Audit summary">
+                            <button type="button" data-qa-history-metric="all" aria-pressed="true" class="ticket-kpi-card active">
+                                <div class="ticket-kpi-label">Total Audits</div>
+                                <div class="ticket-kpi-value" data-qa-history-value="all">—</div>
+                                <div class="ticket-kpi-sub">In selected period</div>
+                            </button>
+                            <button type="button" data-qa-history-metric="open" aria-pressed="false" class="ticket-kpi-card">
+                                <div class="ticket-kpi-label">Open Follow-ups</div>
+                                <div class="ticket-kpi-value danger" data-qa-history-value="open">—</div>
+                                <div class="ticket-kpi-sub">Awaiting action</div>
+                            </button>
+                            <button type="button" data-qa-history-metric="human" aria-pressed="false" class="ticket-kpi-card">
+                                <div class="ticket-kpi-label">Human Audits</div>
+                                <div class="ticket-kpi-value progress" data-qa-history-value="human">—</div>
+                                <div class="ticket-kpi-sub">Human agent reviews</div>
+                            </button>
+                            <button type="button" data-qa-history-metric="ai" aria-pressed="false" class="ticket-kpi-card">
+                                <div class="ticket-kpi-label">AI Audits</div>
+                                <div class="ticket-kpi-value warning" data-qa-history-value="ai">—</div>
+                                <div class="ticket-kpi-sub">AI agent reviews</div>
+                            </button>
+                            <button type="button" data-qa-history-metric="completed" aria-pressed="false" class="ticket-kpi-card">
+                                <div class="ticket-kpi-label">Completed Follow-ups</div>
+                                <div class="ticket-kpi-value resolved" data-qa-history-value="completed">—</div>
+                                <div class="ticket-kpi-sub">Verified actions</div>
+                            </button>
+                            <div class="ticket-kpi-card">
+                                <div class="ticket-kpi-label">Avg. Score</div>
+                                <div class="ticket-kpi-value" data-qa-history-value="average">—</div>
+                                <div class="ticket-kpi-sub">Across scored audits</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
                         <table class="conversation-table ticket-table qa-history-table">
-                            <thead><tr><th scope="col">Ticket / Session</th><th scope="col">Audited on</th><th scope="col">Agent type</th><th scope="col">Audited by</th><th scope="col">Score / 10</th><th scope="col">Follow-up</th></tr></thead>
+                            <thead><tr><th scope="col"><details class="ticket-column-filter"><summary>Ticket / Session</summary><div class="ticket-column-filter-panel"><input type="search" aria-label="Filter by Ticket / Session" placeholder="Filter ticket / session…" data-qa-history-column="0"></div></details></th><th scope="col"><details class="ticket-column-filter"><summary>Audited on</summary><div class="ticket-column-filter-panel"><input type="search" aria-label="Filter by Audited on" placeholder="Filter audited on…" data-qa-history-column="1"></div></details></th><th scope="col"><details class="ticket-column-filter"><summary>Customer / Query</summary><div class="ticket-column-filter-panel"><input type="search" aria-label="Filter by Customer / Query" placeholder="Filter customer / query…" data-qa-history-column="2"></div></details></th><th scope="col"><details class="ticket-column-filter"><summary>Audited by</summary><div class="ticket-column-filter-panel"><input type="search" aria-label="Filter by Audited by" placeholder="Filter audited by…" data-qa-history-column="3"></div></details></th><th scope="col"><details class="ticket-column-filter"><summary>Agent type</summary><div class="ticket-column-filter-panel"><input type="search" aria-label="Filter by Agent type" placeholder="Filter agent type…" data-qa-history-column="4"></div></details></th><th scope="col"><details class="ticket-column-filter"><summary>Follow-up</summary><div class="ticket-column-filter-panel"><input type="search" aria-label="Filter by Follow-up" placeholder="Filter follow-up…" data-qa-history-column="5"></div></details></th><th scope="col"><details class="ticket-column-filter"><summary>Score / 10</summary><div class="ticket-column-filter-panel"><input type="search" aria-label="Filter by Score / 10" placeholder="Filter score / 10…" data-qa-history-column="6"></div></details></th></tr></thead>
                             <tbody id="qaAuditRows"></tbody>
                         </table>
                     </div>
@@ -8798,13 +8872,13 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                         <p id="qaHistoryEmptyMessage" class="qa-muted"></p>
                     </div>
                 </div>
-                <section id="qaHistoryDetail" class="qa-history-detail" aria-labelledby="qaHistoryDetailTitle" hidden>
-                    <button type="button" id="qaHistoryBack">← Back to audit history</button>
-                    <h2 id="qaHistoryDetailTitle" tabindex="-1"></h2>
-                    <div id="qaHistoryDetailBody"></div>
-                </section>
+            </div>
+            <section id="qaHistoryDetail" class="qa-history-detail" aria-labelledby="qaHistoryDetailTitle" hidden>
+                <button type="button" id="qaHistoryBack">← Back to audit history</button>
+                <h2 id="qaHistoryDetailTitle" tabindex="-1"></h2>
+                <div id="qaHistoryDetailBody"></div>
             </section>
-        </div>
+        </section>
     </section>
     <section id="panel-dashboards" class="view-panel">
         <div id="dashboardEmptyState" class="custom-dashboard-empty">
@@ -9766,7 +9840,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-audit-history-1"></script>
+<script src="assets/qa.js?v=qa-ticket-history-1"></script>
 <script>
 /* =====================================================
    STATE
@@ -9985,6 +10059,7 @@ if (workspace === "chatbot") loadChatbotControlCentre();
 if (workspace === "knowledge") loadKnowledgeBase();
 if (workspace === "workflows") renderWorkflowWorkspace();
 if (workspace === "qa") window.NovaraQA?.activate();
+else window.NovaraQA?.deactivate();
 if (refresh) window.scrollTo({ top: 0, behavior: "smooth" });
 if (refresh && workspace !== "qa") updateDashboard(currentPeriod);
 }
@@ -17620,7 +17695,7 @@ document.addEventListener("click",async event=>{
 </style>
 
 <style id="novaradesk-ticket-filter-redesign-v1">
-#panel-tickets .ticket-filter-panel{
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-panel{
     margin:12px 0 18px;
     padding:16px 18px 14px;
     border:1px solid var(--border);
@@ -17628,16 +17703,16 @@ document.addEventListener("click",async event=>{
     background:var(--bg-card);
     box-shadow:0 12px 34px rgba(22,47,34,.06);
 }
-#panel-tickets .ticket-filter-panel-head{
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-panel-head{
     align-items:center;
     margin-bottom:14px;
 }
-#panel-tickets .ticket-filter-panel-head h2{
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-panel-head h2{
     margin:0;
     font-size:15px;
     letter-spacing:-.02em;
 }
-#panel-tickets .ticket-filter-panel-head p{
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-panel-head p{
     margin-top:3px;
     font-size:9px;
 }
@@ -17710,7 +17785,7 @@ document.addEventListener("click",async event=>{
 #panel-tickets .ticket-save-view-row{grid-template-columns:minmax(240px,1fr) auto minmax(120px,.5fr);margin-top:10px;padding-top:10px}
 #panel-tickets .ticket-save-view-row[hidden]{display:none!important}
 @media(max-width:1100px){.ticket-filter-core{grid-template-columns:repeat(2,minmax(0,1fr))}.ticket-filter-advanced{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:760px){#panel-tickets .ticket-filter-panel{padding:14px}.ticket-filter-core,.ticket-filter-advanced{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){:is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-panel{padding:14px}.ticket-filter-core,.ticket-filter-advanced{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.ticket-filter-core,.ticket-filter-advanced{grid-template-columns:1fr}.ticket-filter-date-group>div{grid-template-columns:1fr}.ticket-filter-footer{align-items:stretch;flex-direction:column;gap:7px}.ticket-filter-footer button{justify-content:center}}
 </style>
 
@@ -18166,7 +18241,7 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
 /* Screenshot 1 is the desktop command-bar sizing reference. */
 @media(min-width:901px){
     .toolbar,
-    #panel-tickets .ticket-workspace-toolbar,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar,
     #panel-chatbot .admin-tabs{
         width:100%!important;
         height:62px!important;
@@ -18185,15 +18260,15 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
     #tabSwitcher .tab{height:44px!important;min-height:44px!important}
 
     /* Tickets */
-    #panel-tickets .ticket-view-control{height:46px!important;min-height:46px!important;align-items:center!important}
-    #panel-tickets .ticket-view-control select,
-    #panel-tickets .ticket-view-control .unified-select-trigger{
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control{height:46px!important;min-height:46px!important;align-items:center!important}
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control select,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control .unified-select-trigger{
         height:44px!important;min-height:44px!important;max-height:44px!important;
     }
-    #panel-tickets .ticket-toolbar-right{height:46px!important;align-items:center!important}
-    #panel-tickets .ticket-period-selector{height:46px!important;min-height:46px!important;max-height:46px!important}
-    #panel-tickets .ticket-period-selector button{height:36px!important;min-height:36px!important}
-    #panel-tickets .ticket-filter-toggle{height:44px!important;min-height:44px!important;max-height:44px!important}
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-toolbar-right{height:46px!important;align-items:center!important}
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-period-selector{height:46px!important;min-height:46px!important;max-height:46px!important}
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-period-selector button{height:36px!important;min-height:36px!important}
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-toggle{height:44px!important;min-height:44px!important;max-height:44px!important}
 
     /* Reports: compact the nested report selector so the outer bar stays at reference height. */
     .toolbar .report-mode-toolbar,
@@ -18292,7 +18367,7 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
 <style id="novaradesk-command-bar-density-v2">
 @media (min-width: 901px) {
     .toolbar,
-    #panel-tickets .ticket-workspace-toolbar,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar,
     #panel-chatbot .admin-tabs {
         height: 56px !important;
         min-height: 56px !important;
@@ -18310,21 +18385,21 @@ body,button,input,select,textarea{font-family:"Geist","Inter",-apple-system,Blin
         min-height: 40px !important;
     }
 
-    #panel-tickets .ticket-view-control,
-    #panel-tickets .ticket-toolbar-right,
-    #panel-tickets .ticket-period-selector {
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-toolbar-right,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-period-selector {
         height: 42px !important;
         min-height: 42px !important;
         max-height: 42px !important;
     }
-    #panel-tickets .ticket-view-control select,
-    #panel-tickets .ticket-view-control .unified-select-trigger,
-    #panel-tickets .ticket-filter-toggle {
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control select,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control .unified-select-trigger,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-toggle {
         height: 40px !important;
         min-height: 40px !important;
         max-height: 40px !important;
     }
-    #panel-tickets .ticket-period-selector button {
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-period-selector button {
         height: 34px !important;
         min-height: 34px !important;
     }
@@ -18843,7 +18918,7 @@ html[data-theme="light"] #dashboardToolbarAddReport.layout-control-btn{
 
 <style id="ticket-view-match-report-type">
 /* Keep Ticket View on the toolbar surface, like Report Type. */
-#panel-tickets .ticket-workspace-toolbar .ticket-view-control {
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar .ticket-view-control {
     padding: 4px 7px 4px 10px !important;
     gap: 12px !important;
     border: 0 !important;
@@ -18851,13 +18926,13 @@ html[data-theme="light"] #dashboardToolbarAddReport.layout-control-btn{
     background: transparent !important;
     box-shadow: none !important;
 }
-#panel-tickets .ticket-workspace-toolbar .ticket-view-control .unified-select-trigger,
-html[data-theme] #panel-tickets .ticket-workspace-toolbar .ticket-view-control select:not(.unified-select-source) {
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar .ticket-view-control .unified-select-trigger,
+html[data-theme] :is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar .ticket-view-control select:not(.unified-select-source) {
     border: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
 }
-#panel-tickets .ticket-workspace-toolbar .ticket-view-control:focus-within {
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar .ticket-view-control:focus-within {
     outline: none !important;
 }
 </style>
@@ -19537,7 +19612,7 @@ html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout
 /* Match the compact toolbar and date range controls across Analytics/Reports, Tickets, and AI Chatbot. */
 @media (min-width: 901px) {
     .toolbar,
-    #panel-tickets .ticket-workspace-toolbar,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar,
     #panel-chatbot .admin-tabs {
         box-sizing: border-box !important;
         height: 48px !important;
@@ -19552,7 +19627,7 @@ html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout
     }
 
     #tabSwitcher,
-    #panel-tickets .ticket-toolbar-right,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-toolbar-right,
     .toolbar .toolbar-right,
     .toolbar .report-mode-toolbar,
     .toolbar .dashboard-toolbar-selector {
@@ -19573,8 +19648,8 @@ html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout
         border-radius: 8px !important;
     }
 
-    #panel-tickets .ticket-view-control,
-    #panel-tickets .ticket-period-selector,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-period-selector,
     #periodSelector {
         height: 36px !important;
         min-height: 36px !important;
@@ -19582,9 +19657,9 @@ html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout
         box-sizing: border-box !important;
     }
 
-    #panel-tickets .ticket-view-control select,
-    #panel-tickets .ticket-view-control .unified-select-trigger,
-    #panel-tickets .ticket-filter-toggle,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control select,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control .unified-select-trigger,
+    :is(#panel-tickets,#qaAuditHistoryView) .ticket-filter-toggle,
     .toolbar .report-mode-toolbar select,
     .toolbar .report-mode-toolbar .unified-select-trigger {
         height: 34px !important;
@@ -19596,7 +19671,7 @@ html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout
 
 /* Use the same quiet surface, border, spacing, and selected treatment for both date selectors. */
 #periodSelector,
-#ticketPeriodSelector {
+:is(#ticketPeriodSelector,#qaHistoryPeriodSelector) {
     display: inline-flex !important;
     align-items: center !important;
     gap: 2px !important;
@@ -19607,7 +19682,7 @@ html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout
     box-shadow: none !important;
 }
 #periodSelector button,
-#ticketPeriodSelector button {
+:is(#ticketPeriodSelector,#qaHistoryPeriodSelector) button {
     min-width: 40px !important;
     min-height: 28px !important;
     padding: 0 9px !important;
@@ -19620,30 +19695,30 @@ html body .toolbar .toolbar-right:has(#dashboardToolbarAddReport.open) > .layout
     box-shadow: none !important;
 }
 #periodSelector button:hover,
-#ticketPeriodSelector button:hover {
+:is(#ticketPeriodSelector,#qaHistoryPeriodSelector) button:hover {
     background: var(--surface-hover) !important;
     color: var(--text-secondary) !important;
 }
 #periodSelector button.active,
-#ticketPeriodSelector button.active {
+:is(#ticketPeriodSelector,#qaHistoryPeriodSelector) button.active {
     background: color-mix(in srgb,var(--accent) 12%,var(--surface)) !important;
     color: var(--accent-dark) !important;
     box-shadow: none !important;
 }
 html[data-theme="dark"] #periodSelector button.active,
-html[data-theme="dark"] #ticketPeriodSelector button.active {
+html[data-theme="dark"] :is(#ticketPeriodSelector,#qaHistoryPeriodSelector) button.active {
     color: var(--accent-light) !important;
 }
 
 @media (max-width: 900px) {
     #periodSelector,
-    #ticketPeriodSelector {
+    :is(#ticketPeriodSelector,#qaHistoryPeriodSelector) {
         border-radius: 9px !important;
         background: var(--surface-alt) !important;
         box-shadow: none !important;
     }
     #periodSelector button,
-    #ticketPeriodSelector button {
+    :is(#ticketPeriodSelector,#qaHistoryPeriodSelector) button {
         min-height: 30px !important;
         border-radius: 6px !important;
     }
@@ -20873,7 +20948,7 @@ html body #ticketStatusMenu{width:140px!important;min-width:0!important;max-widt
 </style>
 
 <style id="ticket-column-filter-styles">
-#panel-tickets .ticket-table th{overflow:visible}
+:is(#panel-tickets,#qaAuditHistoryView) .ticket-table th{overflow:visible}
 .ticket-column-filter{position:relative}
 .ticket-column-filter>summary{display:flex;align-items:center;gap:7px;cursor:pointer;list-style:none;white-space:nowrap}
 .ticket-column-filter>summary::-webkit-details-marker{display:none}
@@ -21088,28 +21163,28 @@ html body .toolbar:has(#reportModeToolbar.open) #reportModeToolbar :is(select,.u
 }
 </style>
 <style id="ticket-toolbar-match-analytics-controls">
-#panel-tickets #ticketFilterToggle{order:-1;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+:is(#panel-tickets,#qaAuditHistoryView) :is(#ticketFilterToggle,#qaHistoryFilterToggle){order:-1;display:inline-flex;align-items:center;justify-content:center;gap:7px}
 @media(min-width:721px){
-html body #panel-tickets .ticket-workspace-toolbar{box-sizing:border-box!important;height:48px!important;min-height:48px!important;max-height:48px!important;padding:5px!important;margin-bottom:16px!important;align-items:center!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:8px!important;border-radius:16px!important}
-html body #panel-tickets .ticket-toolbar-right{display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;margin-left:auto!important;box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;transform:none!important}
-html body #panel-tickets .ticket-toolbar-right::before{content:"";order:-2;width:1px;height:24px;background:var(--border);margin-right:12px;flex:0 0 1px}
-html body #panel-tickets #ticketPeriodSelector{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;padding:3px!important;gap:2px!important;align-items:center!important}
-html body #panel-tickets #ticketPeriodSelector button{box-sizing:border-box!important;height:28px!important;min-height:28px!important;max-height:28px!important;padding-top:0!important;padding-bottom:0!important;line-height:1!important;flex:0 0 auto!important}
-html body #panel-tickets #ticketFilterToggle{box-sizing:border-box!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding:0 10px!important;border-radius:8px!important;font-size:calc(9px * var(--ui-text-scale))!important;font-weight:650!important;color:var(--text-secondary)!important}
-html body #panel-tickets .ticket-view-control{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;align-items:center!important}
-html body #panel-tickets .ticket-view-control :is(select,.unified-select-trigger){height:30px!important;min-height:30px!important;max-height:30px!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-workspace-toolbar{box-sizing:border-box!important;height:48px!important;min-height:48px!important;max-height:48px!important;padding:5px!important;margin-bottom:16px!important;align-items:center!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:8px!important;border-radius:16px!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-toolbar-right{display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;margin-left:auto!important;box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;transform:none!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-toolbar-right::before{content:"";order:-2;width:1px;height:24px;background:var(--border);margin-right:12px;flex:0 0 1px}
+html body :is(#panel-tickets,#qaAuditHistoryView) :is(#ticketPeriodSelector,#qaHistoryPeriodSelector){box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;padding:3px!important;gap:2px!important;align-items:center!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) :is(#ticketPeriodSelector,#qaHistoryPeriodSelector) button{box-sizing:border-box!important;height:28px!important;min-height:28px!important;max-height:28px!important;padding-top:0!important;padding-bottom:0!important;line-height:1!important;flex:0 0 auto!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) :is(#ticketFilterToggle,#qaHistoryFilterToggle){box-sizing:border-box!important;height:34px!important;min-height:34px!important;max-height:34px!important;padding:0 10px!important;border-radius:8px!important;font-size:calc(9px * var(--ui-text-scale))!important;font-weight:650!important;color:var(--text-secondary)!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control{box-sizing:border-box!important;height:36px!important;min-height:36px!important;max-height:36px!important;align-items:center!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-view-control :is(select,.unified-select-trigger){height:30px!important;min-height:30px!important;max-height:30px!important}
 }
 </style>
 <style id="ticket-column-header-filter-icons">
-html body #panel-tickets .ticket-column-filter>summary::after{
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-column-filter>summary::after{
 content:""!important;display:block!important;flex:0 0 12px!important;width:12px!important;height:12px!important;
 border:0!important;margin:0!important;transform:none!important;border-radius:0!important;
 background:currentColor!important;opacity:.6!important;
 -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 5h16l-6 7v6l-4 2v-8L4 5Z' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat!important;
 mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 5h16l-6 7v6l-4 2v-8L4 5Z' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat!important;
 }
-html body #panel-tickets .ticket-column-filter.filtered>summary::after,
-html body #panel-tickets .ticket-column-filter>summary:hover::after{opacity:1!important}
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-column-filter.filtered>summary::after,
+html body :is(#panel-tickets,#qaAuditHistoryView) .ticket-column-filter>summary:hover::after{opacity:1!important}
 </style>
 <style id="ticket-filter-unclipped-popover">
 html body #panel-tickets .ticket-spreadsheet-filter[popover]{position:fixed!important;inset:auto!important;margin:0!important;overflow-y:auto!important;overscroll-behavior:contain;z-index:10000!important}
