@@ -87,7 +87,13 @@ html[data-theme="dark"] .qa-board {
     padding: 14px 12px 10px;
     background: var(--qa-surface);
 }
-.qa-queue-filters label { font-size: 11px; color: var(--qa-muted); }
+.qa-board .qa-queue-filters label {
+    color: var(--qa-muted);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
 .qa-board .qa-queue-filters :is(select, .unified-select-trigger) {
     min-width: 0;
     width: 100%;
