@@ -683,7 +683,7 @@
         }).join("");
         byId("qaHistoryEmpty").hidden = matches.length > 0;
         byId("qaHistoryEmptyTitle").textContent = records.length ? "No matching audits" : "No submitted audits yet";
-        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from Cases to Review.";
+        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from Open Audits.";
     }
 
     function showAuditView(view) {
