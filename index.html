@@ -7771,8 +7771,8 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
         <div class="topbar-actions">
             <a id="novaraOwnerPreview" class="novara-preview-button" href="?preview=1#tickets" hidden>Explore preview <span aria-hidden="true">↗</span></a>
             <div id="qaViewSwitch" class="qa-view-switch" role="tablist" aria-label="QA Audits view" hidden>
-                <button id="qaQueueTab" type="button" role="tab" aria-selected="true" aria-controls="qaQueueView">Review queue</button>
-                <button id="qaHistoryTab" type="button" role="tab" aria-selected="false" aria-controls="qaAuditHistoryView" tabindex="-1">Audit history</button>
+                <button id="qaHistoryTab" type="button" role="tab" aria-selected="true" aria-controls="qaAuditHistoryView">Completed Audits</button>
+                <button id="qaQueueTab" type="button" role="tab" aria-selected="false" aria-controls="qaQueueView" tabindex="-1">Cases to Review</button>
             </div>
             <div class="global-search-wrap" id="globalSearchWrap">
                 <div class="global-search-shell">
@@ -8649,7 +8649,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
     ================================================== -->
     <section id="panel-qa" class="view-panel">
         <div class="qa-board" id="qaBoard">
-            <div id="qaQueueView" class="qa-workspace" role="tabpanel" aria-labelledby="qaQueueTab">
+            <div id="qaQueueView" class="qa-workspace" role="tabpanel" aria-labelledby="qaQueueTab" hidden>
                 <section class="qa-queue-pane" aria-label="Audit queue">
                     <div class="qa-queue-filters">
                         <label for="qaTicketView">Current view</label>
@@ -8779,7 +8779,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 </aside>
             </div>
         </div>
-        <section id="qaAuditHistoryView" class="qa-audit-history" role="tabpanel" aria-labelledby="qaHistoryTab" hidden>
+        <section id="qaAuditHistoryView" class="qa-audit-history" role="tabpanel" aria-labelledby="qaHistoryTab">
             <div id="qaHistoryList">
                 <div class="ticket-workspace-toolbar">
                     <label class="ticket-view-control">
@@ -8818,7 +8818,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 </div>
                 <section id="qaHistoryFilterPanel" class="ticket-filter-panel" aria-label="Audit filters" hidden>
                     <div class="ticket-filter-panel-head">
-                        <div><h2>Filters</h2><p>Narrow audit history. Results update instantly.</p></div>
+                        <div><h2>Filters</h2><p>Filter completed audits. Results update instantly.</p></div>
                         <button id="qaHistoryClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
                     </div>
                     <div class="ticket-filter-core">
@@ -8874,7 +8874,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 </div>
             </div>
             <section id="qaHistoryDetail" class="qa-history-detail" aria-labelledby="qaHistoryDetailTitle" hidden>
-                <button type="button" id="qaHistoryBack">← Back to audit history</button>
+                <button type="button" id="qaHistoryBack">← Back to Completed Audits</button>
                 <h2 id="qaHistoryDetailTitle" tabindex="-1"></h2>
                 <div id="qaHistoryDetailBody"></div>
             </section>
@@ -9840,7 +9840,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-ticket-history-1"></script>
+<script src="assets/qa.js?v=qa-tab-names-1"></script>
 <script>
 /* =====================================================
    STATE
