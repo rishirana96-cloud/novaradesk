@@ -55,6 +55,7 @@
         const displayScore = score === null ? "" : `${score / 10}/10`;
         badge.textContent = [displayScore, critical && "Critical fail"].filter(Boolean).join(" · ") || "Unscored";
         badge.classList.toggle("qa-score-critical", critical);
+        badge.classList.toggle("qa-score-unscored", score === null && !critical);
         const progress = byId("qaRatingProgress");
         progress.max = ratings.length || 1;
         progress.value = rated;
@@ -132,8 +133,16 @@
     }
 
     function renderCriteria(criteria, ratings = []) {
-        byId("qaCriteria").innerHTML = criteria.map((name, index) => `<div class="qa-criterion">
-            <label for="qaCriterion${index}">${esc(name)}</label><select id="qaCriterion${index}" data-native-select>${options}</select></div>`).join("");
+        const container = byId("qaCriteria");
+        for (const select of container.querySelectorAll("select")) {
+            const instance = select._unifiedSelect;
+            if (instance) {
+                closeUnifiedSelect(instance);
+                instance.menu.remove();
+            }
+        }
+        container.innerHTML = criteria.map((name, index) => `<div class="qa-criterion">
+            <label for="qaCriterion${index}">${esc(name)}</label><select id="qaCriterion${index}" aria-label="${esc(name)}">${options}</select></div>`).join("");
         criteria.forEach((_, index) => { byId(`qaCriterion${index}`).value = ratings[index] || ""; });
     }
 
