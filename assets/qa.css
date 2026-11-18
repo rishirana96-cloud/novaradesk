@@ -88,16 +88,14 @@ html[data-theme="dark"] .qa-board {
     background: var(--qa-surface);
 }
 .qa-queue-filters label { font-size: 11px; color: var(--qa-muted); }
-.qa-board .qa-queue-filters select {
-    appearance: auto;
-    background-image: none;
+.qa-board .qa-queue-filters :is(select, .unified-select-trigger) {
     min-width: 0;
     width: 100%;
     padding: 6px 8px;
     font-size: 12px;
     font-weight: 500;
 }
-.qa-board .qa-queue-filters select:focus-visible { outline-offset: 1px; }
+.qa-board .qa-queue-filters .unified-select-trigger:focus-visible { outline-offset: 1px; }
 @container (max-width: 244px) {
     .qa-queue-filters { grid-template-columns: 1fr; grid-template-rows: repeat(4, auto); }
 }
@@ -144,7 +142,7 @@ html[data-theme="dark"] .qa-board {
 .qa-detail-actions { grid-column: 2; grid-row: 1 / span 2; align-self: start; align-items: flex-start; justify-content: flex-end; }
 .qa-case-ownership { display: grid; justify-items: end; gap: 5px; min-width: 0; }
 .qa-board #qaTicketStatus { max-width: none; padding: 6px 11px; font-size: 12px !important; line-height: 1.35; }
-#qaAuditedBy { font-size: 10px; overflow-wrap: anywhere; text-align: end; }
+#qaAuditedBy { justify-content: flex-end; overflow-wrap: anywhere; }
 #qaAuditorName { color: var(--text); }
 .qa-board .qa-detail-actions button { min-height: 32px; font-size: 11px; }
 .qa-ticket-meta, #qaReviewMeta { grid-column: 1; grid-row: 2; min-width: 0; }
@@ -240,26 +238,21 @@ html[data-theme="dark"] .qa-board {
 .qa-tool-tabs {
     display: flex;
     flex: none;
-    gap: 4px;
-    padding: 5px;
-    margin: 9px 12px;
-    border: 1px solid var(--qa-border);
-    border-radius: 10px;
-    background: var(--qa-canvas);
+    gap: 16px;
+    padding-inline: 14px;
+    border-bottom: 1px solid var(--qa-border);
 }
 .qa-board .qa-tool-tabs button {
-    flex: 1;
-    min-height: 32px;
-    border-color: transparent;
-    border-radius: 6px;
     background: transparent;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    padding: 12px 3px 10px;
     color: var(--qa-muted);
 }
 .qa-board .qa-tool-tabs button[aria-selected="true"] {
+    border-bottom-color: var(--accent);
     color: var(--text);
-    background: var(--qa-surface);
-    border-color: var(--qa-border);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
 }
 .qa-tool-panel {
     flex: 1;
