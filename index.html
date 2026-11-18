@@ -18068,7 +18068,7 @@ Object.entries(humanKpis).forEach(([id,config])=>{
 /* Normalize visible table headings to the Ticket table's title-case language. */
 const acronyms=new Set(["CSAT","ID","SLA","AI"]);
 const titleCase=value=>value.trim().split(/(\s+|\/)/).map(word=>acronyms.has(word.toUpperCase())?word.toUpperCase():word==="/" ? word : word.charAt(0).toUpperCase()+word.slice(1).toLowerCase()).join("");
-document.querySelectorAll(".table-card thead th,.customer-directory-card thead th,.ticket-call-history-table thead th,.data-explorer-table thead th").forEach(th=>{th.textContent=titleCase(th.textContent);});
+document.querySelectorAll(".table-card thead th,.customer-directory-card thead th,.ticket-call-history-table thead th,.data-explorer-table thead th").forEach(th=>{const label=th.querySelector(".ticket-column-filter > summary") || th;label.textContent=titleCase(label.textContent);});
 })();
 </script>
 
