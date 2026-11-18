@@ -107,7 +107,21 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-picker { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 .qa-picker-tools { display: grid; gap: 8px; padding: 0 12px 12px; background: var(--qa-surface); }
-.qa-picker-tools input { display: block; width: 100%; }
+.qa-picker-tools .ticket-queue-search {
+    margin: 0;
+    background: var(--qa-canvas);
+}
+.qa-board .qa-picker-tools .ticket-queue-search input {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 10px;
+    font-weight: 400;
+}
+.qa-picker-tools .ticket-queue-search:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
 .qa-board #qaCandidatesInfo {
     padding: 10px 12px;
     border-top: 1px solid var(--qa-border);
