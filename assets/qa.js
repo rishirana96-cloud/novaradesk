@@ -283,6 +283,8 @@
         });
     }
 
+    const initials = name => name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
+
     function renderTicketContext(ticket) {
         const context = byId("qaTicketContext");
         const status = byId("qaTicketStatus");
@@ -295,7 +297,7 @@
         status.textContent = ticketStatusLabel(details.status);
         status.className = `ticket-queue-status ${ticketStatusClass(details.status)}`;
         byId("qaAssignedAgent").textContent = details.agent;
-        byId("qaAssigneeAvatar").textContent = details.agent.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
+        byId("qaAssigneeAvatar").textContent = initials(details.agent);
         const response = byId("qaFirstResponse");
         response.textContent = details.firstResponseAt ? "Complete" : "Pending";
         response.classList.toggle("pending", !details.firstResponseAt);
@@ -403,6 +405,7 @@
         const statusLabel = { draft: "In review", followup: "Follow-up open", complete: "Completed" }[record.status];
         byId("qaAuditStatus").textContent = statusLabel;
         byId("qaAuditorName").textContent = record.reviewer || "";
+        byId("qaAuditorAvatar").textContent = initials(record.reviewer || "");
         byId("qaAuditedBy").hidden = !record.reviewer;
         byId("qaReviewMeta").textContent = [card.label, record.type === "ai" ? record.sourceId : statusLabel].filter(Boolean).join(" · ");
         renderCriteria(state.current.criteria, record.ratings);

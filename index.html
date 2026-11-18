@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-native-queue-filters-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-review-controls-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -8649,9 +8649,9 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 <section class="qa-queue-pane" aria-label="Audit queue">
                     <div class="qa-queue-filters">
                         <label for="qaTicketView">Current view</label>
-                        <select id="qaTicketView" data-native-select></select>
+                        <select id="qaTicketView" aria-label="Current view"></select>
                         <label for="qaType">Agent type</label>
-                        <select id="qaType" data-native-select><option value="both">Both</option><option value="ai">AI agent</option><option value="human">Human agent</option></select>
+                        <select id="qaType" aria-label="Agent type"><option value="both">Both</option><option value="ai">AI agent</option><option value="human">Human agent</option></select>
                     </div>
                     <section id="qaPicker" class="qa-picker" hidden aria-label="Cases">
                         <div class="qa-picker-tools">
@@ -8672,7 +8672,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                             <div class="qa-detail-actions">
                                 <div class="qa-case-ownership">
                                     <span id="qaTicketStatus" class="ticket-queue-status" hidden></span>
-                                    <span id="qaAuditedBy" class="qa-muted" hidden>Audited by: <strong id="qaAuditorName"></strong></span>
+                                    <span id="qaAuditedBy" class="qa-ticket-assignee" hidden><span class="qa-muted">Audited by</span><span class="qa-assignee-avatar" id="qaAuditorAvatar" aria-hidden="true"></span><strong id="qaAuditorName"></strong></span>
                                 </div>
                                 <button type="button" data-qa-close-detail aria-label="Close case">✕</button>
                             </div>
@@ -9736,7 +9736,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-auditor-header-1"></script>
+<script src="assets/qa.js?v=qa-review-controls-1"></script>
 <script>
 /* =====================================================
    STATE
