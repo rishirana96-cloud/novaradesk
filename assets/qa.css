@@ -9,7 +9,7 @@
     --qa-danger: #ad453c;
     padding-block: 6px 12px;
     color: var(--text);
-    font-size: 13px;
+    font-size: var(--desk-type-body);
 }
 html[data-theme="dark"] .qa-board {
     --qa-accent: var(--accent);
@@ -17,8 +17,8 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-board [hidden] { display: none !important; }
 .qa-board h2, .qa-board h3, .qa-board p { margin: 0; }
-.qa-board h2 { font-size: 21px; letter-spacing: -.025em; overflow-wrap: anywhere; }
-.qa-board h3 { font-size: 14px; }
+.qa-board h2 { font-size: var(--desk-type-section); letter-spacing: -.025em; overflow-wrap: anywhere; }
+.qa-board h3 { font-size: var(--desk-type-card-title); }
 .qa-board :is(button, input, textarea, select):not(.ticket-queue-copy) {
     font: inherit;
     color: var(--text);
@@ -45,7 +45,7 @@ html[data-theme="dark"] .qa-board {
     gap: 8px;
 }
 .qa-head { justify-content: space-between; }
-.qa-board .qa-status { font-size: 12px; line-height: 1.5; }
+.qa-board .qa-status { font-size: var(--desk-type-control); line-height: 1.5; }
 .qa-board .qa-status:empty { display: none; }
 .qa-board .qa-sr-only {
     position: absolute;
@@ -89,7 +89,7 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-board .qa-queue-filters label {
     color: var(--qa-muted);
-    font-size: 8px;
+    font-size: calc(8px * var(--ui-text-scale));
     font-weight: 800;
     letter-spacing: .09em;
     text-transform: uppercase;
@@ -98,7 +98,7 @@ html[data-theme="dark"] .qa-board {
     min-width: 0;
     width: 100%;
     padding: 6px 8px;
-    font-size: 12px;
+    font-size: var(--desk-type-control);
     font-weight: 500;
 }
 .qa-board .qa-queue-filters .unified-select-trigger:focus-visible { outline-offset: 1px; }
@@ -118,14 +118,14 @@ html[data-theme="dark"] .qa-board {
     outline: 0;
     background: transparent;
     box-shadow: none;
-    font-size: 10px;
+    font-size: calc(10px * var(--ui-text-scale));
     font-weight: 400;
 }
 .qa-picker-tools .ticket-queue-search:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
 .qa-board #qaCandidatesInfo {
     padding: 10px 12px;
     border-top: 1px solid var(--qa-border);
-    font-size: 11px;
+    font-size: var(--desk-type-meta);
 }
 .qa-board #qaCandidates {
     min-height: 0;
@@ -141,7 +141,7 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
 .qa-card-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.qa-ai-label { flex: none; color: var(--qa-accent); font-size: 9px; font-weight: 700; }
+.qa-ai-label { flex: none; color: var(--qa-accent); font-size: var(--desk-type-label); font-weight: 700; }
 .qa-detail-actions .ticket-queue-status { text-transform: capitalize; }
 
 .qa-detail-pane { background: var(--qa-canvas); }
@@ -157,21 +157,21 @@ html[data-theme="dark"] .qa-board {
     background: var(--qa-surface);
 }
 .qa-case-heading { grid-column: 1; grid-row: 1; min-width: 0; }
-.qa-case-heading h2 { margin: 0; font-size: 22px; }
+.qa-case-heading h2 { margin: 0; }
 .qa-board .qa-case-heading .ticket-copy-id { flex: none; width: 30px; min-height: 30px; padding: 0; }
 .qa-detail-actions { grid-column: 2; grid-row: 1 / span 2; align-self: start; align-items: flex-start; justify-content: flex-end; }
 .qa-case-ownership { display: grid; justify-items: end; gap: 5px; min-width: 0; }
-.qa-board #qaTicketStatus { max-width: none; padding: 6px 11px; font-size: 12px !important; line-height: 1.35; }
+.qa-board #qaTicketStatus { max-width: none; padding: 6px 11px; font-size: var(--desk-type-control) !important; line-height: 1.35; }
 #qaAuditedBy { justify-content: flex-end; overflow-wrap: anywhere; }
 #qaAuditorName { color: var(--text); }
-.qa-board .qa-detail-actions button { min-height: 32px; font-size: 11px; }
+.qa-board .qa-detail-actions button { min-height: 32px; font-size: var(--desk-type-meta); }
 .qa-ticket-meta, #qaReviewMeta { grid-column: 1; grid-row: 2; min-width: 0; }
 .qa-ticket-meta, .qa-ticket-assignee, .qa-response-meta {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 7px;
-    font-size: 11px;
+    font-size: var(--desk-type-meta);
 }
 .qa-ticket-meta-divider + .qa-ticket-meta-divider { border-inline-start: 1px solid var(--qa-border); padding-inline-start: 8px; }
 .qa-assignee-avatar {
@@ -182,14 +182,14 @@ html[data-theme="dark"] .qa-board {
     border-radius: 50%;
     background: var(--qa-tint);
     color: var(--qa-accent);
-    font-size: 9px;
+    font-size: var(--desk-type-label);
     font-weight: 700;
 }
 #qaFirstResponse, #qaSlaState { color: var(--qa-accent); }
 #qaSlaState[data-state="unset"] { color: var(--qa-muted); }
 #qaFirstResponse.pending, #qaSlaState[data-state="breached"] { color: var(--qa-danger); }
 .qa-ticket-meta:not([hidden]) + #qaReviewMeta { display: none; }
-#qaReviewMeta { font-size: 11px; overflow-wrap: anywhere; }
+#qaReviewMeta { font-size: var(--desk-type-meta); overflow-wrap: anywhere; }
 .qa-review-body { flex: 1; min-height: 0; overflow: auto; padding: 12px 16px 24px; }
 .qa-ticket-info {
     margin-bottom: 12px;
@@ -220,13 +220,13 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-ticket-info[open] summary::before { transform: rotate(45deg); }
 .qa-ticket-info summary:hover { color: var(--qa-accent); }
-.qa-ticket-info summary .qa-muted { margin-inline-start: auto; font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }
+.qa-ticket-info summary .qa-muted { margin-inline-start: auto; font-size: var(--desk-type-meta); font-weight: 500; overflow-wrap: anywhere; }
 .qa-board .qa-ticket-info .ticket-context { margin: 0; border: 0; border-top: 1px solid var(--qa-border); border-radius: 0 0 10px 10px; }
 .qa-board .ticket-context-section.case { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
 .qa-board .ticket-context-section.case > :last-child { grid-column: 1 / -1; }
 .qa-conversation { border: 1px solid var(--qa-border); border-radius: 12px; background: var(--qa-surface); }
 .qa-conversation-head { padding: 11px 14px; border-bottom: 1px solid var(--qa-border); }
-.qa-conversation-head span { margin-inline-start: 6px; font-size: 11px; font-weight: 500; }
+.qa-conversation-head span { margin-inline-start: 6px; font-size: var(--desk-type-meta); font-weight: 500; }
 .qa-transcript { display: flex; flex-direction: column; gap: 12px; padding: 14px; }
 .qa-message {
     align-self: flex-start;
@@ -245,12 +245,12 @@ html[data-theme="dark"] .qa-board {
     background: var(--qa-tint);
 }
 .qa-message header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 8px; }
-.qa-message header span { color: var(--qa-muted); font-size: 10px; }
+.qa-message header span { color: var(--qa-muted); font-size: var(--desk-type-meta); }
 .qa-message-text { margin-top: 5px; line-height: 1.6; }
 .qa-board .qa-message-text > * + * { margin-top: .55em; }
 .qa-message-text :is(ul, ol) { padding-inline-start: 1.4em; margin-bottom: 0; }
 .qa-message-text a { color: var(--qa-accent); text-decoration: underline; }
-.qa-board .qa-message button { margin-top: 8px; min-height: 26px; padding: 3px 7px; font-size: 10px; }
+.qa-board .qa-message button { margin-top: 8px; min-height: 26px; padding: 3px 7px; font-size: var(--desk-type-meta); }
 .qa-board .qa-message-evidence { border-color: var(--accent); }
 .qa-board .qa-message-evidence button { color: var(--qa-accent); }
 
@@ -292,14 +292,14 @@ html[data-theme="dark"] .qa-board {
     background: var(--qa-surface);
     box-shadow: inset 3px 0 var(--qa-highlight);
 }
-#qaAuditStatus { font-size: 10px; }
+#qaAuditStatus { font-size: var(--desk-type-meta); }
 #qaScore {
     padding: 3px 8px;
     border: 1px solid var(--qa-highlight);
     border-radius: 7px;
     background: var(--qa-tint);
     color: var(--qa-accent);
-    font-size: 17px;
+    font-size: var(--desk-type-section);
     font-variant-numeric: tabular-nums;
     line-height: 1.3;
 }
@@ -308,10 +308,10 @@ html[data-theme="dark"] .qa-board {
     border-color: var(--qa-border);
     background: var(--qa-canvas);
     color: var(--qa-muted);
-    font-size: 10px;
+    font-size: var(--desk-type-meta);
     font-weight: 650;
 }
-#qaScore.qa-score-critical { color: var(--qa-danger); font-size: 12px; }
+#qaScore.qa-score-critical { color: var(--qa-danger); font-size: var(--desk-type-control); }
 #qaRatingProgress {
     appearance: none;
     width: 100%;
@@ -324,10 +324,10 @@ html[data-theme="dark"] .qa-board {
 #qaRatingProgress::-webkit-progress-bar { background: var(--qa-border); }
 #qaRatingProgress::-webkit-progress-value { background: var(--qa-accent); border-radius: 8px; }
 #qaRatingProgress::-moz-progress-bar { background: var(--qa-accent); border-radius: 8px; }
-#qaRatedCount { font-size: 11px; }
+#qaRatedCount { font-size: var(--desk-type-meta); }
 .qa-board fieldset { min-width: 0; margin: 12px 14px 0; padding: 0; border: 0; }
 .qa-board fieldset + fieldset { padding-top: 7px; border-top: 1px solid var(--qa-border); }
-.qa-board legend { padding-inline-end: 6px; font-size: 12px; font-weight: 700; }
+.qa-board legend { padding-inline-end: 6px; font-size: var(--desk-type-control); font-weight: 700; }
 .qa-criterion {
     display: grid;
     gap: 5px;
@@ -337,8 +337,8 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-criterion + .qa-criterion { border-top: 1px solid var(--qa-border); }
 .qa-criterion:focus-within label { color: var(--qa-accent); }
-.qa-criterion label { font-size: 12px; }
-.qa-board .qa-criterion :is(select, .unified-select-trigger) { width: 100%; min-width: 0; min-height: 32px; font-size: 11px; }
+.qa-criterion label { font-size: var(--desk-type-control); }
+.qa-board .qa-criterion :is(select, .unified-select-trigger) { width: 100%; min-width: 0; min-height: 32px; font-size: var(--desk-type-control); }
 .qa-board .qa-criterion :is(select:has(option:checked[value="pass"]), select:has(option:checked[value="pass"]) + .unified-select-trigger) { color: var(--qa-accent); background: var(--qa-tint); }
 .qa-board .qa-criterion :is(select:has(option:checked[value="fail"]), select:has(option:checked[value="fail"]) + .unified-select-trigger) { color: var(--qa-danger); }
 @container (min-width: 285px) {
@@ -346,7 +346,7 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-check { display: flex; align-items: center; gap: 7px; }
 .qa-board .qa-check input { min-height: auto; padding: 0; accent-color: var(--qa-accent); }
-#qaEvidence { margin-block: 7px 12px; font-size: 11px; }
+#qaEvidence { margin-block: 7px 12px; font-size: var(--desk-type-meta); }
 .qa-evidence {
     display: flex;
     align-items: center;
@@ -363,7 +363,7 @@ html[data-theme="dark"] .qa-board {
 .qa-action-fields input, #qaActionType, #qaSettingsType { display: block; width: 100%; margin-top: 5px; }
 #qaSettingsForm, #qaVerify { padding: 14px; }
 #qaSettingsType { margin-bottom: 14px; }
-#qaSettingsHint { margin-top: 5px; font-size: 11px; }
+#qaSettingsHint { margin-top: 5px; font-size: var(--desk-type-meta); }
 #qaSettingsForm button { margin-top: 8px; }
 .qa-board #qaSettingsStatus { margin-top: 8px; }
 .qa-form-footer {
@@ -427,7 +427,7 @@ html[data-theme="dark"] .qa-board {
     border-radius: 9px 9px 0 0;
     background: transparent;
     color: var(--qa-muted);
-    font-size: 11px;
+    font-size: var(--desk-type-meta);
 }
 .qa-board .qa-channel-switch [aria-selected="true"] {
     border-color: var(--qa-border);
@@ -439,7 +439,7 @@ html[data-theme="dark"] .qa-board {
 .qa-channel-switch svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .qa-activity-panel { border: 1px solid var(--qa-border); border-radius: 12px; background: var(--qa-surface); }
 .qa-call-table { overflow: auto; }
-.qa-call-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.qa-call-table table { width: 100%; border-collapse: collapse; font-size: var(--desk-type-meta); }
 .qa-call-table :is(th,td) { padding: 9px 10px; text-align: start; border-bottom: 1px solid var(--qa-border); }
 .qa-call-table th { white-space: nowrap; color: var(--qa-muted); }
 .qa-board .ticket-history-copy { overflow-wrap: anywhere; }
