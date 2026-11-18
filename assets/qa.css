@@ -7,7 +7,7 @@
     --qa-tint: color-mix(in srgb, var(--accent) 10%, var(--qa-surface));
     --qa-highlight: color-mix(in srgb, var(--accent) 30%, var(--qa-border));
     --qa-danger: #ad453c;
-    padding-block: 6px 24px;
+    padding-block: 6px 12px;
     color: var(--text);
     font-size: 13px;
 }
@@ -61,7 +61,7 @@ html[data-theme="dark"] .qa-board {
     display: grid;
     grid-template-columns: clamp(206px, 21%, 304px) minmax(0, 1fr) clamp(258px, 28%, 388px);
     grid-template-rows: minmax(0, 1fr);
-    height: calc(100dvh - 145px);
+    height: calc(100dvh - 121px);
     min-height: 460px;
     overflow: hidden;
     border: 1px solid var(--qa-border);
