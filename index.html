@@ -52,7 +52,7 @@ rel="stylesheet"
  CHART.JS
 ====================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="assets/qa.css?v=qa-open-fill-1">
+<link rel="stylesheet" href="assets/qa.css?v=qa-list-workspace-1">
 <style>
 /* =====================================================
    GLOBAL
@@ -7771,8 +7771,8 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
         <div class="topbar-actions">
             <a id="novaraOwnerPreview" class="novara-preview-button" href="?preview=1#tickets" hidden>Explore preview <span aria-hidden="true">↗</span></a>
             <div id="qaViewSwitch" class="qa-view-switch" role="tablist" aria-label="QA Audits view" hidden>
-                <button id="qaHistoryTab" type="button" role="tab" aria-selected="true" aria-controls="qaAuditHistoryView">Completed Audits</button>
-                <button id="qaQueueTab" type="button" role="tab" aria-selected="false" aria-controls="qaQueueView" tabindex="-1">Open Audits</button>
+                <button id="qaHistoryTab" type="button" role="tab" aria-selected="true" aria-controls="qaAuditHistoryView">List</button>
+                <button id="qaQueueTab" type="button" role="tab" aria-selected="false" aria-controls="qaQueueView" tabindex="-1">Workspace</button>
             </div>
             <div class="global-search-wrap" id="globalSearchWrap">
                 <div class="global-search-shell">
@@ -8818,7 +8818,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 </div>
                 <section id="qaHistoryFilterPanel" class="ticket-filter-panel" aria-label="Audit filters" hidden>
                     <div class="ticket-filter-panel-head">
-                        <div><h2>Filters</h2><p>Filter completed audits. Results update instantly.</p></div>
+                        <div><h2>Filters</h2><p>Filter audits. Results update instantly.</p></div>
                         <button id="qaHistoryClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
                     </div>
                     <div class="ticket-filter-core">
@@ -8873,11 +8873,6 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                     </div>
                 </div>
             </div>
-            <section id="qaHistoryDetail" class="qa-history-detail" aria-labelledby="qaHistoryDetailTitle" hidden>
-                <button type="button" id="qaHistoryBack">← Back to Completed Audits</button>
-                <h2 id="qaHistoryDetailTitle" tabindex="-1"></h2>
-                <div id="qaHistoryDetailBody"></div>
-            </section>
         </section>
     </section>
     <section id="panel-dashboards" class="view-panel">
@@ -9839,7 +9834,7 @@ ORDER BY ticket_count DESC</textarea>
 </div>
 </section>
 </div>
-<script src="assets/qa.js?v=qa-open-fill-1"></script>
+<script src="assets/qa.js?v=qa-list-workspace-1"></script>
 <script>
 /* =====================================================
    STATE
