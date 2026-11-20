@@ -525,17 +525,23 @@ html[data-theme="dark"] .qa-board {
 #qaHistoryDetailBody dd { margin: 0; }
 .qa-history-note { white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* Give the open review workspace the space released by its page title. */
+/* Keep the review heading and controls in a compact row. */
 body.qa-open-audits .main { padding-top: 12px !important; }
 body.qa-open-audits .topbar {
     margin-bottom: 8px !important;
     min-height: 0;
     justify-content: flex-end;
 }
-body.qa-open-audits .topbar .page-title { display: none; }
+body.qa-open-audits .topbar .page-title { display: block; flex-shrink: 0; }
+body.qa-open-audits #pageSubtitle { display: none; }
 body.qa-open-audits .topbar-actions { margin-left: auto; }
 @media (min-width: 821px) {
-    body.qa-open-audits .qa-workspace { height: calc(100dvh - 90px); }
+    body.qa-open-audits .qa-workspace {
+        height: calc(100dvh - var(--qa-workspace-top, 74px) - 8px);
+        min-height: 280px;
+    }
+    body.qa-open-audits .main { padding-bottom: 0; }
+    body.qa-open-audits .qa-board { padding-bottom: 0; }
 }
 @media (max-width: 720px) {
     body.qa-open-audits .topbar {

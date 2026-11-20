@@ -686,6 +686,15 @@
         byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from Open Audits.";
     }
 
+    function fitOpenWorkspace() {
+        if (!document.body.classList.contains("qa-open-audits")) return;
+        const workspace = byId("qaQueueView");
+        const top = workspace.getBoundingClientRect().top;
+        workspace.style.setProperty("--qa-workspace-top", `${Math.max(0, top)}px`);
+    }
+    new ResizeObserver(fitOpenWorkspace).observe(document.querySelector(".topbar"));
+    window.addEventListener("resize", fitOpenWorkspace);
+
     function showAuditView(view) {
         state.view = view;
         const history = view === "history";
@@ -697,6 +706,7 @@
         });
         byId("qaQueueView").hidden = history;
         byId("qaAuditHistoryView").hidden = !history;
+        if (!history) requestAnimationFrame(fitOpenWorkspace);
         if (history) renderAuditHistory();
         else {
             closeHistoryPopovers();
