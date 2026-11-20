@@ -21245,3 +21245,32 @@ html body:has(#panel-ai.active,#panel-human.active) .toolbar .layout-controls{di
 .card-reorder-preview .card-grip{visibility:hidden}
 @media(hover:none){.card-grip{opacity:1}}
 </style>
+<style id="sidebar-icon-spacing">
+@media (min-width: 721px) {
+    html body:not(.sidebar-pinned) #appSidebar.sidebar .brand {
+        margin-bottom: 18px !important;
+        flex-shrink: 0;
+    }
+    html body:not(.sidebar-pinned) #appSidebar.sidebar > .sidebar-heading {
+        display: none !important;
+    }
+    html body:not(.sidebar-pinned) #appSidebar.sidebar .nav {
+        gap: 6px !important;
+        flex: 0 0 auto;
+    }
+    html body:not(.sidebar-pinned) #appSidebar.sidebar .nav-group {
+        gap: 0 !important;
+    }
+    html body:not(.sidebar-pinned) #appSidebar.sidebar .nav-item {
+        box-sizing: border-box !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+        padding: 0 !important;
+    }
+    html body:not(.sidebar-pinned) #appSidebar.sidebar .sidebar-bottom {
+        padding-top: 12px;
+        flex-shrink: 0;
+    }
+}
+</style>
