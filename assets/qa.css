@@ -496,35 +496,11 @@ html[data-theme="dark"] .qa-board {
 }
 .qa-audit-history .ticket-kpi-card { font-family: inherit; text-align: start; }
 .qa-audit-history .qa-muted { color: var(--text-muted); }
-.qa-history-chip {
-    display: inline-block;
-    background: var(--bg-soft);
-    color: var(--accent-dark);
-    border-radius: 6px;
-    padding: 3px 7px;
-    white-space: nowrap;
-    font-size: var(--desk-type-control);
-}
 .qa-history-empty {
     padding: 24px 16px;
     text-align: center;
 }
 .qa-history-empty p { margin-top: 4px; }
-.qa-history-detail { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; display: grid; gap: 12px; padding: 16px; justify-items: start; }
-.qa-history-detail :is(h2, h3, p) { margin: 0; }
-#qaHistoryDetailBody { display: grid; gap: 8px; width: min(100%, 700px); }
-#qaHistoryDetailBody h3 { margin-top: 8px; }
-#qaHistoryDetailBody dl { margin: 0; }
-#qaHistoryDetailBody dl div {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding-block: 8px;
-    border-bottom: 1px solid var(--border);
-}
-#qaHistoryDetailBody dd { margin: 0; }
-.qa-history-note { white-space: pre-wrap; overflow-wrap: anywhere; }
-
 /* Keep the review heading and controls in a compact row. */
 body.qa-open-audits .main { padding-top: 12px !important; }
 body.qa-open-audits .topbar {

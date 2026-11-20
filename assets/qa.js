@@ -9,7 +9,7 @@
     };
     const scoreValues = ["pass", "fail", "na"];
     const options = '<option value="">Select rating</option><option value="pass">Meets standard</option><option value="fail">Misses standard</option><option value="na">Not applicable</option>';
-    const state = { key: "", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null, view: "history", historyKey: null };
+    const state = { key: "", candidates: [], sourceRequest: 0, reviewRequest: 0, current: null, messages: [], evidence: null, view: "history", listScroll: 0 };
     const esc = value => escapeHtml(String(value ?? ""));
     const readable = value => String(value || "").replaceAll("_", " ");
     const sourceKey = item => JSON.stringify([item.type, item.sourceId]);
@@ -367,12 +367,13 @@
         byId("qaRetryTranscript").hidden = true;
         try {
             const encoded = encodeURIComponent(record.sourceId);
-            const data = await request(record.type === "ai" ? `/conversation?session=${encoded}` : `/ticket-detail?id=${encoded}`);
+            const preview = window.NOVARA_DEMO_MODE && Array.isArray(record.previewMessages);
+            const data = preview ? {} : await request(record.type === "ai" ? `/conversation?session=${encoded}` : `/ticket-detail?id=${encoded}`);
             if (sequence !== state.reviewRequest) return;
-            if (data.success === false || (record.type !== "ai" && String(data.ticket?.id) !== record.sourceId)) throw new Error("Conversation unavailable");
+            if (!preview && (data.success === false || (record.type !== "ai" && String(data.ticket?.id) !== record.sourceId))) throw new Error("Conversation unavailable");
             renderTicketContext(record.type === "ai" ? null : data.ticket);
-            renderActivity(record.type === "ai" ? null : data, "No ticket activity for this standalone AI chat.");
-            state.messages = transcriptRows(data, record.type);
+            renderActivity(record.type === "ai" ? null : data, preview ? "No additional activity in this sample audit." : "No ticket activity for this standalone AI chat.");
+            state.messages = preview ? record.previewMessages : transcriptRows(data, record.type);
             const count = state.messages.length;
             byId("qaMessageCount").textContent = count ? `${count} ${count === 1 ? "message" : "messages"}` : "";
             transcript.innerHTML = state.messages.map((message, index) => `
@@ -581,6 +582,12 @@
             submittedAt: new Date(Date.now() - age * 86400000).toISOString(),
             status: followup === "open" ? "followup" : "complete",
             score: passed * 20, criteria: scorecards[type].criteria,
+            previewMessages: [
+                { key: `${sourceId}-customer`, who: "Customer", channel: "Chat", content: `Could you help me with ${topic.toLowerCase()}?` },
+                { key: `${sourceId}-response`, who: type === "ai" ? "Novara AI" : "Support agent", channel: "Chat", content: "I have reviewed your request and explained the next steps. Please let us know if you need further help." },
+                { key: `${sourceId}-thanks`, who: "Customer", channel: "Chat", content: "Thank you for explaining." }
+            ],
+            evidence: { key: `${sourceId}-response`, label: "Chat · Support response" },
             ratings: scorecards[type].criteria.map((_, index) => index < passed ? "pass" : "fail"),
             notes: passed === 5 ? "The response met every criterion on the scorecard." : "Review the criteria marked as missing the standard.",
             action: followup ? {
@@ -591,7 +598,11 @@
     }) : [];
 
     function submittedAudits() {
-        return [...demoAudits, ...(state.key ? read() : []).filter(record => ["complete", "followup"].includes(record.status))];
+        const records = new Map(demoAudits.map(record => [sourceKey(record), record]));
+        for (const record of state.key ? read() : []) {
+            if (["complete", "followup"].includes(record.status)) records.set(sourceKey(record), record);
+        }
+        return [...records.values()];
     }
 
     let historyPeriod = 14;
@@ -621,34 +632,8 @@
         });
     }
 
-    function renderAuditDetail(record) {
-        byId("qaHistoryList").hidden = true;
-        byId("qaHistoryDetail").hidden = false;
-        byId("qaHistoryDetailTitle").textContent = auditLabel(record);
-        const criteria = record.criteria || scorecards[record.type]?.criteria || [];
-        const ratingLabels = { pass: "Meets standard", fail: "Misses standard", na: "Not applicable" };
-        byId("qaHistoryDetailBody").innerHTML = `
-            <p class="qa-muted">${esc([record.customer, scorecards[record.type]?.label, ticketDateText(auditDate(record)), record.reviewer].filter(Boolean).join(" · "))}</p>
-            ${record.topic ? `<p>${esc(record.topic)}</p>` : ""}
-            <h3>Scorecard <span class="qa-history-chip">${auditScore(record)}</span></h3>
-            <dl>${criteria.map((criterion, index) => `<div><dt>${esc(criterion)}</dt><dd>${ratingLabels[record.ratings?.[index]] || "—"}</dd></div>`).join("")}</dl>
-            <h3>Findings</h3>
-            <p>${record.critical ? "Critical error flagged" : "No critical error flagged"}</p>
-            ${record.evidence?.label ? `<p class="qa-muted">Evidence · ${esc(record.evidence.label)}</p>` : ""}
-            ${record.notes ? `<p class="qa-history-note">${esc(record.notes)}</p>` : ""}
-            <h3>Follow-up <span class="qa-history-chip">${followupLabel(record)}</span></h3>
-            ${record.action ? `<p>${esc([record.action.type, record.action.owner, record.action.due].filter(Boolean).join(" · "))}</p>
-                <p class="qa-history-note">${esc(record.action.next)}</p>
-                ${record.action.outcome ? `<p class="qa-history-note">Verification · ${esc(record.action.outcome)}</p>` : ""}` : ""}`;
-    }
-
     function renderAuditHistory() {
         const records = submittedAudits();
-        const selected = records.find(record => sourceKey(record) === state.historyKey);
-        if (selected) return renderAuditDetail(selected);
-        state.historyKey = null;
-        byId("qaHistoryList").hidden = false;
-        byId("qaHistoryDetail").hidden = true;
         const type = byId("qaHistoryType").value;
         const query = byId("qaHistorySearch").value.trim().toLowerCase();
         const filters = historyColumns.map(input => input.value.trim().toLowerCase());
@@ -683,7 +668,7 @@
         }).join("");
         byId("qaHistoryEmpty").hidden = matches.length > 0;
         byId("qaHistoryEmptyTitle").textContent = records.length ? "No matching audits" : "No submitted audits yet";
-        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from Open Audits.";
+        byId("qaHistoryEmptyMessage").textContent = records.length ? "Try a different date range, view, or filter." : "Audits appear here after you submit them from Workspace.";
     }
 
     function fitOpenWorkspace() {
@@ -696,6 +681,8 @@
     window.addEventListener("resize", fitOpenWorkspace);
 
     function showAuditView(view) {
+        const returningToList = view === "history" && state.view !== "history";
+        if (view !== "history" && state.view === "history") state.listScroll = window.scrollY;
         state.view = view;
         const history = view === "history";
         document.body.classList.toggle("qa-open-audits", !history);
@@ -707,8 +694,10 @@
         byId("qaQueueView").hidden = history;
         byId("qaAuditHistoryView").hidden = !history;
         if (!history) requestAnimationFrame(fitOpenWorkspace);
-        if (history) renderAuditHistory();
-        else {
+        if (history) {
+            renderAuditHistory();
+            if (returningToList) requestAnimationFrame(() => window.scrollTo({ top: state.listScroll, behavior: "instant" }));
+        } else {
             closeHistoryPopovers();
             if (state.key && byId("qaPicker").hidden) showPicker();
         }
@@ -830,16 +819,12 @@
     byId("qaAuditRows").addEventListener("click", event => {
         const row = event.target.closest("tr")?.querySelector("[data-qa-history-key]");
         if (!row) return;
-        state.historyKey = row.dataset.qaHistoryKey;
-        renderAuditHistory();
-        byId("qaHistoryDetailTitle").focus();
-    });
-    byId("qaHistoryBack").addEventListener("click", () => {
-        const key = state.historyKey;
-        state.historyKey = null;
-        renderAuditHistory();
-        const row = [...byId("qaAuditRows").querySelectorAll("button")].find(button => button.dataset.qaHistoryKey === key);
-        (row || historyFilterToggle).focus();
+        const record = submittedAudits().find(record => sourceKey(record) === row.dataset.qaHistoryKey);
+        if (!record) return;
+        closeHistoryPopovers();
+        showAuditView("queue");
+        openAudit(record);
+        window.scrollTo({ top: 0, behavior: "instant" });
     });
 
     window.NovaraQA = {
