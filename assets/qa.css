@@ -16,6 +16,7 @@ html[data-theme="dark"] .qa-board {
     --qa-danger: #f19b92;
 }
 .qa-board [hidden] { display: none !important; }
+.qa-board:has(> #qaQueueView[hidden]) { display: none; }
 .qa-board h2, .qa-board h3, .qa-board p { margin: 0; }
 .qa-board h2 { font-size: var(--desk-type-section); letter-spacing: -.025em; overflow-wrap: anywhere; }
 .qa-board h3 { font-size: var(--desk-type-card-title); }
