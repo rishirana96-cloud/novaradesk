@@ -524,3 +524,25 @@ html[data-theme="dark"] .qa-board {
 }
 #qaHistoryDetailBody dd { margin: 0; }
 .qa-history-note { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Give the open review workspace the space released by its page title. */
+body.qa-open-audits .main { padding-top: 12px !important; }
+body.qa-open-audits .topbar {
+    margin-bottom: 8px !important;
+    min-height: 0;
+    justify-content: flex-end;
+}
+body.qa-open-audits .topbar .page-title { display: none; }
+body.qa-open-audits .topbar-actions { margin-left: auto; }
+@media (min-width: 821px) {
+    body.qa-open-audits .qa-workspace { height: calc(100dvh - 90px); }
+}
+@media (max-width: 720px) {
+    body.qa-open-audits .topbar {
+        display: flex !important;
+        flex-direction: row;
+        align-items: center !important;
+        flex-wrap: wrap;
+    }
+    body.qa-open-audits .topbar-actions { flex: 1 1 280px; width: auto; }
+}

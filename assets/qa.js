@@ -689,6 +689,7 @@
     function showAuditView(view) {
         state.view = view;
         const history = view === "history";
+        document.body.classList.toggle("qa-open-audits", !history);
         viewTabs.forEach((tab, index) => {
             const active = (index === 0) === history;
             tab.setAttribute("aria-selected", String(active));
@@ -844,7 +845,10 @@
         activate() {
             showAuditView(state.view);
         },
-        deactivate: closeHistoryPopovers,
+        deactivate() {
+            document.body.classList.remove("qa-open-audits");
+            closeHistoryPopovers();
+        },
         refresh() {
             if (state.view === "history") return renderAuditHistory();
             if (state.key) return loadCandidates(!state.current);
