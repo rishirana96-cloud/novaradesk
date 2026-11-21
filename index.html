@@ -8560,40 +8560,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 <button id="ticketApplyCustomDate" class="primary" type="button">Apply</button>
             </div>
         </div>
-        <section id="ticketFilterPanel" class="ticket-filter-panel" hidden aria-label="Ticket filters">
-            <div class="ticket-filter-panel-head">
-                <div><h2>Filters</h2><p>Narrow the queue. Results update instantly.</p></div>
-                <div class="ticket-filter-head-actions">
-                    <button id="ticketClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
-                    <button id="ticketFilterClose" class="ticket-filter-close" type="button" aria-label="Close filters">×</button>
-                </div>
-            </div>
-            <div class="ticket-filter-core">
-                <label><span>Status</span><select id="ticketFilterStatus"><option value="">All statuses</option><option value="open">Open</option><option value="pending">Pending Revert</option><option value="progress">In Progress</option><option value="resolved">Resolved</option><option value="reopened">Reopened</option></select></label>
-                <label><span>Priority</span><select id="ticketFilterPriority"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></label>
-                <label><span>Assigned agent</span><select id="ticketFilterAgent"><option value="">All agents</option></select></label>
-                <fieldset class="ticket-filter-date-group"><legend>Created date</legend><div><label><span>From</span><input id="ticketFilterCreatedFrom" type="date" aria-label="Created from"></label><label><span>To</span><input id="ticketFilterCreatedTo" type="date" aria-label="Created to"></label></div></fieldset>
-            </div>
-            <div id="ticketActiveFilters" class="ticket-active-filters" aria-live="polite"></div>
-            <div id="ticketAdvancedFilters" class="ticket-filter-grid ticket-filter-advanced" hidden>
-                <label><span>Intent</span><input id="ticketFilterIntent" type="search" placeholder="e.g. refund"></label>
-                <label><span>Sentiment</span><select id="ticketFilterSentiment"><option value="">All sentiments</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select></label>
-                <label><span>Ticket number</span><input id="ticketFilterNumber" type="search" placeholder="e.g. NX-0042"></label>
-                <label><span>Customer name</span><input id="ticketFilterCustomer" type="search" placeholder="Name contains…"></label>
-                <label><span>Phone number</span><input id="ticketFilterPhone" type="search" placeholder="Phone contains…"></label>
-                <label><span>Escalation reason</span><input id="ticketFilterEscalation" type="search" placeholder="Reason contains…"></label>
-                <label><span>Customer query</span><input id="ticketFilterQuery" type="search" placeholder="Query contains…"></label>
-            </div>
-            <div class="ticket-filter-footer">
-                <button id="ticketMoreFilters" class="ticket-more-filters" type="button" aria-expanded="false" aria-controls="ticketAdvancedFilters"><span>＋</span> More filters</button>
-                <button id="ticketSaveViewReveal" class="ticket-save-view-reveal" type="button" aria-expanded="false" aria-controls="ticketSaveViewRow">Save as view</button>
-            </div>
-            <div id="ticketSaveViewRow" class="ticket-save-view-row" hidden>
-                <label><span>Custom view name</span><input id="ticketViewName" type="text" maxlength="60" placeholder="e.g. High-priority refunds"></label>
-                <button id="ticketSaveView" class="report-primary-btn" type="button">Save view</button>
-                <span id="ticketViewMessage" role="status"></span>
-            </div>
-        </section>
+        <div class="ticket-results-layout">
         <div class="table-card">
             <div class="table-header">
                 <div class="ticket-compact-metrics" aria-label="Ticket summary">
@@ -8652,6 +8619,41 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                 </table>
             </div>
             <nav id="ticketPagination" class="ticket-pagination" aria-label="Ticket pages"></nav>
+        </div>
+        <section id="ticketFilterPanel" class="ticket-filter-panel" hidden aria-label="Ticket filters">
+            <div class="ticket-filter-panel-head">
+                <div><h2>Filters</h2><p>Narrow the queue. Results update instantly.</p></div>
+                <div class="ticket-filter-head-actions">
+                    <button id="ticketClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
+                    <button id="ticketFilterClose" class="ticket-filter-close" type="button" aria-label="Close filters">×</button>
+                </div>
+            </div>
+            <div class="ticket-filter-core">
+                <label><span>Status</span><select id="ticketFilterStatus"><option value="">All statuses</option><option value="open">Open</option><option value="pending">Pending Revert</option><option value="progress">In Progress</option><option value="resolved">Resolved</option><option value="reopened">Reopened</option></select></label>
+                <label><span>Priority</span><select id="ticketFilterPriority"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></label>
+                <label><span>Assigned agent</span><select id="ticketFilterAgent"><option value="">All agents</option></select></label>
+                <fieldset class="ticket-filter-date-group"><legend>Created date</legend><div><label><span>From</span><input id="ticketFilterCreatedFrom" type="date" aria-label="Created from"></label><label><span>To</span><input id="ticketFilterCreatedTo" type="date" aria-label="Created to"></label></div></fieldset>
+            </div>
+            <div id="ticketActiveFilters" class="ticket-active-filters" aria-live="polite"></div>
+            <div id="ticketAdvancedFilters" class="ticket-filter-grid ticket-filter-advanced" hidden>
+                <label><span>Intent</span><input id="ticketFilterIntent" type="search" placeholder="e.g. refund"></label>
+                <label><span>Sentiment</span><select id="ticketFilterSentiment"><option value="">All sentiments</option><option value="positive">Positive</option><option value="neutral">Neutral</option><option value="negative">Negative</option></select></label>
+                <label><span>Ticket number</span><input id="ticketFilterNumber" type="search" placeholder="e.g. NX-0042"></label>
+                <label><span>Customer name</span><input id="ticketFilterCustomer" type="search" placeholder="Name contains…"></label>
+                <label><span>Phone number</span><input id="ticketFilterPhone" type="search" placeholder="Phone contains…"></label>
+                <label><span>Escalation reason</span><input id="ticketFilterEscalation" type="search" placeholder="Reason contains…"></label>
+                <label><span>Customer query</span><input id="ticketFilterQuery" type="search" placeholder="Query contains…"></label>
+            </div>
+            <div class="ticket-filter-footer">
+                <button id="ticketMoreFilters" class="ticket-more-filters" type="button" aria-expanded="false" aria-controls="ticketAdvancedFilters"><span>＋</span> More filters</button>
+                <button id="ticketSaveViewReveal" class="ticket-save-view-reveal" type="button" aria-expanded="false" aria-controls="ticketSaveViewRow">Save as view</button>
+            </div>
+            <div id="ticketSaveViewRow" class="ticket-save-view-row" hidden>
+                <label><span>Custom view name</span><input id="ticketViewName" type="text" maxlength="60" placeholder="e.g. High-priority refunds"></label>
+                <button id="ticketSaveView" class="report-primary-btn" type="button">Save view</button>
+                <span id="ticketViewMessage" role="status"></span>
+            </div>
+        </section>
         </div>
     </section>
     <!-- =================================================
@@ -17839,7 +17841,16 @@ saveReveal?.addEventListener("click",()=>{
 });
 document.getElementById("ticketFilterClose")?.addEventListener("click",()=>{
     panel.hidden=true;
-    document.getElementById("ticketFilterToggle")?.setAttribute("aria-expanded","false");
+    const toggle=document.getElementById("ticketFilterToggle");
+    toggle?.setAttribute("aria-expanded","false");
+    toggle?.focus({preventScroll:true});
+});
+panel.addEventListener("keydown",event=>{
+    if(event.key!=="Escape")return;
+    panel.hidden=true;
+    const toggle=document.getElementById("ticketFilterToggle");
+    toggle?.setAttribute("aria-expanded","false");
+    toggle?.focus({preventScroll:true});
 });
 chips?.addEventListener("click",event=>{
     const button=event.target.closest("[data-ticket-filter-remove]");
@@ -21382,4 +21393,72 @@ html body .main { margin-top: -2pt !important; }
 <style id="ticket-status-left-alignment">
 #panel-tickets .ticket-table th:nth-child(5),
 #panel-tickets .ticket-table td:nth-child(5) { text-align: left; }
+</style>
+
+<style id="ticket-right-filter-panel">
+#panel-tickets .ticket-results-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+#panel-tickets .ticket-results-layout > .table-card {
+    min-width: 0;
+    margin: 0;
+    container: ticket-results / inline-size;
+}
+#panel-tickets .ticket-results-layout > #ticketFilterPanel {
+    min-width: 0;
+    margin: 0;
+    padding: 18px !important;
+}
+#panel-tickets #ticketFilterPanel .ticket-filter-panel-head {
+    gap: 8px;
+    flex-wrap: wrap;
+}
+#panel-tickets #ticketFilterPanel .ticket-filter-core,
+#panel-tickets #ticketFilterPanel .ticket-filter-advanced,
+#panel-tickets #ticketFilterPanel .ticket-save-view-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+#panel-tickets #ticketFilterPanel .ticket-filter-date-group > div {
+    grid-template-columns: minmax(0, 1fr);
+}
+#panel-tickets #ticketFilterPanel .ticket-filter-footer {
+    gap: 8px;
+    align-items: stretch;
+    flex-direction: column;
+}
+#panel-tickets #ticketFilterPanel .ticket-save-view-row .report-primary-btn {
+    min-width: 0;
+}
+#panel-tickets .ticket-results-layout .table-wrapper { overflow-x: auto; }
+#panel-tickets .ticket-results-layout .ticket-table { min-width: 780px; }
+@media (min-width: 901px) {
+    #panel-tickets .ticket-results-layout:has(> #ticketFilterPanel:not([hidden])) {
+        grid-template-columns: minmax(0, 1fr) clamp(280px, 22vw, 340px);
+    }
+    #panel-tickets .ticket-results-layout > .table-card { grid-column: 1; grid-row: 1; }
+    #panel-tickets .ticket-results-layout > #ticketFilterPanel {
+        grid-column: 2;
+        grid-row: 1;
+        position: sticky;
+        top: 16px;
+        max-height: calc(100dvh - 32px);
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+}
+@media (max-width: 900px) {
+    #panel-tickets .ticket-results-layout > #ticketFilterPanel { grid-row: 1; }
+}
+@container ticket-results (max-width: 1000px) {
+    #panel-tickets .ticket-compact-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #panel-tickets .ticket-compact-metrics .ticket-kpi-card:nth-child(3n) { border-right: 0 !important; }
+    #panel-tickets .ticket-compact-metrics .ticket-kpi-card:nth-child(-n+3) { border-bottom: 1px solid var(--border) !important; }
+}
+@container ticket-results (min-width: 1001px) {
+    #panel-tickets .ticket-compact-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    #panel-tickets .ticket-compact-metrics .ticket-kpi-card:not(:last-child) { border-right: 1px solid var(--border) !important; border-bottom: 0 !important; }
+}
 </style>
