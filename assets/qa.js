@@ -748,6 +748,17 @@
         panel.hidden = !panel.hidden;
         historyFilterToggle.setAttribute("aria-expanded", String(!panel.hidden));
     });
+    function closeHistoryFilters() {
+        byId("qaHistoryFilterPanel").hidden = true;
+        historyFilterToggle.setAttribute("aria-expanded", "false");
+        historyFilterToggle.focus();
+    }
+    byId("qaHistoryFilterClose").addEventListener("click", closeHistoryFilters);
+    byId("qaHistoryFilterPanel").addEventListener("keydown", event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        closeHistoryFilters();
+    });
     byId("qaHistoryClearFilters").addEventListener("click", () => {
         byId("qaHistorySearch").value = "";
         byId("qaHistoryType").value = "";

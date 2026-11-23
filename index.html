@@ -8828,16 +8828,7 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                         <button id="qaHistoryApplyCustomDate" class="primary" type="button">Apply</button>
                     </div>
                 </div>
-                <section id="qaHistoryFilterPanel" class="ticket-filter-panel" aria-label="Audit filters" hidden>
-                    <div class="ticket-filter-panel-head">
-                        <div><h2>Filters</h2><p>Filter completed audits. Results update instantly.</p></div>
-                        <button id="qaHistoryClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
-                    </div>
-                    <div class="ticket-filter-core">
-                        <label><span>Search audits</span><input id="qaHistorySearch" type="search" placeholder="Ticket, customer, or reviewer" autocomplete="off"></label>
-                        <label><span>Agent type</span><select id="qaHistoryType"><option value="">All agent types</option><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option></select></label>
-                    </div>
-                </section>
+                <div class="ticket-results-layout">
                 <div class="table-card">
                     <div class="table-header">
                         <div class="ticket-compact-metrics" aria-label="Audit summary">
@@ -8883,6 +8874,18 @@ html[data-theme="light"] #tabSwitcher .tab.active{color:#202522!important}
                         <h3 id="qaHistoryEmptyTitle"></h3>
                         <p id="qaHistoryEmptyMessage" class="qa-muted"></p>
                     </div>
+                </div>
+                <section id="qaHistoryFilterPanel" class="ticket-filter-panel" aria-label="Audit filters" hidden>
+                    <div class="ticket-filter-panel-head">
+                        <div><h2>Filters</h2><p>Filter completed audits. Results update instantly.</p></div>
+                        <button id="qaHistoryClearFilters" class="ticket-filter-clear" type="button">Clear all</button>
+                        <button id="qaHistoryFilterClose" class="ticket-filter-clear" type="button" aria-label="Close audit filters">×</button>
+                    </div>
+                    <div class="ticket-filter-core">
+                        <label><span>Search audits</span><input id="qaHistorySearch" type="search" placeholder="Ticket, customer, or reviewer" autocomplete="off"></label>
+                        <label><span>Agent type</span><select id="qaHistoryType"><option value="">All agent types</option><option value="human">Human agent</option><option value="ai">AI agent</option><option value="handoff">AI to human handoff</option></select></label>
+                    </div>
+                </section>
                 </div>
             </div>
             <section id="qaHistoryDetail" class="qa-history-detail" aria-labelledby="qaHistoryDetailTitle" hidden>
@@ -21396,92 +21399,92 @@ html body .main { margin-top: -2pt !important; }
 </style>
 
 <style id="ticket-right-filter-panel">
-#panel-tickets .ticket-results-layout {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
     gap: 16px;
 }
-#panel-tickets .ticket-results-layout > .table-card {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout > .table-card {
     min-width: 0;
     margin: 0;
     container: ticket-results / inline-size;
 }
-#panel-tickets .ticket-results-layout > #ticketFilterPanel {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout > :is(#ticketFilterPanel, #qaHistoryFilterPanel) {
     min-width: 0;
     margin: 0;
     padding: 18px !important;
 }
-#panel-tickets #ticketFilterPanel .ticket-filter-panel-head {
+:is(#panel-tickets, #qaAuditHistoryView) :is(#ticketFilterPanel, #qaHistoryFilterPanel) .ticket-filter-panel-head {
     gap: 8px;
     flex-wrap: wrap;
 }
-#panel-tickets #ticketFilterPanel .ticket-filter-core,
-#panel-tickets #ticketFilterPanel .ticket-filter-advanced,
-#panel-tickets #ticketFilterPanel .ticket-save-view-row {
+:is(#panel-tickets, #qaAuditHistoryView) :is(#ticketFilterPanel, #qaHistoryFilterPanel) .ticket-filter-core,
+:is(#panel-tickets, #qaAuditHistoryView) :is(#ticketFilterPanel, #qaHistoryFilterPanel) .ticket-filter-advanced,
+:is(#panel-tickets, #qaAuditHistoryView) :is(#ticketFilterPanel, #qaHistoryFilterPanel) .ticket-save-view-row {
     grid-template-columns: minmax(0, 1fr) !important;
 }
-#panel-tickets #ticketFilterPanel .ticket-filter-date-group > div {
+:is(#panel-tickets, #qaAuditHistoryView) :is(#ticketFilterPanel, #qaHistoryFilterPanel) .ticket-filter-date-group > div {
     grid-template-columns: minmax(0, 1fr);
 }
-#panel-tickets #ticketFilterPanel .ticket-filter-footer {
+:is(#panel-tickets, #qaAuditHistoryView) :is(#ticketFilterPanel, #qaHistoryFilterPanel) .ticket-filter-footer {
     gap: 8px;
     align-items: stretch;
     flex-direction: column;
 }
-#panel-tickets #ticketFilterPanel .ticket-save-view-row .report-primary-btn {
+:is(#panel-tickets, #qaAuditHistoryView) :is(#ticketFilterPanel, #qaHistoryFilterPanel) .ticket-save-view-row .report-primary-btn {
     min-width: 0;
 }
 /* Fit all ticket columns into the space left beside Filters. */
-#panel-tickets .ticket-results-layout .table-wrapper { overflow-x: visible; }
-#panel-tickets .ticket-results-layout .ticket-table {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout .table-wrapper { overflow-x: visible; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout .ticket-table {
     width: 100%;
     min-width: 0;
     table-layout: fixed;
 }
-#panel-tickets .ticket-table th:nth-child(1) { width: 10%; }
-#panel-tickets .ticket-table th:nth-child(2) { width: 11%; }
-#panel-tickets .ticket-table th:nth-child(3) { width: 25%; }
-#panel-tickets .ticket-table th:nth-child(4) { width: 15%; }
-#panel-tickets .ticket-table th:nth-child(5) { width: 20%; }
-#panel-tickets .ticket-table th:nth-child(6) { width: 7%; }
-#panel-tickets .ticket-table th:nth-child(7) { width: 12%; }
-#panel-tickets .ticket-table th,
-#panel-tickets .ticket-table td {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th:nth-child(1) { width: 10%; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th:nth-child(2) { width: 11%; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th:nth-child(3) { width: 25%; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th:nth-child(4) { width: 15%; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th:nth-child(5) { width: 20%; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th:nth-child(6) { width: 7%; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th:nth-child(7) { width: 12%; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table th,
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table td {
     box-sizing: border-box;
     padding-left: clamp(8px, 1.4cqi, 20px);
     padding-right: clamp(8px, 1.4cqi, 20px);
     white-space: normal;
     overflow-wrap: anywhere;
 }
-#panel-tickets .ticket-table td.query {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table td.query {
     max-width: none;
     overflow: visible;
     text-overflow: clip;
 }
-#panel-tickets .ticket-table :is(.ticket-badge, .sla-badge, .ticket-assignee, .ticket-age) {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-table :is(.ticket-badge, .sla-badge, .ticket-assignee, .ticket-age) {
     max-width: 100%;
     box-sizing: border-box;
     white-space: normal;
     overflow-wrap: anywhere;
 }
-#panel-tickets .ticket-compact-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-#panel-tickets .ticket-compact-metrics .ticket-kpi-card {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-compact-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-compact-metrics .ticket-kpi-card {
     padding: 15px clamp(8px, 1.4cqi, 20px) !important;
     border-bottom: 0 !important;
 }
-#panel-tickets .ticket-compact-metrics .ticket-kpi-card:not(:last-child) { border-right: 1px solid var(--border) !important; }
-#panel-tickets .ticket-compact-metrics .ticket-kpi-card:last-child { border-right: 0 !important; }
-#panel-tickets .ticket-compact-metrics :is(.ticket-kpi-label, .ticket-kpi-sub) { white-space: normal; }
-#panel-tickets .ticket-compact-metrics .ticket-kpi-value {
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-compact-metrics .ticket-kpi-card:not(:last-child) { border-right: 1px solid var(--border) !important; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-compact-metrics .ticket-kpi-card:last-child { border-right: 0 !important; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-compact-metrics :is(.ticket-kpi-label, .ticket-kpi-sub) { white-space: normal; }
+:is(#panel-tickets, #qaAuditHistoryView) .ticket-compact-metrics .ticket-kpi-value {
     font-size: clamp(20px, 2.8cqi, calc(24px * var(--ui-text-scale))) !important;
 }
 @media (min-width: 901px) {
-    #panel-tickets .ticket-results-layout:has(> #ticketFilterPanel:not([hidden])) {
+    :is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout:has(> :is(#ticketFilterPanel, #qaHistoryFilterPanel):not([hidden])) {
         grid-template-columns: minmax(0, 1fr) clamp(280px, 22vw, 340px);
     }
-    #panel-tickets .ticket-results-layout > .table-card { grid-column: 1; grid-row: 1; }
-    #panel-tickets .ticket-results-layout > #ticketFilterPanel {
+    :is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout > .table-card { grid-column: 1; grid-row: 1; }
+    :is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout > :is(#ticketFilterPanel, #qaHistoryFilterPanel) {
         grid-column: 2;
         grid-row: 1;
         position: sticky;
@@ -21492,6 +21495,16 @@ html body .main { margin-top: -2pt !important; }
     }
 }
 @media (max-width: 900px) {
-    #panel-tickets .ticket-results-layout > #ticketFilterPanel { grid-row: 1; }
+    :is(#panel-tickets, #qaAuditHistoryView) .ticket-results-layout > :is(#ticketFilterPanel, #qaHistoryFilterPanel) { grid-row: 1; }
 }
+/* Audit list uses the same fitting behavior with widths suited to audit fields. */
+#qaAuditHistoryView .ticket-table th:nth-child(1) { width: 12%; }
+#qaAuditHistoryView .ticket-table th:nth-child(2) { width: 12%; }
+#qaAuditHistoryView .ticket-table th:nth-child(3) { width: 24%; }
+#qaAuditHistoryView .ticket-table th:nth-child(4) { width: 15%; }
+#qaAuditHistoryView .ticket-table th:nth-child(5) { width: 13%; }
+#qaAuditHistoryView .ticket-table th:nth-child(6) { width: 14%; }
+#qaAuditHistoryView .ticket-table th:nth-child(7) { width: 10%; }
+#qaAuditHistoryView .ticket-table .ticket-id { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+#qaAuditHistoryView .ticket-column-filter > summary { white-space: normal; }
 </style>
