@@ -21,3 +21,15 @@
 - Development-store installation complete. Live order lookup not yet passing. No production application changes.
 
 Next: deploy the Worker entry-point fix to staging, verify embedded order lookup, register compliance webhooks, run real integration tests, and implement tenant-safe NovaraDesk workspace linking before review.
+
+## Retest — 2026-11-23
+
+- Checked branch 6a5c69d without merging or deploying production changes.
+- Existing 26 tests and syntax check passed under Node 24.22.3.
+- Added 10 readiness tests. All 36 tests pass. New coverage includes empty order results, upstream 429/outages/malformed results, uncached responses, duplicate privacy webhook delivery, cross-shop receipt IDs, targeted uninstall and transactional shop redaction. SQLite is local/in-memory through a D1 adapter; this does not prove remote D1 behavior.
+- Signed into existing Shopify account and opened the existing development store and embedded NovaraDesk app.
+- Embedded app loads and displays `Shopify could not return orders. Check app access approval.` No successful live order lookup claimed.
+- Shopify Dev Dashboard logs show the Orders GraphQL request with ERR status. Detail panel remained loading, so the exact underlying GraphQL error message was unavailable.
+- Verified Protected customer data access page: Level 1 Customer data is Not requested. This is a confirmed unmet prerequisite and a likely explanation for the failed lookup. Level 2 names, email, phone and addresses are also Not requested; the implemented order query does not need those fields.
+- Opened Customer data access reasons dialog. Customer service is available. No permissions saved or expanded. Awaiting explicit approval before enabling Level 1 development access.
+- End-to-end order lookup and update tests remain blocked. Workspace linking, ticket context, AI order lookup and background order sync are not implemented in this isolated service.
