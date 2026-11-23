@@ -5,7 +5,7 @@
     const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
     const number = new Intl.NumberFormat("en", { maximumFractionDigits: 2 });
     const circularTypes = new Set(["doughnut", "pie", "polarArea"]);
-    const totalLabels = { aiSentimentChart: "Conversations", humanReasonsChart: "Escalations", ticketStatusChart: "Tickets" };
+    const totalLabels = { aiSentimentChart: "Conversations", humanReasonsChart: "Rated outcomes", ticketStatusChart: "Tickets" };
     function polish(chart) {
         const options = chart.config.options;
         const light = document.documentElement.dataset.theme === "light";
@@ -13,19 +13,27 @@
         const strong = light ? "#23313f" : "#edf2f7";
         const grid = light ? "rgba(100,116,139,.12)" : "rgba(148,163,184,.12)";
         const surface = light ? "#ffffff" : "#17211d";
-        const fontSize = ({ small: 10, default: 11, large: 12, xlarge: 14 })[document.documentElement.dataset.textSize] || 11;
+        const fontSize = ({ small: 11, default: 12, large: 13, xlarge: 14 })[document.documentElement.dataset.textSize] || 12;
         const circular = circularTypes.has(chart.config.type);
         options.layout ||= {};
         options.layout.padding = { top: 8, right: 8, bottom: 4, left: 0 };
         options.animation = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? false : { duration: 280 };
         if (!circular) options.interaction = { ...options.interaction, mode: "index", intersect: false };
         options.plugins ||= {};
-        const legend = options.plugins.legend;
+        const legend = options.plugins.legend === false ? false : (options.plugins.legend ||= {});
         if (legend && legend !== false) {
             legend.position = circular ? "bottom" : "top";
             legend.align = circular ? "center" : "start";
             legend.labels ||= {};
             Object.assign(legend.labels, { color: text, usePointStyle: true, pointStyle: "circle", boxWidth: 7, boxHeight: 7, padding: 18, font: { family, size: fontSize, weight: "500" } });
+        }
+        if (legend && totalLabels[chart.canvas.id]) {
+            legend.labels.generateLabels = instance => {
+                const dataset = instance.data.datasets[0];
+                const labels = Chart.overrides.doughnut.plugins.legend.labels.generateLabels(instance);
+                if (!dataset || instance.data.labels.length !== dataset.data.length) return labels;
+                return labels.map(item => ({ ...item, text: `${item.text}  ${number.format(Number(dataset.data[item.index]) || 0)}` }));
+            };
         }
         if (options.plugins.tooltip !== false) {
             const tooltip = options.plugins.tooltip ||= {};
@@ -65,7 +73,10 @@
         chart.data.datasets.forEach(dataset => {
             const type = dataset.type || chart.config.type;
             if (type === "bar") Object.assign(dataset, { borderWidth: 0, borderRadius: 3, maxBarThickness: 28, categoryPercentage: .7, barPercentage: .8 });
-            if (type === "line") Object.assign(dataset, { borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, pointHitRadius: 14, pointHoverBorderWidth: 2, pointHoverBorderColor: surface, tension: .25 });
+            if (type === "line") {
+                Object.assign(dataset, { borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, pointHitRadius: 14, pointHoverBorderWidth: 2, pointHoverBorderColor: surface, tension: .25 });
+                if (dataset.fill === true && /^#[0-9a-f]{6}$/i.test(dataset.borderColor)) dataset.backgroundColor = `${dataset.borderColor}${light ? "10" : "18"}`;
+            }
             if (type === "doughnut" || type === "pie") Object.assign(dataset, { borderWidth: 3, borderColor: surface, hoverOffset: 4, borderRadius: 2 });
         });
         if (chart.config.type === "doughnut") options.cutout = "74%";
@@ -75,6 +86,16 @@
         id: "novaraPresentation",
         beforeInit: polish,
         beforeUpdate: polish,
+        afterUpdate(chart) {
+            const card = chart.canvas.closest(".chart-card, .ticket-status-card, .dashboard-widget, .report-preview-card");
+            const title = card?.querySelector(".chart-title, .panel-title, .dashboard-widget-title strong, h3")?.textContent.trim() || "Data chart";
+            const dataset = chart.data.datasets[0];
+            const summary = circularTypes.has(chart.config.type) && dataset
+                ? (chart.data.labels || []).slice(0, 12).map((label, index) => `${label}: ${dataset.data[index] ?? "unavailable"}`).join(", ")
+                : `${chart.data.labels?.length || 0} data points. ${chart.data.datasets.map(item => item.label).filter(Boolean).join(", ")}`;
+            chart.canvas.setAttribute("role", "img");
+            chart.canvas.setAttribute("aria-label", `${title}. ${summary}`);
+        },
         afterDraw(chart) {
             const label = totalLabels[chart.canvas.id];
             if (!label || chart.config.type !== "doughnut") return;
@@ -93,7 +114,7 @@
             const value = compact.format(total);
             if (ctx.measureText(value).width < arc.innerRadius * 1.6) ctx.fillText(value, arc.x, arc.y - 9);
             ctx.fillStyle = appearance.text; ctx.font = `400 ${Math.min(11, arc.innerRadius * .17)}px ${family}`;
-            ctx.fillText(label, arc.x, arc.y + 15); ctx.restore();
+            ctx.fillText(visible.length < dataset.data.length ? "Visible total" : label, arc.x, arc.y + 15); ctx.restore();
         }
     });
 })();
