@@ -21432,8 +21432,50 @@ html body .main { margin-top: -2pt !important; }
 #panel-tickets #ticketFilterPanel .ticket-save-view-row .report-primary-btn {
     min-width: 0;
 }
-#panel-tickets .ticket-results-layout .table-wrapper { overflow-x: auto; }
-#panel-tickets .ticket-results-layout .ticket-table { min-width: 780px; }
+/* Fit all ticket columns into the space left beside Filters. */
+#panel-tickets .ticket-results-layout .table-wrapper { overflow-x: visible; }
+#panel-tickets .ticket-results-layout .ticket-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+#panel-tickets .ticket-table th:nth-child(1) { width: 10%; }
+#panel-tickets .ticket-table th:nth-child(2) { width: 11%; }
+#panel-tickets .ticket-table th:nth-child(3) { width: 25%; }
+#panel-tickets .ticket-table th:nth-child(4) { width: 15%; }
+#panel-tickets .ticket-table th:nth-child(5) { width: 20%; }
+#panel-tickets .ticket-table th:nth-child(6) { width: 7%; }
+#panel-tickets .ticket-table th:nth-child(7) { width: 12%; }
+#panel-tickets .ticket-table th,
+#panel-tickets .ticket-table td {
+    box-sizing: border-box;
+    padding-left: clamp(8px, 1.4cqi, 20px);
+    padding-right: clamp(8px, 1.4cqi, 20px);
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+#panel-tickets .ticket-table td.query {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+}
+#panel-tickets .ticket-table :is(.ticket-badge, .sla-badge, .ticket-assignee, .ticket-age) {
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+#panel-tickets .ticket-compact-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+#panel-tickets .ticket-compact-metrics .ticket-kpi-card {
+    padding: 15px clamp(8px, 1.4cqi, 20px) !important;
+    border-bottom: 0 !important;
+}
+#panel-tickets .ticket-compact-metrics .ticket-kpi-card:not(:last-child) { border-right: 1px solid var(--border) !important; }
+#panel-tickets .ticket-compact-metrics .ticket-kpi-card:last-child { border-right: 0 !important; }
+#panel-tickets .ticket-compact-metrics :is(.ticket-kpi-label, .ticket-kpi-sub) { white-space: normal; }
+#panel-tickets .ticket-compact-metrics .ticket-kpi-value {
+    font-size: clamp(20px, 2.8cqi, calc(24px * var(--ui-text-scale))) !important;
+}
 @media (min-width: 901px) {
     #panel-tickets .ticket-results-layout:has(> #ticketFilterPanel:not([hidden])) {
         grid-template-columns: minmax(0, 1fr) clamp(280px, 22vw, 340px);
@@ -21451,14 +21493,5 @@ html body .main { margin-top: -2pt !important; }
 }
 @media (max-width: 900px) {
     #panel-tickets .ticket-results-layout > #ticketFilterPanel { grid-row: 1; }
-}
-@container ticket-results (max-width: 1000px) {
-    #panel-tickets .ticket-compact-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    #panel-tickets .ticket-compact-metrics .ticket-kpi-card:nth-child(3n) { border-right: 0 !important; }
-    #panel-tickets .ticket-compact-metrics .ticket-kpi-card:nth-child(-n+3) { border-bottom: 1px solid var(--border) !important; }
-}
-@container ticket-results (min-width: 1001px) {
-    #panel-tickets .ticket-compact-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-    #panel-tickets .ticket-compact-metrics .ticket-kpi-card:not(:last-child) { border-right: 1px solid var(--border) !important; border-bottom: 0 !important; }
 }
 </style>
