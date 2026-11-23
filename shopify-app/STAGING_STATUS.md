@@ -33,3 +33,14 @@ Next: deploy the Worker entry-point fix to staging, verify embedded order lookup
 - Verified Protected customer data access page: Level 1 Customer data is Not requested. This is a confirmed unmet prerequisite and a likely explanation for the failed lookup. Level 2 names, email, phone and addresses are also Not requested; the implemented order query does not need those fields.
 - Opened Customer data access reasons dialog. Customer service is available. No permissions saved or expanded. Awaiting explicit approval before enabling Level 1 development access.
 - End-to-end order lookup and update tests remain blocked. Workspace linking, ticket context, AI order lookup and background order sync are not implemented in this isolated service.
+
+### Approved development access and successful live test
+
+- User explicitly approved enabling Level 1 development customer data access for Customer service. Applied and saved through Shopify Dev Dashboard. Names, email addresses, phone numbers and addresses remain unrequested.
+- Existing development order #1001 retrieved successfully with payment PENDING, fulfilment UNFULFILLED and total USD 10.00.
+- Searching a nonexistent order returned 0 orders. Invalid text returned Enter a numeric order number.
+- Created development-only free order #1002 from draft #D12, containing NovaraDesk QA — zero-value fulfilment test. No customer, tax, shipping or monetary payment required.
+- Embedded app retrieved #1002 as PAID / UNFULFILLED / USD 0.00.
+- Marked this synthetic order fulfilled in Shopify. Confirmed Shopify rendered Fulfilled #1002-F1, then refreshed the embedded order lookup and confirmed PAID / FULFILLED / USD 0.00.
+- This verifies live on-demand read-only order retrieval and visibility of fulfilment updates. It does not verify webhook-driven sync, ticket linkage, AI order lookup, restricted-staff behavior, uninstall/reinstall or public-app approval. Those remain separate launch gates.
+- No production application deployment or production data changes made. The free order is retained in the development store as test evidence.
