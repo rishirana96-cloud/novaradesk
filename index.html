@@ -4913,6 +4913,22 @@ window.NOVARA_DEMO_API = (() => {
         if (path.endsWith("/ratings")) return json([{ rating: "yes", count: 38 }, { rating: "partial", count: 9 }, { rating: "no", count: 4 }]);
         if (path.endsWith("/resolution")) return json(rowsForRange(analytics, parsed).map(day => ({ date: day.date, total: day.total_conversations, resolved_count: day.resolved })));
         if (path.endsWith("/sentiment")) return json([{ sentiment: "positive", count: 34, avg_score: .82 }, { sentiment: "neutral", count: 14, avg_score: .5 }, { sentiment: "negative", count: 6, avg_score: .2 }]);
+        if (path.endsWith("/ticket/update") && method === "POST") {
+            let body;
+            try { body = JSON.parse(init.body || "{}"); } catch { return json({ error: "Invalid request" }, 400); }
+            const ticket = tickets.find(item => Number(item.id) === Number(body.ticketId));
+            if (!ticket) return json({ error: "Ticket not found" }, 404);
+            const statuses = { open: "open", in_progress: "in_progress", pending: "pending_revert", reopen: "reopened", resolve: "resolved" };
+            if (Object.hasOwn(statuses, body.action)) {
+                if (body.action === "resolve" && !String(body.note || body.resolutionNote || "").trim()) return json({ error: "Add a resolution note first." }, 400);
+                ticket.status = statuses[body.action];
+                ticket.updated_at = new Date().toISOString();
+                if (body.action === "resolve") ticket.resolved_at = ticket.updated_at;
+                else ticket.resolved_at = null;
+            }
+            if (body.action === "assign") ticket.agent_name = body.agentName || "Unassigned";
+            return json({ success: true, ticket });
+        }
         if (path.endsWith("/tickets")) return json(tickets);
         if (path.endsWith("/ticket-detail")) return json(detail(parsed.searchParams.get("id")));
         if (path.endsWith("/conversation")) {
