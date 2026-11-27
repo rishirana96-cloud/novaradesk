@@ -21533,3 +21533,26 @@ html body .main { margin-top: -2pt !important; }
     :is(#panel-ai, #panel-human) .chart-container { height: 250px; }
 }
 </style>
+
+<style id="novaradesk-header-title-balance">
+/* Keep the original title slot while displaying the requested smaller heading. */
+.topbar .page-title h1 {
+    min-height: calc(33.64px * var(--ui-text-scale));
+    display: flex;
+    align-items: center;
+}
+@media (min-width: 721px) {
+    .topbar .topbar-actions { height: 40px !important; min-height: 40px !important; }
+    .topbar-actions .global-search-shell input,
+    .topbar-actions .global-search-wrap.open .global-search-shell input,
+    .topbar-actions .global-search-wrap:focus-within .global-search-shell input,
+    .topbar-actions .refresh-btn {
+        font-size: calc(11px * var(--ui-text-scale)) !important;
+    }
+    .topbar-actions .refresh-btn svg,
+    .topbar-actions .quick-settings-button svg { width: 16px !important; height: 16px !important; }
+}
+@media (max-width: 720px) {
+    .topbar .page-title h1 { min-height: calc(27.84px * var(--ui-text-scale)); }
+}
+</style>
