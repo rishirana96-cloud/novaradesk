@@ -1,4 +1,5 @@
 import { page } from './page.js';
+import { workspaceRoute } from './workspace.js';
 const enc = new TextEncoder();
 const shopPattern = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 const topics = new Set(['app/uninstalled','customers/data_request','customers/redact','shop/redact']);
@@ -29,13 +30,19 @@ async function webhook(request,env){
  // Payloads are deliberately discarded, including customer identifiers.
  // Batch mutation and receipt together: failures return 503 so Shopify retries.
  const statements=[];
- if(topic==='app/uninstalled'||topic==='shop/redact') statements.push(env.DB.prepare('DELETE FROM shops WHERE shop = ?').bind(shop));
+ if(topic==='app/uninstalled'||topic==='shop/redact') {
+  if(env.WORKSPACE_LINKING_ENABLED==='staging') {
+   statements.push(env.DB.prepare('DELETE FROM ticket_order_links WHERE shop = ?').bind(shop));
+   statements.push(env.DB.prepare('DELETE FROM workspace_links WHERE shop = ?').bind(shop));
+  }
+  statements.push(env.DB.prepare('DELETE FROM shops WHERE shop = ?').bind(shop));
+ }
  if(topic==='shop/redact') statements.push(env.DB.prepare('DELETE FROM webhook_receipts WHERE shop = ?').bind(shop));
  else statements.push(env.DB.prepare('INSERT OR IGNORE INTO webhook_receipts(shop,id,topic) VALUES(?,?,?)').bind(shop,id,topic));
  await env.DB.batch(statements);
  return json({accepted:true});
 }
-async function orders(request,env,fetcher){
+async function orders(request,env,fetcher,linking=false){
  const token=(request.headers.get('authorization')||'').replace(/^Bearer /,'');
  const shop=await authenticate(token,env);
  const q=new URL(request.url).searchParams.get('order')||'';
@@ -46,6 +53,11 @@ async function orders(request,env,fetcher){
  const access=await exchange.json();
  if(!access.access_token) return json({error:'Shopify authentication failed'},502);
  if(!(access.associated_user_scope||'').split(',').includes('read_orders')) return json({error:'Your Shopify staff account needs order access'},403);
+ if(linking) {
+  const claims=JSON.parse(new TextDecoder().decode(decode(token.split('.')[1])));
+  const owner=access.associated_user?.account_owner===true && String(access.associated_user.id)===String(claims.sub);
+  return workspaceRoute(request,env,shop,owner,order=>orders(new Request(new URL('/api/orders?order='+encodeURIComponent(order),request.url),{headers:{authorization:'Bearer '+token}}),env,fetcher));
+ }
  const result=await fetcher(`https://${shop}/admin/api/${env.SHOPIFY_API_VERSION}/graphql.json`,{method:'POST',headers:{'content-type':'application/json','X-Shopify-Access-Token':access.access_token},body:JSON.stringify({query:'query Orders($query:String!){ orders(first:20,sortKey:CREATED_AT,reverse:true,query:$query){nodes{id name createdAt displayFinancialStatus displayFulfillmentStatus currentTotalPriceSet{shopMoney{amount currencyCode}}}}}',variables:{query:q?`name:${q.replace(/^#/,'')}`:''}}),signal:AbortSignal.timeout(10000)});
  if(result.status===429) return json({error:'Shopify is busy. Please retry shortly.'},429);
  if(!result.ok) return json({error:'Unable to read orders. Check Shopify permissions.'},502);
@@ -61,6 +73,10 @@ export async function handle(request,env,fetcher=fetch){
  if(!env.SHOPIFY_API_KEY||!env.SHOPIFY_API_SECRET||!env.DB||!/^\d{4}-(01|04|07|10)$/.test(env.SHOPIFY_API_VERSION||'')) return json({error:'Shopify staging configuration required'},503);
  if(url.pathname==='/webhooks'&&request.method==='POST') return await webhook(request,env);
  if(url.pathname==='/api/orders'&&request.method==='GET') return await orders(request,env,fetcher);
+ if(['/api/workspace-link','/api/ticket-order-link'].includes(url.pathname)&&request.method==='POST') {
+  if(env.WORKSPACE_LINKING_ENABLED!=='staging'||!env.WORKSPACE_BACKEND?.fetch) return json({error:'Workspace linking requires an isolated staging backend'},503);
+  return await orders(request,env,fetcher,true);
+ }
  if(url.pathname==='/'&&request.method==='GET'){
  const shop=url.searchParams.get('shop');
  const csp=`default-src 'self'; script-src 'self' https://cdn.shopify.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.shopify.com https://*.myshopify.com; frame-ancestors https://admin.shopify.com${shopPattern.test(shop||'')?' https://'+shop:''}; base-uri 'none'; object-src 'none'`;

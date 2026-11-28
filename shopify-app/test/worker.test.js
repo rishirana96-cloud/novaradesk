@@ -33,3 +33,14 @@ test('HTML CSP is tenant specific and prevents injection',async()=>{const r=awai
 test('missing config fails closed',async()=>assert.equal((await handle(req('/'),{})).status,503));
 
 test('Worker runtime context is not used as an HTTP client',async()=>{const prior=globalThis.fetch; let reached=false; globalThis.fetch=async()=>{reached=true;return new Response('',{status:400})};try {const r=await worker.fetch(req('/api/orders'),env,{waitUntil(){}});assert.equal(reached,true);assert.equal(r.status,401)}finally{globalThis.fetch=prior}});
+
+test('uninstall removes staged ticket links before workspace links',async()=>{
+ calls.length=0;
+ assert.equal((await handle(webhook('app/uninstalled'),{...env,WORKSPACE_LINKING_ENABLED:'staging'})).status,200);
+ assert.deepEqual(calls.filter(c=>c.sql.startsWith('DELETE')).map(c=>c.sql),[
+  'DELETE FROM ticket_order_links WHERE shop = ?',
+  'DELETE FROM workspace_links WHERE shop = ?',
+  'DELETE FROM shops WHERE shop = ?'
+ ]);
+ assert.ok(calls.every(c=>c.values[0]==='demo.myshopify.com'));
+});
