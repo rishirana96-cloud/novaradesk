@@ -1,6 +1,6 @@
 # Staging workspace and ticket linking
 
-Implemented, disabled by default, and not deployed. The existing embedded order
+Linking APIs are implemented, disabled by default, and not deployed. The existing embedded order
 lookup continues independently. No production Worker or database was changed.
 
 POST /api/workspace-link accepts `{}`. POST /api/ticket-order-link accepts
@@ -19,6 +19,10 @@ Only link identifiers are stored, without session tokens or order payloads.
 Uninstall and shop redaction remove link metadata in the webhook transaction.
 
 ## Required staging backend contract
+
+A separate backend is now deployed; see workspace-backend/README.md for its
+observed status and activation steps. Its SQL enforces ticket workspace ownership.
+Live Google sign-in, the Shopify service binding, and connection UI remain pending.
 
 Enable only after applying migration 0002 to the separate Shopify staging D1,
 binding WORKSPACE_BACKEND to a separate NovaraDesk staging Worker, and setting
@@ -41,13 +45,13 @@ must be established explicitly before any backfill or production migration.
 
 ## Validation and remaining work
 
-43 local tests cover existing authentication and webhook behavior plus staged
+56 local tests cover existing authentication and webhook behavior plus staged
 linking, owner identity mismatch, workspace/session denial, cross-workspace
 tickets, missing ticket ownership, identity overrides, exact order resolution,
 metadata-only writes, and uninstall cleanup. Local doubles do not prove real
 service bindings, Shopify exchange response shape, or live D1 behavior.
 
-Remaining: isolated backend with tenant-scoped tickets; secure connection UI;
+Remaining: activate staging Google sign-in; finish the staging service binding; secure connection UI;
 live two-workspace negative tests; signed webhook cleanup tests against D1;
 staging deployment. AI order lookup and automatic order syncing are not enabled.
 No offline tokens or order-update subscriptions are introduced by this change.
