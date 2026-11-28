@@ -1,0 +1,15 @@
+/* Only the expanded navigation owns pinned shortcuts. */
+#appSidebar .pinned-navigation { display:none!important; }
+body.expanded-inbox-mode #appSidebar .pinned-navigation { display:block!important; }
+#appSidebar .pinned-navigation { border-radius:8px; transition:background .15s; }
+#appSidebar .pinned-hint { margin:4px 8px 8px; padding:12px 8px; border:1px dashed var(--border-strong,var(--border)); border-radius:7px; color:var(--text-muted); font-size:11px; line-height:1.5; text-align:center; }
+#appSidebar .pinned-hint[hidden] { display:none; }
+#appSidebar .pinned-navigation.pin-dragging { outline:1px dashed var(--accent); outline-offset:3px; min-height:65px; }
+#appSidebar .pinned-navigation.pin-drop-active { background:color-mix(in srgb,var(--accent) 10%,transparent); }
+#appSidebar .pinned-row { position:relative; cursor:grab; }
+html[data-theme] body.expanded-inbox-mode #appSidebar .pinned-link { width:100%; padding-right:30px!important; }
+#appSidebar .pinned-remove { position:absolute; right:3px; top:6px; width:24px; height:24px; border:0; border-radius:5px; background:transparent; color:var(--text-muted); cursor:pointer; font-size:17px; opacity:0; }
+#appSidebar .pinned-row:hover .pinned-remove, #appSidebar .pinned-row:focus-within .pinned-remove { opacity:1; }
+#appSidebar .pinned-remove:hover { color:var(--text); background:var(--surface-hover); }
+#appSidebar .pinned-announcement { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+@media (pointer:coarse) { #appSidebar .pinned-remove { opacity:1; } }

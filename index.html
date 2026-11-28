@@ -17379,6 +17379,8 @@ document.getElementById("sidebarUserName").textContent=name;
 document.getElementById("sidebarUserRole").textContent=role;
 document.body.classList.add("novara-authenticated");
 window.NovaraQA?.initialize(user);
+window.NOVARA_PINNED_USER = user;
+window.NovaraPinnedNavigation?.initialize(user);
 }
 async function verifySession(){
 const token=window.localStorage.getItem(tokenKey)||window.sessionStorage.getItem(tokenKey);
@@ -21656,3 +21658,6 @@ html body .main { margin-top: -2pt !important; }
 #ticketChatDock .dock-status-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #ticketChatDock .dock-chat.collapsed .dock-details { display: none; }
 </style>
+
+<link rel="stylesheet" href="assets/pinned-nav.css?v=1">
+<script src="assets/pinned-nav.js?v=1"></script>
