@@ -1,0 +1,10 @@
+name = "novaradesk-workspace-staging"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+[[d1_databases]]
+binding = "DB"
+database_name = "novaradesk-workspace-staging"
+database_id = "862faf2e-c31a-446d-a18c-e8d5caa616ee"
+migrations_dir = "migrations"
+# Configure a dedicated staging GOOGLE_CLIENT_ID before enabling sign-in.
